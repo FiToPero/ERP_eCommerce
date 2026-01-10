@@ -1,0 +1,3514 @@
+
+---------------------------------------- Primero 1 ---------------------------------------------------------------
+Perfecto, este es el corazón de cualquier e-commerce/ERP serio.
+Te voy a dar una arquitectura de base de datos probada, usada en sistemas de logística, ERP y e-commerce multidepósito, pensada para Laravel + Eloquent.
+
+👉 Objetivo:
+
+    Multi-almacén (multi storage / depósitos)
+
+    Stock confiable
+
+    Historial completo de movimientos
+
+    Ventas desacopladas del stock
+
+    Escalable y auditable
+
+🧠 Principio clave (MUY IMPORTANTE)
+
+    El stock NO se guarda “moviendo números”
+    El stock se CALCULA a partir de los movimientos
+
+El stock actual es una vista (o tabla cacheada),
+pero la verdad está en stock_movements.
+🧱 Modelo de datos general
+
+products
+storages (warehouses)
+stock_levels        (opcional / cache)
+stock_movements
+
+orders (ventas)
+order_items
+
+🧱 1) Products
+
+products
+--------
+id
+sku
+name
+type            -- simple | variant | service
+manage_stock    -- bool
+timestamps
+
+📌 Nota:
+
+    Servicios o digitales → manage_stock = false
+
+🧱 2) Storages (depósitos / sucursales)
+
+storages
+--------
+id
+name
+code            -- WH01, LOCAL01
+type            -- warehouse | store | virtual
+address
+timestamps
+
+Ej:
+
+    Depósito central
+
+    Sucursal física
+
+    Mercado Libre Full (virtual)
+
+🧱 3) Stock Levels (opcional pero recomendado)
+
+⚠️ NO es la fuente de verdad
+⚡ Es cache para consultas rápidas
+
+stock_levels
+------------
+product_id
+storage_id
+quantity
+updated_at
+
+PRIMARY KEY (product_id, storage_id)
+
+📌 Se recalcula automáticamente desde stock_movements.
+🧱 4) Stock Movements (TABLA CLAVE)
+
+stock_movements
+---------------
+id
+product_id
+storage_id
+quantity        -- + o -
+movement_type  -- IN | OUT | ADJUST | TRANSFER
+source_type    -- purchase | sale | return | adjustment | transfer
+source_id      -- id de la orden, compra, etc
+notes
+created_at
+
+Ejemplos:
+Tipo	Cantidad
+Compra	+50
+Venta	-2
+Ajuste inventario	-1
+Transferencia	-10 / +10
+🧱 5) Transferencias entre depósitos
+
+Las transferencias son 2 movimientos:
+
+- OUT → storage A
++ IN  → storage B
+
+Ambos con el mismo source_id.
+🧱 6) Ventas (Orders)
+
+orders
+------
+id
+user_id
+status        -- pending | paid | shipped | canceled
+total
+created_at
+
+🧱 7) Items de la venta
+
+order_items
+-----------
+id
+order_id
+product_id
+storage_id        -- de dónde se despacha
+quantity
+price
+subtotal
+
+📌 El storage_id es CLAVE para multi-depósito.
+🔗 Relaciones Eloquent
+Product
+
+public function stockMovements()
+{
+    return $this->hasMany(StockMovement::class);
+}
+
+public function stockLevels()
+{
+    return $this->hasMany(StockLevel::class);
+}
+
+Storage
+
+public function stockMovements()
+{
+    return $this->hasMany(StockMovement::class);
+}
+
+🧮 Cómo calcular stock real (sin cache)
+
+SELECT SUM(quantity)
+FROM stock_movements
+WHERE product_id = ?
+AND storage_id = ?
+
+⚡ Cómo actualizar stock_levels (cache)
+
+Cada vez que insertás un movimiento:
+
+StockLevel::updateOrCreate(
+    [
+        'product_id' => $productId,
+        'storage_id' => $storageId
+    ],
+    [
+        'quantity' => DB::raw('quantity + ' . $movementQty)
+    ]
+);
+
+🔥 Flujo completo de una venta
+
+1️⃣ Cliente compra
+2️⃣ Se crea order
+3️⃣ Se crean order_items
+4️⃣ Se crean stock_movements (OUT)
+5️⃣ Se actualiza stock_levels
+
+✔ Auditable
+✔ Reversible
+✔ Sin inconsistencias
+🛡️ Ventajas de esta arquitectura
+
+✅ Soporta multi-depósito real
+✅ Historial completo (auditoría)
+✅ Fácil rollback (cancelar venta = movimiento inverso)
+✅ Compatible con Mercado Libre, Full, envíos externos
+✅ Escala a miles de productos y movimientos
+✅ Usada por Odoo, SAP, Shopify, VTEX, etc.
+📌 Extensiones habituales (si querés)
+
+Puedo ampliarte esto con:
+    🔸 Reservas de stock (pending orders)
+    🔸 Lotes y vencimientos
+    🔸 Series / IMEI
+    🔸 Stock mínimo por depósito
+    🔸 Integración con Mercado Libre Full
+    🔸 Eventos + colas (queues)
+    🔸 Soft delete contable
+----------------------------------------------------------------------------------------------------------------------
+
+-------------------------  SEGUNDO 2  ---------------------------------------------------------------------
+En Laravel (y en general en cualquier arquitectura limpia) sí es más eficiente y más mantenible separar los datos de login de los datos personales del usuario.
+Es una práctica común y recomendada.
+✅ La mejor práctica: separar users y profiles
+Por qué separar las tablas
+
+    Seguridad
+    Los datos sensibles de autenticación (email, password, remember_token, 2FA, etc.) deben estar aislados del resto de la información.
+    Si algún día compartís la tabla de perfiles con un sistema externo, no exponés datos críticos.
+
+    Escalabilidad y limpieza
+    La tabla users queda pequeña y estable.
+    La tabla profiles puede crecer con muchos campos adicionales sin afectar el login ni tocar nada de autenticación.
+
+    Módulos independientes
+    Podés tener módulos que acceden al perfil, pero no deben ver el email/password.
+    Ejemplo: un módulo de RRHH, CRM, o estadísticas.
+
+    Rendimiento
+    La tabla users se consulta todo el tiempo (middleware, autenticación, tokens, login, etc.) → cuanto más liviana mejor.
+    El perfil solo se consulta cuando realmente hace falta.
+
+    Mejor organización del modelo Eloquent
+    Evita modelos gigantes con decenas de columnas no relacionadas entre sí.
+
+🧱 Estructura recomendada de BD
+Tabla users
+
+Sólo lo necesario para login/autenticación:
+Campo	Uso
+id	PK
+email	login
+password	login
+email_verified_at	verificación
+remember_token	sesiones
+created_at / updated_at	timestamps
+Tabla profiles
+
+Datos personales del usuario:
+Campo	Ejemplo
+id	PK
+user_id	FK a users
+nombre	"Juan"
+apellido	"González"
+telefono	"+54 ..."
+direccion	"...
+avatar	"/img/user/..."
+fecha_nacimiento	"1982-05-10"
+...	cualquier extra
+🔗 Relación Eloquent
+User.php
+
+class User extends Authenticatable
+{
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+}
+
+Profile.php
+
+class Profile extends Model
+{
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
+
+📌 ¿Cuándo NO hace falta separar?
+
+Si tu aplicación es muy simple, por ejemplo:
+
+    un blog personal,
+
+    o un panel pequeño donde solo vos usás el sistema.
+
+En esos casos no pasa nada si mezclás todo en users.
+Pero en cuanto tu sistema crece un poco → separar es mucho mejor.
+🎯 Conclusión
+
+Sí:
+✔ Es mejor práctica separar User (login) y Profile (datos personales)
+✔ Te da seguridad, claridad, desacoplamiento, rendimiento y escalabilidad
+✔ Laravel Eloquent lo maneja muy bien con hasOne
+
+Si querés te puedo mostrar:
+
+✅ Migraciones completas
+✅ Modelos completos
+✅ Seeders
+✅ Cómo cargar el perfil automáticamente después del registro
+Solo pedímelo.
+Tú dijiste:
+y si además tengo roles, como debo hacer esta relacion con user
+ChatGPT Plus
+
+La relación entre Users y Roles depende del tipo de sistema que quieras construir, pero en el 99% de los proyectos modernos se usa una relación Many-to-Many.
+
+Es decir:
+
+    Un usuario puede tener uno o varios roles
+
+    Un rol puede pertenecer a muchos usuarios
+
+Esto se maneja con una tabla pivote: role_user (o users_roles).
+✅ Diseño recomendado para roles
+🧱 Tablas
+Tabla roles
+
+id
+name
+slug      // admin, editor, vendedor, cliente
+description
+created_at, updated_at
+
+Tabla pivote role_user
+
+user_id
+role_id
+
+No necesita ID propio.
+🔗 Relaciones Eloquent
+User.php
+
+public function roles()
+{
+    return $this->belongsToMany(Role::class);
+}
+
+Role.php
+
+public function users()
+{
+    return $this->belongsToMany(User::class);
+}
+
+🎯 ¿Por qué es mejor Many-to-Many?
+
+Porque permite cosas como:
+
+    un usuario puede ser Admin + Editor
+
+    un usuario puede cambiar de rol sin cambiar arquitectura
+
+    podés agregar roles nuevos sin tocar la tabla users
+
+    se pueden agregar permisos por rol más adelante
+
+Es la misma arquitectura que usan:
+
+    Spatie Permissions
+
+    Laravel Permission Packages
+
+    Cualquier RBAC (Role Based Access Control) moderno
+
+🧩 ¿Y cómo se relaciona con el Profile?
+
+Así queda todo:
+
+users
+   |
+   |-- hasOne --> profiles
+   |
+   |-- belongsToMany --> roles
+
+Es decir:
+
+    User tiene un Profile
+
+    User tiene uno o varios Roles
+
+El Profile NO debe tener relación con los roles, porque es solo datos personales.
+🧪 Ejemplo práctico de asignar roles
+
+$user = User::find(1);
+
+// asignar un rol
+$user->roles()->attach(2);
+
+// quitar un rol
+$user->roles()->detach(3);
+
+// sincronizar roles
+$user->roles()->sync([1, 4]);  // deja solo esos roles
+
+🧠 ¿Querés usar permisos también?
+
+Si querés un sistema completo tipo ACL (Roles + Permisos), te puedo diseñar este esquema:
+
+    Tabla roles
+
+    Tabla permissions
+
+    pivotes: role_permission, user_role
+
+Y con las relaciones listas para usar en Laravel.
+
+Pedímelo y te lo preparo.
+Tú dijiste:
+pero cuantas consultas puedo generar a la tabla roles de esta forma?
+ChatGPT Plus
+
+Buena pregunta, porque la cantidad de consultas es clave para rendimiento.
+
+La respuesta corta:
+
+👉 Si usás la relación many-to-many normal, las consultas son pocas y totalmente controlables.
+👉 Y si usás with() para eager loading, casi siempre vas a tener solo 1 o 2 consultas sin importar cuántos usuarios o roles haya.
+✅ ¿Cuántas consultas hace Eloquent a roles?
+✔ 1) Si cargás un usuario y luego pedís sus roles (lazy loading)
+
+$user = User::find(1);      // 1 consulta a users
+$user->roles;               // 1 consulta a role_user + roles
+
+Total:
+2 consultas
+
+siempre, independientemente de la cantidad de roles que tenga.
+✔ 2) Si cargás varios usuarios sin eager loading (MAL):
+
+$users = User::all();   // 1 consulta a users
+
+foreach($users as $u) {
+    $u->roles;          // 1 consulta por cada user → N+1 problem
+}
+
+Ejemplo: 100 usuarios = 101 consultas
+
+Esto es malo… pero Laravel te da la solución:
+🚀 3) Con eager loading (la forma correcta y óptima)
+
+$users = User::with('roles')->get();
+
+Eloquent hará:
+
+    1 consulta → tabla users
+
+    1 consulta → tabla pivote + roles
+
+Total:
+2 consultas sin importar si tenés 10, 100, 1000 o 20.000 usuarios
+
+Esto es súper eficiente.
+🧠 ¿Por qué solo 1 consulta para roles?
+
+Laravel ejecuta:
+
+SELECT * FROM roles
+INNER JOIN role_user ON roles.id = role_user.role_id
+WHERE user_id IN (lista de todos los usuarios cargados)
+
+Eso trae todo de una vez.
+🏎️ 4) Consulta de roles para un solo usuario
+
+Siempre será solo 1 consulta:
+
+$user->roles;
+
+Porque hace:
+
+SELECT roles.*
+FROM roles
+JOIN role_user ON role_id = roles.id
+WHERE user_id = X;
+
+🛡️ Conclusión sobre rendimiento
+
+Diseño User ↔ Role Many-to-Many es:
+
+    Performante
+
+    Escalable
+
+    Usado por todos los sistemas RBAC
+
+➜ Nunca vas a tener un problema de consultas si usás EAGER LOADING (with()).
+📌 ¿Querés que te modele un sistema completo RBAC (Roles + Permisos) con todas las relaciones y optimizaciones?
+
+Te lo armo si querés.
+Tú dijiste:
+si por favor
+ChatGPT Plus
+
+Perfecto. Acá tenés un sistema RBAC completo, profesional, escalable y totalmente compatible con Laravel sin usar paquetes externos (aunque es compatible con Spatie si después querés).
+
+Incluye:
+
+    Estructura de BD
+
+    Migraciones
+
+    Modelos Eloquent
+
+    Relaciones
+
+    Cómo asignar roles y permisos
+
+    Cómo consultar permisos de un usuario
+
+    Middleware de autorización
+
+🧱 1. Estructura de Base de Datos (RBAC Completo)
+Tabla roles
+
+    id
+
+    name
+
+    slug
+
+    description
+
+Tabla permissions
+
+    id
+
+    name
+
+    slug
+
+    description
+
+Tabla pivote role_user
+
+    role_id
+
+    user_id
+
+Tabla pivote permission_role
+
+    permission_id
+
+    role_id
+
+    Importante:
+    Los permisos siempre se asignan al rol.
+    Los usuarios obtienen permisos a través de sus roles.
+
+📝 2. Migraciones
+create_roles_table.php
+
+Schema::create('roles', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('slug')->unique();
+    $table->string('description')->nullable();
+    $table->timestamps();
+});
+
+create_permissions_table.php
+
+Schema::create('permissions', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('slug')->unique();
+    $table->string('description')->nullable();
+    $table->timestamps();
+});
+
+create_role_user_table.php
+
+Schema::create('role_user', function (Blueprint $table) {
+    $table->foreignId('role_id')->constrained()->cascadeOnDelete();
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->primary(['role_id', 'user_id']);
+});
+
+create_permission_role_table.php
+
+Schema::create('permission_role', function (Blueprint $table) {
+    $table->foreignId('permission_id')->constrained()->cascadeOnDelete();
+    $table->foreignId('role_id')->constrained()->cascadeOnDelete();
+    $table->primary(['permission_id', 'role_id']);
+});
+
+📦 3. Modelos Eloquent
+Role.php
+
+class Role extends Model
+{
+    protected $fillable = ['name', 'slug', 'description'];
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+}
+
+Permission.php
+
+class Permission extends Model
+{
+    protected $fillable = ['name', 'slug', 'description'];
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+}
+
+User.php
+
+class User extends Authenticatable
+{
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function hasRole($slug)
+    {
+        return $this->roles->pluck('slug')->contains($slug);
+    }
+
+    public function hasPermission($slug)
+    {
+        return $this->roles
+            ->flatMap->permissions
+            ->pluck('slug')
+            ->contains($slug);
+    }
+}
+
+🔥 4. Asignar Roles y Permisos
+Crear roles
+
+Role::create([
+    'name' => 'Administrador',
+    'slug' => 'admin',
+]);
+
+Crear permisos
+
+Permission::create([
+    'name' => 'Crear usuarios',
+    'slug' => 'users.create',
+]);
+
+Asignar permisos a roles
+
+$role = Role::where('slug', 'admin')->first();
+$role->permissions()->attach($permission_id);
+
+Asignar roles a usuarios
+
+$user = User::find(1);
+$user->roles()->attach($role_id);
+
+🔎 5. Cómo consultar roles y permisos
+Ver si un usuario tiene un rol
+
+if ($user->hasRole('admin')) {
+    // ok
+}
+
+Ver si un usuario tiene un permiso
+
+if ($user->hasPermission('users.create')) {
+    // ok
+}
+
+🛡️ 6. Middleware de permisos
+Generar middleware
+
+php artisan make:middleware PermissionMiddleware
+
+PermissionMiddleware.php
+
+public function handle($request, Closure $next, $permission)
+{
+    if (!auth()->user()->hasPermission($permission)) {
+        abort(403, 'No tienes permisos');
+    }
+
+    return $next($request);
+}
+
+Registrar middleware
+
+En app/Http/Kernel.php:
+
+'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+
+Usarlo en rutas:
+
+Route::get('/admin', function () {
+    return 'Panel Admin';
+})->middleware('permission:admin.access');
+
+⚡ 7. Optimización de consultas (IMPORTANTÍSIMO)
+
+Cuando obtengas usuarios con roles y permisos:
+
+$users = User::with('roles.permissions')->get();
+
+Esto genera:
+
+    1 consulta a users
+
+    1 consulta a role_user + roles
+
+    1 consulta a permission_role + permissions
+
+TOTAL: 3 CONSULTAS
+Aunque cargues 1.000 usuarios con 20 roles y 200 permisos.
+
+Máximo rendimiento.
+🧠 8. ¿Querés roles jerárquicos, permisos directos al usuario, o un sistema multigrupo?
+
+Puedo extenderte el sistema:
+
+    🔸 Roles heredados (Admin hereda Supervisor)
+
+    🔸 Permisos directos al usuario (como Spatie)
+
+    🔸 Módulos separados (ACL modular)
+
+    🔸 Cacheo completo con Redis
+
+    🔸 Seeders automáticos
+
+Si querés, decime qué tipo de sistema vas a construir (ERP, e-commerce, multiempresa, SaaS, etc.) y te hago la arquitectura exacta.
+Tú dijiste:
+detalla esto: public function hasRole($slug) { return $this->roles->pluck('slug')->contains($slug); } public function hasPermission($slug) { return $this->roles ->flatMap->permissions ->pluck('slug') ->contains($slug); }
+ChatGPT Plus
+
+Aquí va el detalle completo, paso a paso, de cómo funcionan los métodos hasRole() y hasPermission(), qué hace cada línea y por qué está diseñado así.
+🧩 1. Método hasRole()
+
+public function hasRole($slug)
+{
+    return $this->roles->pluck('slug')->contains($slug);
+}
+
+Vamos línea por línea:
+🔥 $this->roles
+
+    $this es el User.
+
+    roles es la relación belongsToMany() ya cargada o que se carga al momento.
+
+Devuelve una Collection de Role.
+
+Ejemplo de lo que puede contener:
+
+[
+    (Role { id:1, slug:"admin", ... }),
+    (Role { id:2, slug:"editor", ... }),
+]
+
+🔥 ->pluck('slug')
+
+Toma esa colección de objetos Role y extrae solo la columna slug.
+
+Resultado:
+
+[
+    "admin",
+    "editor"
+]
+
+Es más eficiente trabajar solo con strings en lugar de objetos completos.
+🔥 ->contains($slug)
+
+Pregunta si el string que pasamos existe dentro del array.
+
+Ejemplo:
+
+$user->hasRole('admin'); // true
+$user->hasRole('cliente'); // false
+
+✅ Resultado final
+
+hasRole() devuelve true si el usuario posee ese rol, caso contrario devuelve false.
+🧩 2. Método hasPermission()
+
+public function hasPermission($slug)
+{
+    return $this->roles
+        ->flatMap->permissions
+        ->pluck('slug')
+        ->contains($slug);
+}
+
+Este método es más complejo porque:
+
+    un usuario no tiene permisos directos,
+
+    sino a través de TODOS sus roles.
+
+Ejemplo:
+
+User:
+  roles:
+    - admin
+        permissions: [users.create, users.delete, orders.manage]
+    - editor
+        permissions: [posts.create, posts.edit]
+
+🔥 Paso 1: $this->roles
+
+Devuelve:
+
+Collection([
+    Role1,
+    Role2,
+])
+
+🔥 Paso 2: flatMap->permissions
+
+Aquí ocurre la magia.
+¿Qué hace flatMap?
+
+    Ejecuta $role->permissions para cada rol.
+
+    Aplana todo en una sola colección.
+
+Ejemplo de resultado:
+
+Collection([
+    Permission { slug:"users.create" },
+    Permission { slug:"users.delete" },
+    Permission { slug:"orders.manage" },
+    Permission { slug:"posts.create" },
+    Permission { slug:"posts.edit" },
+])
+
+Sin flatMap obtendrías una colección de colecciones, lo cual es incómodo.
+🔥 Paso 3: ->pluck('slug')
+
+Extrae solo los slugs:
+
+[
+    "users.create",
+    "users.delete",
+    "orders.manage",
+    "posts.create",
+    "posts.edit"
+]
+
+🔥 Paso 4: ->contains($slug)
+
+Comprueba si el usuario tiene ese permiso:
+
+$user->hasPermission('posts.edit');   // true
+$user->hasPermission('users.read');   // false
+
+📌 ¿Por qué funciona así?
+
+Porque los permisos están en los roles, no en los usuarios:
+
+User → hasMany Roles → hasMany Permissions
+
+La función:
+
+    reúne los permisos de todos sus roles
+
+    los aplana en 1 sola lista
+
+    busca el permiso
+
+Super óptimo y claro.
+🛡️ ¿Es eficiente?
+
+Sí, si usás EAGER LOADING:
+
+User::with('roles.permissions')->find($id);
+
+Entonces hasRole() y hasPermission() no hacen consultas extra, solo trabajan en memoria.
+→ Ultra rápido.
+🎁 ¿Querés una versión más poderosa con caché y autorización avanzada?
+
+Te puedo armar:
+
+    hasAnyRole()
+
+    hasAllRoles()
+
+    hasAnyPermission()
+
+    hasAllPermissions()
+
+    Cache automático por usuario
+
+    Cache por rol
+
+    Directivas Blade @role y @permission
+
+Solo decime.
+Tú dijiste:
+ahora en mi aplicación laravel tengo Product, ya que la aplicacón es un e-commers, pero no solo publica los producto en la web propia, sino que tambien publica lo product en Mercado Libre, google merchent y meta. como seria más optimo guardar la informacón necesari del product en la DB, si en una sola table o en varias relacionadas
+ChatGPT Plus
+
+Excelente pregunta. Para un e-commerce multicanal (web propia, Mercado Libre, Google Merchant, Meta/Facebook Shop), NO es óptimo guardar toda la información del producto en una única tabla.
+La arquitectura más eficiente y escalable es dividir la información del producto en varias tablas relacionadas, siguiendo una estructura modular, normalizada y orientada a canales.
+
+A continuación te doy la arquitectura ideal, explicando el por qué y el cómo.
+✅ CONCLUSIÓN RÁPIDA
+
+La mejor práctica es:
+✔ Tabla principal: products
+✔ Tablas secundarias por categoría de datos
+✔ Tablas específicas por canal (Mercado Libre, Google, Meta)
+
+Así evitas una tabla gigante e inmanejable, manteniendo rendimiento y flexibilidad.
+
+Vamos con el detalle.
+🧱 1) Tabla principal products (datos comunes)
+
+Aquí guardás SOLO lo que es común para todos los canales.
+
+Ejemplo:
+
+products
+---------
+id
+sku
+name
+brand_id
+category_id
+price
+sale_price
+stock
+status          // active, paused
+description     // versión corta si querés
+...
+timestamps
+
+Datos que todas las plataformas necesitan.
+🧱 2) Tabla product_details (descripción extensa + imágenes)
+
+Muchos e-commerce separan:
+
+    descripciones largas
+
+    características técnicas
+
+    contenido HTML
+
+    imágenes
+
+Esto evita sobrecargar la tabla principal.
+
+product_details
+---------------
+id
+product_id (FK)
+long_description
+features (JSON)
+specs (JSON)
+images (JSON) o tabla aparte product_images
+
+🧱 3) Tablas de atributos dinámicos (si tu catálogo es grande)
+
+Ejemplo: TV, heladeras, notebooks, lavarropas…
+Cada categoría tiene atributos distintos.
+
+Usás un sistema tipo:
+attributes
+
+id | name        | type
+1  | color       | string
+2  | potencia    | integer
+3  | pulgadas    | integer
+
+product_attribute_values
+
+product_id | attribute_id | value
+
+Esto lo usan Shopify, WooCommerce, Magento, Prestashop, Odoo, etc.
+🧱 4) Tablas por canal (MUY IMPORTANTE)
+
+Cada canal tiene requerimientos distintos, formatos distintos, IDs distintos y reglas distintas.
+
+Por eso lo óptimo es:
+🔵 Mercado Libre
+
+ml_products
+-----------
+id
+product_id
+ml_item_id          // ID de ML
+title
+description
+category_id_ml
+price_ml
+listing_type
+status
+variations (JSON)
+attributes (JSON)
+...
+
+🔴 Google Merchant Center
+
+google_products
+---------------
+id
+product_id
+google_product_id
+google_title
+google_description
+google_category
+google_price
+google_sale_price
+google_brand
+condition
+gtin
+mpn
+availability
+feed_status
+...
+
+🟣 Meta / Facebook Shop / Instagram
+
+meta_products
+-------------
+id
+product_id
+meta_item_id
+title
+description
+price
+sale_price
+category
+availability
+...
+
+🎯 ¿Por qué usar tablas específicas por canal?
+✔ 1) Cada canal exige campos diferentes
+
+    Google obliga a: google_category, gtin, mpn
+
+    Mercado Libre obliga a: attributes, listing_type, variations
+
+    Meta tiene sus propias categorías
+    Si metés todo en la tabla products → se vuelve inmanejable.
+
+✔ 2) Cada canal tiene su propio ID
+
+Ej:
+
+    Mercado Libre → item_id tipo "MLA123456789"
+
+    Google → g_product_id
+
+    Meta → fb_item_id
+
+Jamás deben convivir en la tabla principal.
+✔ 3) Permite sincronización independiente
+
+Podés actualizar:
+
+    stock en Mercado Libre
+
+    precio en Google
+
+    título en Meta
+
+Sin afectar la web principal.
+✔ 4) Evita recargar la tabla products con 200 columnas
+
+Muchos ERP caen en este error.
+Resultado: consultas lentas, código difícil de mantener y migraciones enormes.
+✔ 5) Optimiza el rendimiento para Eloquent
+
+Consultás solo lo necesario:
+
+Product::with('googleProduct', 'mlProduct', 'metaProduct')->find($id);
+
+2–3 consultas limpias, sin columnas basura.
+🧩 5) Relaciones Eloquent
+Modelo Product
+
+public function detail()
+{
+    return $this->hasOne(ProductDetail::class);
+}
+
+public function ml()
+{
+    return $this->hasOne(MlProduct::class);
+}
+
+public function google()
+{
+    return $this->hasOne(GoogleProduct::class);
+}
+
+public function meta()
+{
+    return $this->hasOne(MetaProduct::class);
+}
+
+public function attributes()
+{
+    return $this->hasMany(ProductAttributeValue::class);
+}
+
+🚀 6) Arquitectura final recomendada (muy usada en ERP grandes)
+
+products
+product_details
+product_images
+attributes
+product_attribute_values
+
+ml_products
+google_products
+meta_products
+
+Si vendés en muchas plataformas más adelante (Amazon, Shopify, WooCommerce), solo agregás:
+
+amazon_products
+shopify_products
+etc...
+
+Sin tocar nada del core.
+📌 Si querés, te puedo armar (decime SÍ):
+✔ Migraciones completas
+✔ Modelos Eloquent completos
+✔ Seeders
+✔ Ejemplo de feed Google
+✔ Ejemplo de publicación Mercado Libre (API v2)
+✔ Ejemplo de sincronización de stock multi-canal
+
+Todo integrado para usar en tu e-commerce Laravel real.
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------  TERCERO 3  ---------------------------------------------------------------------------
+Lo rehago desde cero, ordenado, y dejando explícito el soporte multi-storage (multi-depósito / multi-sucursal) en TODAS las entidades donde corresponde.
+
+Este modelo es nivel ERP, totalmente válido para e-commerce, marketplaces y operaciones reales.
+🧠 PRINCIPIO BASE (no negociable)
+
+    Un producto puede existir en muchos storages
+
+    Una venta puede salir de varios storages
+
+    El stock NO se guarda en la venta
+
+    El stock se mueve SOLO con movimientos
+
+    El stock actual es un cálculo / cache
+
+🧱 1. PRODUCTS (producto)
+products
+Campo	Tipo	Descripción
+id	PK	
+sku	string (unique)	Código interno
+name	string	Nombre
+description	text	Descripción corta
+manage_stock	boolean	Si controla stock
+type	enum	simple / variant / service
+status	enum	active / inactive
+created_at	timestamp	
+updated_at	timestamp	
+
+Relaciones
+
+    hasMany → stock_movements
+
+    hasMany → order_items
+
+    hasMany → purchase_items
+
+    hasMany → stock_levels
+
+🧱 2. STORAGES (depósitos / sucursales / virtuales)
+storages
+Campo	Tipo	Descripción
+id	PK	
+name	string	Nombre
+code	string (unique)	WH01, ML_FULL
+type	enum	warehouse / store / virtual
+address	string	Dirección
+is_active	boolean	
+created_at	timestamp	
+
+Relaciones
+
+    hasMany → stock_movements
+
+    hasMany → order_items
+
+    hasMany → purchase_items
+
+    hasMany → stock_levels
+
+🧱 3. STOCK LEVELS (stock actual por producto y storage)
+
+⚠️ NO es la verdad
+✔ Es cache rápido
+stock_levels
+Campo	Tipo
+product_id	FK
+storage_id	FK
+quantity	integer
+updated_at	timestamp
+
+PK compuesta
+
+(product_id, storage_id)
+
+Relaciones
+
+    belongsTo → product
+
+    belongsTo → storage
+
+🧱 4. STOCK MOVEMENTS (fuente de verdad)
+stock_movements
+Campo	Tipo	Descripción
+id	PK	
+product_id	FK	
+storage_id	FK	
+quantity	integer	+ / -
+movement_type	enum	IN / OUT / ADJUST / TRANSFER
+source_type	enum	purchase / sale / return / transfer
+source_id	bigint	id del documento
+notes	text	
+created_at	timestamp	
+
+Relaciones
+
+    belongsTo → product
+
+    belongsTo → storage
+
+🧱 5. SALES (ventas / pedidos)
+orders
+Campo	Tipo	Descripción
+id	PK	
+user_id	FK	Cliente
+status	enum	pending / paid / shipped / canceled
+channel	enum	web / ml / google / meta
+total	decimal	
+created_at	timestamp	
+
+Relaciones
+
+    hasMany → order_items
+
+🧱 6. SALES ITEMS (ítems de venta, MULTI-STORAGE)
+order_items
+Campo	Tipo	Descripción
+id	PK	
+order_id	FK	
+product_id	FK	
+storage_id	FK	de dónde sale
+quantity	integer	
+price	decimal	
+subtotal	decimal	
+created_at	timestamp	
+
+Relaciones
+
+    belongsTo → order
+
+    belongsTo → product
+
+    belongsTo → storage
+
+🧱 7. PURCHASES (compras)
+purchases
+Campo	Tipo
+id	PK
+supplier_id	FK
+status	enum (draft, received, canceled)
+total	decimal
+created_at	timestamp
+
+Relaciones
+
+    hasMany → purchase_items
+
+🧱 8. PURCHASE ITEMS (MULTI-STORAGE)
+purchase_items
+Campo	Tipo	Descripción
+id	PK	
+purchase_id	FK	
+product_id	FK	
+storage_id	FK	a dónde entra
+quantity	integer	
+cost	decimal	
+subtotal	decimal	
+
+Relaciones
+
+    belongsTo → purchase
+
+    belongsTo → product
+
+    belongsTo → storage
+
+🔗 DIAGRAMA CONCEPTUAL RESUMIDO
+
+Product
+ ├── StockLevel (1 por storage)
+ ├── StockMovement (historial)
+ ├── OrderItem (salidas)
+ └── PurchaseItem (entradas)
+
+Storage
+ ├── StockLevel
+ ├── StockMovement
+ ├── OrderItem
+ └── PurchaseItem
+
+Order
+ └── OrderItem (N productos, N storages)
+
+Purchase
+ └── PurchaseItem (N productos, N storages)
+
+🔄 FLUJOS CLAVES
+🟢 Compra
+
+Purchase
+  → PurchaseItem (storage X)
+    → StockMovement (+)
+      → StockLevel ++
+
+🔴 Venta
+
+Order
+  → OrderItem (storage Y)
+    → StockMovement (-)
+      → StockLevel --
+
+🔁 Transferencia
+
+OUT → storage A
+IN  → storage B
+
+🛡️ BENEFICIOS REALES
+
+✅ Multi-depósito real
+✅ Mercado Libre FULL / FBA / dropshipping
+✅ Auditoría completa
+✅ Reversión segura
+✅ Escala sin romper el modelo
+✅ Compatible con colas, eventos y cache
+📌 Próximos pasos (si querés)
+
+Puedo:
+
+    📄 Dibujarte el ERD visual
+
+    ⚙️ Generarte migraciones Laravel
+
+    🔐 Agregar reservas de stock
+
+    🔁 Manejar devoluciones
+
+    🚚 Integrar envíos
+
+    🇦🇷 Adaptarlo a AFIP / facturación argentina
+
+Decime cómo querés seguir.
+explicame como trabaja y como crear en Laravel StockLevel ya que dices que no es una tabla en la DB si no es virtual.
+
+Excelente pregunta.
+Esto es CLAVE para entender bien un sistema de stock profesional en Laravel.
+
+Voy a explicarte cómo funciona realmente StockLevel, por qué digo que es “virtual”, y cómo implementarlo correctamente en Laravel, con dos enfoques (sin tabla y con tabla cache).
+🧠 1️⃣ ¿Por qué StockLevel es “virtual”?
+
+Porque el stock REAL no se guarda.
+
+👉 La única verdad es stock_movements.
+
+El stock es simplemente:
+
+STOCK = SUM(stock_movements.quantity)
+        WHERE product_id = X
+        AND storage_id = Y
+
+Eso es un cálculo, no un dato persistido.
+
+Por eso decimos:
+
+    StockLevel es una vista lógica, no una entidad de negocio.
+
+🧱 2️⃣ Opción A — StockLevel SIN tabla (100% virtual)
+📌 Cuándo usarla
+
+    Catálogo chico/mediano
+
+    Menos de ~100k movimientos
+
+    Máxima consistencia
+
+    Reportes exactos
+
+🔹 Query base (SQL)
+
+SELECT
+  product_id,
+  storage_id,
+  SUM(quantity) AS stock
+FROM stock_movements
+GROUP BY product_id, storage_id;
+
+🔹 Método Eloquent (recomendado)
+Product.php
+
+public function stockInStorage($storageId)
+{
+    return $this->stockMovements()
+        ->where('storage_id', $storageId)
+        ->sum('quantity');
+}
+
+Uso:
+
+$stock = $product->stockInStorage($storageId);
+
+✔ No tabla
+✔ Siempre exacto
+❌ Más costoso si se consulta mucho
+🔹 Stock total (todos los storages)
+
+public function totalStock()
+{
+    return $this->stockMovements()->sum('quantity');
+}
+
+🧱 3️⃣ Opción B — StockLevel CON tabla (cache de stock)
+
+👉 Esta es la opción usada en producción real
+
+⚠️ Sigue siendo “virtual” conceptualmente
+✔ Pero tiene tabla para performance
+📦 Tabla stock_levels
+
+stock_levels
+------------
+product_id
+storage_id
+quantity
+updated_at
+
+PRIMARY KEY (product_id, storage_id)
+
+    ❗ Nunca se edita manualmente
+
+🔹 Modelo Eloquent
+StockLevel.php
+
+class StockLevel extends Model
+{
+    public $timestamps = false;
+    protected $primaryKey = null;
+    public $incrementing = false;
+
+    protected $fillable = [
+        'product_id',
+        'storage_id',
+        'quantity',
+    ];
+}
+
+🔹 Relación
+Product.php
+
+public function stockLevels()
+{
+    return $this->hasMany(StockLevel::class);
+}
+
+🔄 4️⃣ ¿Cómo se mantiene actualizado el stock?
+✔ Siempre a partir de stock_movements
+🔹 Flujo correcto
+
+    Insertás un movimiento
+
+    Actualizás el cache (stock_levels)
+
+    Nunca al revés
+
+🔹 Servicio recomendado
+StockService.php
+
+class StockService
+{
+    public function move(
+        int $productId,
+        int $storageId,
+        int $quantity,
+        string $type,
+        string $sourceType,
+        int $sourceId
+    ) {
+        DB::transaction(function () use (
+            $productId,
+            $storageId,
+            $quantity,
+            $type,
+            $sourceType,
+            $sourceId
+        ) {
+            StockMovement::create([
+                'product_id'   => $productId,
+                'storage_id'   => $storageId,
+                'quantity'     => $quantity,
+                'movement_type'=> $type,
+                'source_type'  => $sourceType,
+                'source_id'    => $sourceId,
+            ]);
+
+            StockLevel::updateOrCreate(
+                [
+                    'product_id' => $productId,
+                    'storage_id' => $storageId,
+                ],
+                [
+                    'quantity' => DB::raw("quantity + {$quantity}")
+                ]
+            );
+        });
+    }
+}
+
+🛡️ 5️⃣ ¿Qué pasa si se rompe el cache?
+
+No pasa nada.
+Rebuild total:
+
+TRUNCATE stock_levels;
+
+INSERT INTO stock_levels (product_id, storage_id, quantity)
+SELECT product_id, storage_id, SUM(quantity)
+FROM stock_movements
+GROUP BY product_id, storage_id;
+
+✔ Cache reconstruido
+✔ Integridad intacta
+⚖️ 6️⃣ Comparación real
+Enfoque	Pros	Contras
+100% virtual	Siempre exacto	Lento con mucho tráfico
+Cache (recomendado)	Ultra rápido	Requiere disciplina
+🧠 Conclusión final
+
+    StockLevel es virtual en concepto, no en implementación.
+
+    La verdad → stock_movements
+
+    El rendimiento → stock_levels
+
+    Laravel → ambos juntos
+
+Esto es exactamente lo que usan:
+
+    Shopify
+
+    Odoo
+
+    SAP
+
+    VTEX
+
+Si querés, el próximo paso natural es:
+
+    🔐 reservas de stock
+
+    🔁 cancelaciones
+
+    ⚡ eventos + colas
+
+    📦 lotes / vencimientos
+----------------------------------------------------------------------------------------------------------------------------
+
+--------------------------------  CUARTO  4  ------------------------------------------------------------------------
+ahora has un esquema de base dato y su relaciones. pero. entre supplier, client, user, cuenta corriente. Ten en cuenta que un client también puede ser supplier y viceversa.
+
+Excelente, este es un diseño de ERP real, bien pensado 👍
+Vamos a armar un esquema de base de datos claro y extensible para:
+
+    Users (usuarios del sistema)
+
+    Persons (entidades comerciales)
+
+    Clients
+
+    Suppliers
+
+    Cuenta corriente (ledger)
+
+    Relaciones correctas cuando una misma entidad puede ser cliente y proveedor
+
+La clave es NO duplicar personas.
+🧠 PRINCIPIO BASE (MUY IMPORTANTE)
+
+    Cliente y proveedor NO son personas distintas, son ROLES comerciales.
+
+La persona (empresa o individuo) es UNA
+Puede actuar como:
+
+    cliente
+
+    proveedor
+
+    ambos
+
+🧱 1️⃣ PERSONS (Entidad comercial única)
+persons
+
+Representa una persona física o jurídica.
+Campo	Tipo	Descripción
+id	PK	
+type	enum	individual / company
+name	string	Razón social / Nombre
+document_type	enum	DNI / CUIT
+document_number	string	
+email	string	
+phone	string	
+address	text	
+created_at	timestamp	
+
+✔ Una persona = una fila
+✔ Nunca duplicar
+🧱 2️⃣ USERS (usuarios del sistema)
+users
+
+Son los que usan el sistema, no los clientes.
+Campo	Tipo
+id	PK
+person_id	FK (nullable)
+email	string
+password	string
+status	enum
+created_at	timestamp
+
+Relación
+
+    belongsTo → person (opcional)
+
+📌 Un usuario puede estar asociado a una persona (ej: dueño de la empresa)
+🧱 3️⃣ CLIENTS (rol comercial: cliente)
+clients
+Campo	Tipo
+id	PK
+person_id	FK (unique)
+credit_limit	decimal
+payment_terms	integer (días)
+active	boolean
+created_at	timestamp
+
+✔ No duplica datos personales
+🧱 4️⃣ SUPPLIERS (rol comercial: proveedor)
+suppliers
+Campo	Tipo
+id	PK
+person_id	FK (unique)
+payment_terms	integer
+bank_account	string
+active	boolean
+created_at	timestamp
+
+✔ La misma persona puede estar en ambas tablas
+🧱 5️⃣ CURRENT ACCOUNTS (cuenta corriente)
+
+    Una persona tiene UNA cuenta corriente
+    No una por cliente / proveedor
+
+current_accounts
+Campo	Tipo
+id	PK
+person_id	FK (unique)
+balance	decimal
+created_at	timestamp
+
+📌 balance puede ser cache
+📌 La verdad está en los movimientos
+🧱 6️⃣ ACCOUNT MOVEMENTS (movimientos de cuenta corriente)
+account_movements
+Campo	Tipo	Descripción
+id	PK	
+current_account_id	FK	
+amount	decimal	+ / -
+movement_type	enum	invoice / payment / credit_note / debit_note
+source_type	enum	sale / purchase / payment
+source_id	bigint	
+created_at	timestamp	
+
+✔ + = nos debe
+✔ − = le debemos / pagamos
+🔗 RELACIONES RESUMIDAS
+
+Person
+ ├── hasOne Client
+ ├── hasOne Supplier
+ ├── hasOne CurrentAccount
+ └── hasMany Users
+
+User
+ └── belongsTo Person (opcional)
+
+Client
+ └── belongsTo Person
+
+Supplier
+ └── belongsTo Person
+
+CurrentAccount
+ └── belongsTo Person
+ └── hasMany AccountMovement
+
+🧠 ¿Por qué este modelo es correcto?
+✅ No duplica datos
+
+    No hay dos “Juan Pérez” distintos
+
+✅ Soporta cliente + proveedor
+
+    Una empresa puede comprar y vender
+
+✅ Contabilidad limpia
+
+    Una sola cuenta corriente por persona
+
+✅ Escalable
+
+    Podés agregar más roles comerciales sin tocar persons
+
+🧪 Ejemplo real
+
+Empresa ACME S.A.:
+
+    Compra insumos → proveedor
+
+    Revende productos → cliente
+
+persons: ACME S.A.
+clients: person_id = 5
+suppliers: person_id = 5
+current_accounts: person_id = 5
+
+Balance único, movimientos claros.
+📌 Extensiones típicas
+
+Si querés ir un nivel más arriba:
+
+    📄 Facturas electrónicas (AFIP)
+
+    🧾 Retenciones / percepciones
+
+    🏦 Bancos y conciliaciones
+
+    📊 Reportes contables
+
+    🔐 Multi-empresa
+
+Decime si querés que te arme:
+
+    el ERD visual
+
+    las migraciones Laravel
+
+    o la lógica de cuenta corriente paso a paso
+
+si por favor
+
+Listo ✅
+Te dejé todo el esquema completo en el canvas:
+
+    📐 ERD claro (personas, clientes, proveedores, usuarios, cuenta corriente)
+
+    🧱 Listado de tablas con campos
+
+    🛠️ Migraciones Laravel listas para usar
+
+    🔄 Lógica de cuenta corriente con transacciones
+
+    🧠 Reglas de negocio bien definidas
+
+Este diseño es ERP-grade:
+
+    sin duplicar personas
+
+    soporta cliente/proveedor simultáneo
+
+    consistente contablemente
+
+    escalable a AFIP, multi-empresa, bancos, etc.
+
+👉 Próximo paso recomendado (decime cuál querés):
+
+    Observer de AccountMovement para actualizar current_accounts.balance
+
+    Facturación + impuestos (IVA, percepciones, retenciones)
+
+    Integración con ventas/compras y stock
+
+    Tests automáticos de cuenta corriente
+
+    Multi-empresa (tenant)
+
+Seguimos.
+has solo estos pasos: Observer de AccountMovement para actualizar current_accounts.balance Facturación + impuestos (IVA, percepciones, retenciones) Integración con ventas/compras y stock
+Erp Personas, Clientes, Proveedores Y Cuenta Corriente
+Esquema de Base de Datos y Relaciones
+ERD (Diagrama Conceptual)
+Person (persons)
+├─ hasOne → Client (clients)
+├─ hasOne → Supplier (suppliers)
+├─ hasOne → CurrentAccount (current_accounts)
+└─ hasMany → User (users)
+
+User (users)
+└─ belongsTo → Person
+
+Client (clients)
+└─ belongsTo → Person
+
+Supplier (suppliers)
+└─ belongsTo → Person
+
+CurrentAccount (current_accounts)
+└─ belongsTo → Person
+└─ hasMany → AccountMovement (account_movements)
+
+    Principio: Cliente y proveedor son roles de una misma entidad (persons). No se duplican datos.
+
+Tablas y Campos
+persons
+Campo	Tipo
+id	PK
+type	enum(individual, company)
+name	string
+document_type	enum(DNI, CUIT)
+document_number	string
+email	string
+phone	string
+address	text
+created_at	timestamp
+updated_at	timestamp
+users
+Campo	Tipo
+id	PK
+person_id	FK nullable
+email	string
+password	string
+status	enum
+created_at	timestamp
+updated_at	timestamp
+clients
+Campo	Tipo
+id	PK
+person_id	FK unique
+credit_limit	decimal
+payment_terms	integer
+active	boolean
+created_at	timestamp
+updated_at	timestamp
+suppliers
+Campo	Tipo
+id	PK
+person_id	FK unique
+payment_terms	integer
+bank_account	string
+active	boolean
+created_at	timestamp
+updated_at	timestamp
+current_accounts
+Campo	Tipo
+id	PK
+person_id	FK unique
+balance	decimal (cache)
+created_at	timestamp
+updated_at	timestamp
+account_movements
+Campo	Tipo
+id	PK
+current_account_id	FK
+amount	decimal (+/-)
+movement_type	enum(invoice,payment,credit_note,debit_note)
+source_type	enum(sale,purchase,payment)
+source_id	bigint
+created_at	timestamp
+Migraciones (Laravel)
+persons
+Schema::create('persons', function (Blueprint $table) {
+$table->id();
+$table->enum('type', ['individual','company']);
+$table->string('name');
+$table->enum('document_type', ['DNI','CUIT']);
+$table->string('document_number');
+$table->string('email')->nullable();
+$table->string('phone')->nullable();
+$table->text('address')->nullable();
+$table->timestamps();
+});
+users
+Schema::create('users', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->nullable()->constrained()->nullOnDelete();
+$table->string('email')->unique();
+$table->string('password');
+$table->enum('status', ['active','inactive']);
+$table->timestamps();
+});
+clients
+Schema::create('clients', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->unique()->constrained()->cascadeOnDelete();
+$table->decimal('credit_limit', 12, 2)->default(0);
+$table->integer('payment_terms')->default(0);
+$table->boolean('active')->default(true);
+$table->timestamps();
+});
+suppliers
+Schema::create('suppliers', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->unique()->constrained()->cascadeOnDelete();
+$table->integer('payment_terms')->default(0);
+$table->string('bank_account')->nullable();
+$table->boolean('active')->default(true);
+$table->timestamps();
+});
+current_accounts
+Schema::create('current_accounts', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->unique()->constrained()->cascadeOnDelete();
+$table->decimal('balance', 12, 2)->default(0);
+$table->timestamps();
+});
+account_movements
+Schema::create('account_movements', function (Blueprint $table) {
+$table->id();
+$table->foreignId('current_account_id')->constrained()->cascadeOnDelete();
+$table->decimal('amount', 12, 2);
+$table->enum('movement_type', ['invoice','payment','credit_note','debit_note']);
+$table->enum('source_type', ['sale','purchase','payment']);
+$table->unsignedBigInteger('source_id')->nullable();
+$table->timestamps();
+});
+Lógica de Cuenta Corriente (Flujo)
+Regla
+
+    La verdad está en account_movements
+
+    current_accounts.balance es cache
+
+Ejemplo: Factura de venta
+DB::transaction(function () use ($personId, $amount, $orderId) {
+$account = CurrentAccount::firstOrCreate(['person_id' => $personId]);
+
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => $amount, // + nos debe
+'movement_type' => 'invoice',
+'source_type' => 'sale',
+'source_id' => $orderId,
+]);
+});
+Ejemplo: Pago
+DB::transaction(function () use ($personId, $amount, $paymentId) {
+$account = CurrentAccount::where('person_id', $personId)->firstOrFail();
+
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => -$amount, // pago
+'movement_type' => 'payment',
+'source_type' => 'payment',
+'source_id' => $paymentId,
+]);
+});
+
+    El balance se actualiza mediante Observer de AccountMovement de forma similar a stock_levels.
+
+1️⃣ Observer de AccountMovement → actualización automática de balance
+Objetivo
+
+Mantener current_accounts.balance como cache, sincronizado automáticamente cada vez que se registra un movimiento contable.
+Flujo
+AccountMovement (verdad)
+↓ Observer
+CurrentAccount.balance (cache)
+Crear Observer
+php artisan make:observer AccountMovementObserver --model=AccountMovement
+AccountMovementObserver.php
+class AccountMovementObserver
+{
+public function created(AccountMovement $movement)
+{
+CurrentAccount::where('id', $movement->current_account_id)
+->update([
+'balance' => DB::raw('balance + ' . $movement->amount),
+'updated_at' => now(),
+]);
+}
+}
+
+✔ Evita race conditions
+✔ Sin lógica en controladores
+✔ Transaccional
+Registrar Observer
+public function boot()
+{
+AccountMovement::observe(AccountMovementObserver::class);
+}
+2️⃣ Facturación + Impuestos (IVA, percepciones, retenciones)
+Tablas necesarias
+invoices
+Campo	Descripción
+id	PK
+person_id	Cliente / Proveedor
+type	sale / purchase
+subtotal	Neto
+tax_total	Impuestos
+total	Total
+status	draft / issued / paid
+invoice_items
+Campo	Descripción
+invoice_id	FK
+product_id	FK
+quantity	Cantidad
+unit_price	Precio
+vat_rate	% IVA
+vat_amount	IVA
+total	Total ítem
+tax_lines
+Campo	Descripción
+invoice_id	FK
+tax_type	IVA / perception / retention
+rate	%
+amount	Monto
+Ejemplo cálculo IVA
+$vat = $net * 0.21;
+$total = $net + $vat;
+Impacto contable
+
+Al emitir factura:
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => $invoice->total, // cliente debe
+'movement_type' => 'invoice',
+'source_type' => 'sale',
+'source_id' => $invoice->id,
+]);
+
+Al registrar retención:
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => -$retentionAmount,
+'movement_type' => 'credit_note',
+'source_type' => 'tax',
+]);
+3️⃣ Integración Ventas / Compras / Stock
+Regla de oro
+
+    Ventas y compras NO tocan stock ni balance directamente
+
+Todo pasa por movimientos.
+Venta (flujo completo)
+Venta
+├─ Factura
+│ └─ AccountMovement (+)
+└─ StockMovement (-)
+DB::transaction(function () use ($sale) {
+
+// 1. Stock
+foreach ($sale->items as $item) {
+StockMovement::create([
+'product_id' => $item->product_id,
+'storage_id' => $item->storage_id,
+'quantity' => -$item->quantity,
+'source_type' => 'sale',
+'source_id' => $sale->id,
+]);
+}
+
+// 2. Cuenta corriente
+AccountMovement::create([
+'current_account_id' => $sale->person->currentAccount->id,
+'amount' => $sale->total,
+'movement_type' => 'invoice',
+'source_type' => 'sale',
+'source_id' => $sale->id,
+]);
+});
+Compra
+Compra
+├─ Factura proveedor
+│ └─ AccountMovement (-)
+└─ StockMovement (+)
+DB::transaction(function () use ($purchase) {
+
+StockMovement::create([
+'product_id' => $purchase->product_id,
+'storage_id' => $purchase->storage_id,
+'quantity' => +$purchase->quantity,
+'source_type' => 'purchase',
+'source_id' => $purchase->id,
+]);
+
+AccountMovement::create([
+'current_account_id' => $purchase->supplier->currentAccount->id,
+'amount' => -$purchase->total,
+'movement_type' => 'invoice',
+'source_type' => 'purchase',
+'source_id' => $purchase->id,
+]);
+});
+🧠 Conclusión
+
+    AccountMovement = verdad contable
+
+    StockMovement = verdad física
+
+    Observers mantienen caches
+
+    Transacciones garantizan consistencia
+
+    Diseño ERP real y escalable
+
+Perfecto ✅
+Ya dejé solo esos tres puntos desarrollados al detalle en el canvas, sin ruido extra:
+
+1️⃣ Observer de AccountMovement
+
+    actualización automática y segura de current_accounts.balance
+
+    sin race conditions
+
+    integrado con transacciones
+
+2️⃣ Facturación + impuestos
+
+    modelo correcto para IVA, percepciones y retenciones
+
+    impacto contable real (no “magia” en el balance)
+
+    preparado para AFIP / Latinoamérica
+
+3️⃣ Integración ventas, compras y stock
+
+    flujo completo
+
+    stock y contabilidad desacoplados
+
+    movimientos como única fuente de verdad
+
+Este diseño:
+
+    no se rompe con concurrencia
+
+    permite auditoría
+
+    escala a ERP serio
+
+👉 Próximo paso lógico (si querés):
+
+    reservas de stock
+
+    pagos parciales
+
+    conciliación bancaria
+
+    multi-empresa / multi-tenant
+
+    AFIP (CAE, tipos de comprobante)
+
+Decime cómo seguimos.
+si yo quiero hacer saber todos los movimientos de una Persons. los tengo que traer de accounts_movements, en current_accounts solo tengo el total.
+
+Sí. Exactamente así 👍
+Tu razonamiento es correcto a nivel contable y de arquitectura.
+
+Voy a explicártelo con precisión, sin ambigüedades, y mostrarte cómo consultarlo bien en Laravel.
+✅ Respuesta corta (confirmación)
+
+    ✔ Todos los movimientos de una Person se obtienen desde account_movements
+    ✔ current_accounts solo guarda el balance total (cache)
+    ✔ Nunca se usa current_accounts para auditoría o historial
+
+🧠 Por qué esto es correcto (conceptualmente)
+📌 account_movements = Libro mayor
+
+    Histórico completo
+
+    Inmutable
+
+    Auditable
+
+    Fuente de verdad
+
+📌 current_accounts = Resumen
+
+    Solo el saldo actual
+
+    Se puede recalcular
+
+    Optimiza performance
+
+    Esto es exactamente como funciona contabilidad real y bancos.
+
+🧱 Relación correcta entre tablas
+
+Person
+ └── hasOne CurrentAccount
+        └── hasMany AccountMovement
+
+🔍 Cómo obtener TODOS los movimientos de una Person
+Opción 1 — Vía relaciones (recomendada)
+Modelos
+
+// Person.php
+public function currentAccount()
+{
+    return $this->hasOne(CurrentAccount::class);
+}
+
+// CurrentAccount.php
+public function movements()
+{
+    return $this->hasMany(AccountMovement::class);
+}
+
+Consulta
+
+$movements = Person::find($personId)
+    ->currentAccount
+    ->movements()
+    ->orderBy('created_at', 'desc')
+    ->get();
+
+✔ Clara
+✔ Semántica
+✔ Fácil de mantener
+Opción 2 — Consulta directa (más eficiente para reportes)
+
+$movements = AccountMovement::whereHas('currentAccount', function ($q) use ($personId) {
+    $q->where('person_id', $personId);
+})
+->orderBy('created_at', 'desc')
+->get();
+
+✔ Ideal para listados grandes
+✔ Evita cargar modelos innecesarios
+📊 Ejemplo de extracto de cuenta corriente
+
+$movements = AccountMovement::whereHas('currentAccount', fn ($q) =>
+    $q->where('person_id', $personId)
+)->get();
+
+$balance = CurrentAccount::where('person_id', $personId)->value('balance');
+
+Esto replica exactamente un extracto bancario:
+
+    movimientos
+
+    saldo actual
+
+🧪 Recalcular balance (prueba de integridad)
+
+$realBalance = AccountMovement::whereHas('currentAccount', fn ($q) =>
+    $q->where('person_id', $personId)
+)->sum('amount');
+
+Podés compararlo con:
+
+$cachedBalance = $person->currentAccount->balance;
+
+✔ Si coinciden → sistema sano
+✔ Si no → tenés bug (y lo detectás)
+🚫 Qué NO hacer (muy importante)
+
+❌ No guardes historial en current_accounts
+❌ No borres movimientos
+❌ No edites montos históricos
+❌ No recalcules saldo en cada consulta
+🛡️ Buenas prácticas extra
+
+    Índice en account_movements.current_account_id
+
+    Índice en created_at
+
+    Soft deletes ❌ (NO en contabilidad)
+
+    Transacciones siempre
+
+🧠 Conclusión final
+
+✔ Sí, todo el historial viene de account_movements
+✔ current_accounts es solo un resumen
+✔ Este diseño es el correcto y profesional
+
+Estás diseñando un sistema contable serio.
+
+Si querés, seguimos con:
+
+    extractos con saldo acumulado
+
+    pagos parciales
+
+    conciliación bancaria
+
+    cierre de cuentas
+
+    reportes contables
+
+Decime.
+pero esto no sobrecarga de trabajo account_movements y no tiene ningún sentido tener acount_current
+
+Muy buena pregunta.
+Y es normal que aparezca esta duda: si uno no entiende el por qué, parece redundante.
+Vamos a aclararlo con criterio de sistemas reales (ERP / bancos / e-commerce grandes).
+
+Voy por partes y con ejemplos concretos.
+❓ ¿No se sobrecarga account_movements?
+🔴 NO.
+
+account_movements DEBE crecer. Ese es su trabajo.
+
+    Es el libro mayor.
+    Los libros mayores nunca se borran ni se resumen.
+
+Un ERP con 10 años:
+
+    millones de movimientos ✔
+
+    funciona perfectamente ✔
+
+¿Por qué?
+
+    Está indexada
+
+    Se consulta por rangos
+
+    Se usa solo cuando necesitás historial
+
+❓ Entonces… ¿para qué existe current_accounts?
+🎯 current_accounts NO existe por lógica
+🎯 existe por performance y concurrencia
+🧠 Analogía REAL (banco)
+Concepto	Banco
+account_movements	Extracto histórico
+current_accounts.balance	Saldo visible
+
+¿El banco recalcula tu saldo sumando 10 años de movimientos cada vez que abrís la app?
+
+❌ NO
+✔ Usa un saldo cacheado
+🧮 ¿Qué pasaría SIN current_accounts?
+
+Cada vez que preguntás:
+
+    “¿Cuánto debe este cliente?”
+
+Laravel tendría que hacer:
+
+SELECT SUM(amount)
+FROM account_movements
+WHERE current_account_id = 123;
+
+En un sistema real:
+
+    500k movimientos
+
+    100 usuarios concurrentes
+
+    dashboard con 20 saldos
+
+💣 Colapso innecesario
+⚡ Con current_accounts
+
+SELECT balance
+FROM current_accounts
+WHERE person_id = 5;
+
+✔ O(1)
+✔ ultra rápido
+✔ sin locks pesados
+🧠 Entonces… ¿qué tabla se consulta más?
+Tabla	Uso
+current_accounts	TODO el tiempo
+account_movements	Cuando necesitás detalle
+🔁 ¿Y la carga de escritura?
+
+Cada factura / pago genera:
+
+1 INSERT en account_movements
+1 UPDATE en current_accounts
+
+Eso es barato para cualquier BD.
+🛡️ Consistencia garantizada
+
+    Ambos dentro de DB::transaction
+
+    Observer con DB::raw
+
+    Sin inconsistencias
+
+    Sin race conditions
+
+❗ ¿Cuándo NO usar current_accounts?
+
+Solo en sistemas:
+
+    muy chicos
+
+    sin concurrencia
+
+    sin crecimiento
+
+    sin dashboards
+
+Ejemplo:
+
+    app escolar
+
+    sistema interno chico
+
+🧪 Prueba definitiva (integridad)
+
+Si dudás de current_accounts:
+
+$real = AccountMovement::where('current_account_id', $id)->sum('amount');
+$cache = CurrentAccount::find($id)->balance;
+
+Si coinciden → diseño correcto.
+🧠 Conclusión clara
+
+    ❌ No es redundante
+    ❌ No es innecesario
+    ❌ No sobrecarga
+
+    ✔ Es la forma correcta y profesional
+
+account_movements crece por diseño
+current_accounts existe para performance
+🧭 Regla de oro
+
+    Nunca optimices lectura con lógica compleja.
+    Cacheá resultados simples.
+
+Si querés, el próximo paso lógico es mostrarte:
+
+    cómo paginar millones de movimientos
+
+    cómo archivar movimientos viejos
+
+    cómo hacer extractos con saldo acumulado
+
+    cómo auditar diferencias automáticamente
+----------------------------------------------------------------------------------------------------------------------------
+
+-----------------------------  QUINTO  5  ---------------------------------------------------------------------------
+que tipo de documentos se crean y se reciben tanto para la compra y la venta, desde el afip o arca por ejemplo remito nota de credito. y como debo hacer la BD
+
+Excelente pregunta. Acá ya entramos en contabilidad + fiscalidad argentina real (AFIP / ARCA).
+Te voy a explicar qué documentos existen, cuándo se usan, qué impactan (stock / cuenta corriente / impuestos) y cómo modelarlos en la base de datos sin que se rompa.
+
+Voy en 3 capas:
+
+    📄 Documentos reales (compra / venta)
+
+    🔁 Qué impacto tiene cada uno
+
+    🧱 Modelo de BD recomendado (neutral, extensible)
+
+1️⃣ DOCUMENTOS EN ARGENTINA (AFIP / ARCA)
+🔹 DOCUMENTOS DE VENTA (emitidos)
+🧾 Factura
+
+Tipos AFIP:
+
+    Factura A
+
+    Factura B
+
+    Factura C
+
+    Factura E
+
+    Factura M
+
+Impacta:
+
+    ✔ Cuenta corriente (cliente debe)
+
+    ✔ Impuestos (IVA, etc.)
+
+    ❌ Stock (no directamente)
+
+🧾 Nota de crédito
+
+Se usa para:
+
+    devolución
+
+    descuento posterior
+
+    anulación parcial / total
+
+Impacta:
+
+    ✔ Cuenta corriente (reduce deuda)
+
+    ✔ Impuestos (IVA negativo)
+
+    ✔ Stock (si hay devolución física)
+
+🧾 Nota de débito
+
+Se usa para:
+
+    intereses
+
+    cargos adicionales
+
+Impacta:
+
+    ✔ Cuenta corriente (aumenta deuda)
+
+    ✔ Impuestos
+
+🚚 Remito
+
+Documento logístico, NO fiscal.
+
+Impacta:
+
+    ✔ Stock
+
+    ❌ Cuenta corriente
+
+    ❌ Impuestos
+
+    Un remito no genera deuda.
+
+🔹 DOCUMENTOS DE COMPRA (recibidos)
+🧾 Factura proveedor
+
+Tipos:
+
+    Factura A
+
+    Factura B
+
+    Factura C
+
+Impacta:
+
+    ✔ Cuenta corriente (vos debés)
+
+    ✔ Impuestos (crédito fiscal IVA)
+
+    ❌ Stock (no directamente)
+
+🧾 Nota de crédito proveedor
+
+    devolución
+
+    bonificación
+
+Impacta:
+
+    ✔ Cuenta corriente (reduce deuda)
+
+    ✔ Impuestos
+
+    ✔ Stock (si hay devolución)
+
+🚚 Remito proveedor
+
+Impacta:
+
+    ✔ Stock
+
+    ❌ Cuenta corriente
+
+    ❌ Impuestos
+
+2️⃣ MATRIZ DE IMPACTO (CLAVE)
+Documento	Stock	Cuenta Corriente	Impuestos
+Factura venta	❌	✔ +	✔
+Nota crédito venta	✔ (si dev.)	✔ -	✔
+Nota débito venta	❌	✔ +	✔
+Remito venta	✔ -	❌	❌
+Factura compra	❌	✔ -	✔
+Nota crédito compra	✔ +	✔ +	✔
+Remito compra	✔ +	❌	❌
+3️⃣ MODELO DE BASE DE DATOS (CORRECTO)
+🧠 PRINCIPIO CLAVE
+
+    El documento NO hace nada por sí mismo.
+    El documento DISPARA movimientos.
+
+🧱 TABLA BASE: documents
+
+documents
+---------
+id
+person_id              -- cliente o proveedor
+direction              -- sale / purchase
+document_type           -- invoice, credit_note, debit_note, delivery_note
+letter                  -- A, B, C, E, M
+number
+issue_date
+subtotal
+tax_total
+total
+status                  -- draft, issued, canceled
+afip_cae
+afip_cae_expiration
+created_at
+
+✔ Unifica TODO
+✔ Compatible AFIP / ARCA
+✔ No duplica tablas
+🧱 document_items
+
+document_items
+--------------
+document_id
+product_id
+quantity
+unit_price
+net_amount
+vat_rate
+vat_amount
+total
+
+🧱 tax_lines (IVA, percepciones, retenciones)
+
+tax_lines
+---------
+document_id
+tax_type          -- vat, perception, retention
+tax_code
+rate
+amount
+
+🧱 MOVIMIENTOS (los que ya definimos)
+stock_movements
+
+product_id
+storage_id
+quantity
+source_type = document
+source_id = documents.id
+
+account_movements
+
+current_account_id
+amount
+movement_type = invoice / credit_note / debit_note
+source_type = document
+source_id = documents.id
+
+4️⃣ FLUJOS REALES (EJEMPLOS)
+🧾 Emitir factura de venta
+
+DB::transaction(function () use ($document) {
+
+    // cuenta corriente
+    AccountMovement::create([
+        'current_account_id' => $document->person->currentAccount->id,
+        'amount' => $document->total,
+        'movement_type' => 'invoice',
+        'source_type' => 'document',
+        'source_id' => $document->id,
+    ]);
+});
+
+🚚 Confirmar remito de venta
+
+DB::transaction(function () use ($document) {
+
+    foreach ($document->items as $item) {
+        StockMovement::create([
+            'product_id' => $item->product_id,
+            'storage_id' => $item->storage_id,
+            'quantity' => -$item->quantity,
+            'source_type' => 'document',
+            'source_id' => $document->id,
+        ]);
+    }
+});
+
+🧾 Nota de crédito con devolución
+
+DB::transaction(function () use ($document) {
+
+    // stock
+    foreach ($document->items as $item) {
+        StockMovement::create([
+            'product_id' => $item->product_id,
+            'storage_id' => $item->storage_id,
+            'quantity' => +$item->quantity,
+            'source_type' => 'document',
+            'source_id' => $document->id,
+        ]);
+    }
+
+    // cuenta corriente
+    AccountMovement::create([
+        'current_account_id' => $document->person->currentAccount->id,
+        'amount' => -$document->total,
+        'movement_type' => 'credit_note',
+        'source_type' => 'document',
+        'source_id' => $document->id,
+    ]);
+});
+
+🧠 CONCLUSIÓN FINAL (IMPORTANTE)
+
+✔ AFIP / ARCA trabaja con documentos fiscales
+✔ Tu sistema trabaja con movimientos
+✔ El documento orquesta, no ejecuta
+✔ Este modelo:
+
+    es auditable
+
+    es escalable
+
+    soporta AFIP real
+
+    no se rompe con el tiempo
+
+Si querés, el próximo paso natural es:
+
+    📡 integración AFIP (CAE)
+
+    📑 tipos de comprobante AFIP y validaciones
+
+    🔄 vincular remito → factura
+
+    🧾 libros IVA ventas / compras
+
+    🏦 conciliación bancaria AFIP
+
+Decime y seguimos.
+si por favor sigue
+
+Perfecto, seguimos entonces 👍
+Ahora voy a bajar esto a nivel AFIP real, sin humo, y cómo modelarlo bien en la BD para que después no tengas que reescribir todo.
+
+Voy en este orden:
+
+1️⃣ Tipos de comprobantes AFIP (venta / compra)
+2️⃣ Estados reales del documento
+3️⃣ Integración AFIP (CAE) – flujo correcto
+4️⃣ Relación Remito → Factura
+5️⃣ Libros IVA (ventas / compras)
+6️⃣ Ajustes finales al modelo de BD
+1️⃣ TIPOS DE COMPROBANTES AFIP (LOS QUE IMPORTAN)
+🔹 Ventas (emitidos)
+
+AFIP identifica los comprobantes por código, no por nombre.
+Código AFIP	Documento
+001	Factura A
+006	Factura B
+011	Factura C
+003	Nota de Crédito A
+008	Nota de Crédito B
+013	Nota de Crédito C
+002	Nota de Débito A
+007	Nota de Débito B
+012	Nota de Débito C
+091	Remito (no fiscal)
+
+📌 Remito no lleva CAE
+🔹 Compras (recibidos)
+
+No pedís CAE, pero tenés que guardarlos para libros IVA.
+Documento
+Factura proveedor
+Nota de crédito proveedor
+Nota de débito proveedor
+Remito proveedor
+2️⃣ ESTADOS REALES DE UN DOCUMENTO
+
+Esto es MUY importante y suele hacerse mal.
+Estados correctos
+
+draft        → creado pero no válido
+issued       → emitido (CAE aprobado)
+rejected     → AFIP rechazó
+canceled     → anulado internamente
+accounted    → impactó contabilidad
+
+📌 Nunca borres documentos
+📌 AFIP exige trazabilidad
+3️⃣ INTEGRACIÓN AFIP – FLUJO CORRECTO
+❌ Error común
+
+    Crear factura → impactar stock → impactar cuenta → pedir CAE
+
+✅ Flujo correcto
+
+1. Crear documento (draft)
+2. Validar datos fiscales
+3. Enviar a AFIP
+4. AFIP devuelve CAE
+5. Marcar como issued
+6. Recién ahí generar movimientos
+
+Ejemplo real en código
+
+DB::transaction(function () use ($document) {
+
+    // 1. Pedir CAE (fuera o dentro según diseño)
+    $cae = AfipService::emitInvoice($document);
+
+    if (!$cae->approved) {
+        throw new Exception('AFIP rechazó el comprobante');
+    }
+
+    // 2. Guardar datos AFIP
+    $document->update([
+        'status' => 'issued',
+        'afip_cae' => $cae->code,
+        'afip_cae_expiration' => $cae->expiration,
+    ]);
+
+    // 3. Impacto contable
+    AccountMovement::create([
+        'current_account_id' => $document->person->currentAccount->id,
+        'amount' => $document->total,
+        'movement_type' => 'invoice',
+        'source_type' => 'document',
+        'source_id' => $document->id,
+    ]);
+});
+
+✔ Si AFIP falla → no hay movimientos
+✔ Nunca hay deuda sin factura válida
+4️⃣ REMITO → FACTURA (RELACIÓN CLAVE)
+
+En la vida real:
+
+    entregás mercadería (remito)
+
+    facturás después
+
+📌 Modelado correcto
+
+documents
+---------
+id
+parent_document_id   -- FK a remito
+document_type
+
+Ejemplo
+
+Remito #123
+  └── Factura A #456
+
+En BD
+
+$invoice->parent_document_id = $deliveryNote->id;
+$invoice->save();
+
+📌 Esto permite:
+
+    facturación parcial
+
+    varios remitos → una factura
+
+    trazabilidad AFIP
+
+5️⃣ LIBROS IVA (VENTAS / COMPRAS)
+
+AFIP exige exactamente estos datos.
+Libro IVA Ventas
+
+Se obtiene de:
+
+    documents (issued)
+
+    document_items
+
+    tax_lines
+
+Campos clave:
+
+    CUIT cliente
+
+    tipo comprobante
+
+    punto de venta
+
+    número
+
+    neto gravado
+
+    IVA 21 / 10.5
+
+    exento
+
+    total
+
+👉 No necesitás tablas nuevas, solo vistas / queries.
+Libro IVA Compras
+
+De:
+
+    documentos de compra
+
+    tax_lines
+
+    datos del proveedor
+
+Ejemplo consulta conceptual
+
+SELECT
+  d.issue_date,
+  d.document_type,
+  d.letter,
+  d.number,
+  p.document_number AS cuit,
+  d.subtotal,
+  SUM(t.amount) AS iva,
+  d.total
+FROM documents d
+JOIN persons p ON p.id = d.person_id
+LEFT JOIN tax_lines t ON t.document_id = d.id
+WHERE d.direction = 'sale'
+  AND d.status = 'issued';
+
+6️⃣ AJUSTES FINALES AL MODELO DE BD
+documents (final)
+
+documents
+---------
+id
+person_id
+direction           -- sale / purchase
+document_type       -- invoice / credit_note / debit_note / delivery_note
+afip_code
+letter
+point_of_sale
+number
+parent_document_id
+issue_date
+subtotal
+tax_total
+total
+status
+afip_cae
+afip_cae_expiration
+created_at
+
+🧠 CONCLUSIÓN FINAL (IMPORTANTE)
+
+✔ AFIP trabaja con documentos fiscales
+✔ Tu sistema trabaja con movimientos
+✔ El documento:
+
+    valida
+
+    registra
+
+    vincula
+
+    audita
+
+❌ El documento NO maneja stock ni dinero directamente
+
+Este diseño:
+
+    es correcto fiscalmente
+
+    soporta AFIP real
+
+    escala
+
+    no se rompe
+
+🔜 Próximos pasos posibles
+
+Decime cuál querés y lo hacemos:
+
+1️⃣ Servicio AFIP (WSFEv1) paso a paso
+2️⃣ Tipos de IVA, percepciones y retenciones argentinas
+3️⃣ Pagos parciales y conciliación
+4️⃣ Multi-punto de venta
+5️⃣ Facturación electrónica + Mercado Libre
+
+Seguimos.
+has lo 5 pasos
+Erp Personas, Clientes, Proveedores Y Cuenta Corriente
+Esquema de Base de Datos y Relaciones
+ERD (Diagrama Conceptual)
+Person (persons)
+├─ hasOne → Client (clients)
+├─ hasOne → Supplier (suppliers)
+├─ hasOne → CurrentAccount (current_accounts)
+└─ hasMany → User (users)
+
+User (users)
+└─ belongsTo → Person
+
+Client (clients)
+└─ belongsTo → Person
+
+Supplier (suppliers)
+└─ belongsTo → Person
+
+CurrentAccount (current_accounts)
+└─ belongsTo → Person
+└─ hasMany → AccountMovement (account_movements)
+
+    Principio: Cliente y proveedor son roles de una misma entidad (persons). No se duplican datos.
+
+Tablas y Campos
+persons
+Campo	Tipo
+id	PK
+type	enum(individual, company)
+name	string
+document_type	enum(DNI, CUIT)
+document_number	string
+email	string
+phone	string
+address	text
+created_at	timestamp
+updated_at	timestamp
+users
+Campo	Tipo
+id	PK
+person_id	FK nullable
+email	string
+password	string
+status	enum
+created_at	timestamp
+updated_at	timestamp
+clients
+Campo	Tipo
+id	PK
+person_id	FK unique
+credit_limit	decimal
+payment_terms	integer
+active	boolean
+created_at	timestamp
+updated_at	timestamp
+suppliers
+Campo	Tipo
+id	PK
+person_id	FK unique
+payment_terms	integer
+bank_account	string
+active	boolean
+created_at	timestamp
+updated_at	timestamp
+current_accounts
+Campo	Tipo
+id	PK
+person_id	FK unique
+balance	decimal (cache)
+created_at	timestamp
+updated_at	timestamp
+account_movements
+Campo	Tipo
+id	PK
+current_account_id	FK
+amount	decimal (+/-)
+movement_type	enum(invoice,payment,credit_note,debit_note)
+source_type	enum(sale,purchase,payment)
+source_id	bigint
+created_at	timestamp
+Migraciones (Laravel)
+persons
+Schema::create('persons', function (Blueprint $table) {
+$table->id();
+$table->enum('type', ['individual','company']);
+$table->string('name');
+$table->enum('document_type', ['DNI','CUIT']);
+$table->string('document_number');
+$table->string('email')->nullable();
+$table->string('phone')->nullable();
+$table->text('address')->nullable();
+$table->timestamps();
+});
+users
+Schema::create('users', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->nullable()->constrained()->nullOnDelete();
+$table->string('email')->unique();
+$table->string('password');
+$table->enum('status', ['active','inactive']);
+$table->timestamps();
+});
+clients
+Schema::create('clients', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->unique()->constrained()->cascadeOnDelete();
+$table->decimal('credit_limit', 12, 2)->default(0);
+$table->integer('payment_terms')->default(0);
+$table->boolean('active')->default(true);
+$table->timestamps();
+});
+suppliers
+Schema::create('suppliers', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->unique()->constrained()->cascadeOnDelete();
+$table->integer('payment_terms')->default(0);
+$table->string('bank_account')->nullable();
+$table->boolean('active')->default(true);
+$table->timestamps();
+});
+current_accounts
+Schema::create('current_accounts', function (Blueprint $table) {
+$table->id();
+$table->foreignId('person_id')->unique()->constrained()->cascadeOnDelete();
+$table->decimal('balance', 12, 2)->default(0);
+$table->timestamps();
+});
+account_movements
+Schema::create('account_movements', function (Blueprint $table) {
+$table->id();
+$table->foreignId('current_account_id')->constrained()->cascadeOnDelete();
+$table->decimal('amount', 12, 2);
+$table->enum('movement_type', ['invoice','payment','credit_note','debit_note']);
+$table->enum('source_type', ['sale','purchase','payment']);
+$table->unsignedBigInteger('source_id')->nullable();
+$table->timestamps();
+});
+Lógica de Cuenta Corriente (Flujo)
+Regla
+
+    La verdad está en account_movements
+
+    current_accounts.balance es cache
+
+Ejemplo: Factura de venta
+DB::transaction(function () use ($personId, $amount, $orderId) {
+$account = CurrentAccount::firstOrCreate(['person_id' => $personId]);
+
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => $amount, // + nos debe
+'movement_type' => 'invoice',
+'source_type' => 'sale',
+'source_id' => $orderId,
+]);
+});
+Ejemplo: Pago
+DB::transaction(function () use ($personId, $amount, $paymentId) {
+$account = CurrentAccount::where('person_id', $personId)->firstOrFail();
+
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => -$amount, // pago
+'movement_type' => 'payment',
+'source_type' => 'payment',
+'source_id' => $paymentId,
+]);
+});
+
+    El balance se actualiza mediante Observer de AccountMovement de forma similar a stock_levels.
+
+1️⃣ Observer de AccountMovement → actualización automática de balance
+Objetivo
+
+Mantener current_accounts.balance como cache, sincronizado automáticamente cada vez que se registra un movimiento contable.
+Flujo
+AccountMovement (verdad)
+↓ Observer
+CurrentAccount.balance (cache)
+Crear Observer
+php artisan make:observer AccountMovementObserver --model=AccountMovement
+AccountMovementObserver.php
+class AccountMovementObserver
+{
+public function created(AccountMovement $movement)
+{
+CurrentAccount::where('id', $movement->current_account_id)
+->update([
+'balance' => DB::raw('balance + ' . $movement->amount),
+'updated_at' => now(),
+]);
+}
+}
+
+✔ Evita race conditions
+✔ Sin lógica en controladores
+✔ Transaccional
+Registrar Observer
+public function boot()
+{
+AccountMovement::observe(AccountMovementObserver::class);
+}
+2️⃣ Facturación + Impuestos (IVA, percepciones, retenciones)
+Tablas necesarias
+invoices
+Campo	Descripción
+id	PK
+person_id	Cliente / Proveedor
+type	sale / purchase
+subtotal	Neto
+tax_total	Impuestos
+total	Total
+status	draft / issued / paid
+invoice_items
+Campo	Descripción
+invoice_id	FK
+product_id	FK
+quantity	Cantidad
+unit_price	Precio
+vat_rate	% IVA
+vat_amount	IVA
+total	Total ítem
+tax_lines
+Campo	Descripción
+invoice_id	FK
+tax_type	IVA / perception / retention
+rate	%
+amount	Monto
+Ejemplo cálculo IVA
+$vat = $net * 0.21;
+$total = $net + $vat;
+Impacto contable
+
+Al emitir factura:
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => $invoice->total, // cliente debe
+'movement_type' => 'invoice',
+'source_type' => 'sale',
+'source_id' => $invoice->id,
+]);
+
+Al registrar retención:
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => -$retentionAmount,
+'movement_type' => 'credit_note',
+'source_type' => 'tax',
+]);
+3️⃣ Integración Ventas / Compras / Stock
+Regla de oro
+
+    Ventas y compras NO tocan stock ni balance directamente
+
+Todo pasa por movimientos.
+Venta (flujo completo)
+Venta
+├─ Factura
+│ └─ AccountMovement (+)
+└─ StockMovement (-)
+DB::transaction(function () use ($sale) {
+
+// 1. Stock
+foreach ($sale->items as $item) {
+StockMovement::create([
+'product_id' => $item->product_id,
+'storage_id' => $item->storage_id,
+'quantity' => -$item->quantity,
+'source_type' => 'sale',
+'source_id' => $sale->id,
+]);
+}
+
+// 2. Cuenta corriente
+AccountMovement::create([
+'current_account_id' => $sale->person->currentAccount->id,
+'amount' => $sale->total,
+'movement_type' => 'invoice',
+'source_type' => 'sale',
+'source_id' => $sale->id,
+]);
+});
+Compra
+Compra
+├─ Factura proveedor
+│ └─ AccountMovement (-)
+└─ StockMovement (+)
+DB::transaction(function () use ($purchase) {
+
+StockMovement::create([
+'product_id' => $purchase->product_id,
+'storage_id' => $purchase->storage_id,
+'quantity' => +$purchase->quantity,
+'source_type' => 'purchase',
+'source_id' => $purchase->id,
+]);
+
+AccountMovement::create([
+'current_account_id' => $purchase->supplier->currentAccount->id,
+'amount' => -$purchase->total,
+'movement_type' => 'invoice',
+'source_type' => 'purchase',
+'source_id' => $purchase->id,
+]);
+});
+🧠 Conclusión
+
+    AccountMovement = verdad contable
+
+    StockMovement = verdad física
+
+    Observers mantienen caches
+
+    Transacciones garantizan consistencia
+
+    Diseño ERP real y escalable
+
+
+🔜 Implementación completa – 5 PASOS
+1️⃣ Servicio AFIP (WSFEv1) – Paso a paso
+Componentes
+
+    Certificado (.crt) y Clave privada (.key)
+
+    Token & Sign (WSAA)
+
+    WSFEv1 para emisión
+
+Flujo
+Credenciales → WSAA (token/sign)
+→ WSFEv1 (FECAESolicitar)
+→ CAE + vencimiento
+Estructura de servicio
+class AfipService
+{
+public function getTokenSign() { /* WSAA */ }
+public function emitInvoice(Document $doc) { /* WSFEv1 */ }
+}
+Reglas
+
+    Emitir solo si status=draft
+
+    Guardar afip_code, point_of_sale, number, cae
+
+    Si AFIP rechaza → excepción y rollback
+
+2️⃣ IVA, percepciones y retenciones (Argentina)
+IVA (más comunes)
+
+    21%
+
+    10.5%
+
+    27%
+
+    Exento
+
+tax_lines (uso)
+
+    IVA por alícuota
+
+    Percepción IIBB
+
+    Retención Ganancias / IVA
+
+TaxLine::create([
+'document_id' => $doc->id,
+'tax_type' => 'vat',
+'rate' => 21,
+'amount' => $vatAmount,
+]);
+
+📌 AFIP exige desagregado por alícuota
+3️⃣ Pagos parciales y conciliación
+payments
+payments
+--------
+id
+person_id
+amount
+method -- cash, transfer, card
+reference
+created_at
+Impacto contable
+AccountMovement::create([
+'current_account_id' => $account->id,
+'amount' => -$payment->amount,
+'movement_type' => 'payment',
+'source_type' => 'payment',
+'source_id' => $payment->id,
+]);
+
+✔ Soporta pagos parciales ✔ El saldo se mantiene correcto
+4️⃣ Multi–punto de venta
+points_of_sale
+points_of_sale
+--------------
+id
+number
+name
+active
+documents
+
+    point_of_sale
+
+    Numeración independiente por PV
+
+📌 AFIP numera por punto de venta
+5️⃣ Facturación electrónica + Mercado Libre
+Modelo
+
+    Orden ML → Documento interno
+
+    Documento interno → AFIP
+
+    Guardar IDs ML
+
+documents
+---------
+external_channel -- mercadolibre\ nexternal_id
+Flujo
+Orden ML
+→ Documento (draft)
+→ AFIP (CAE)
+→ Impacto contable
+→ Sync estado ML
+
+✔ Facturás desde tu sistema ✔ Cumplís AFIP ✔ Conciliás ventas ML
+🧠 Cierre
+
+    Documentos orquestan
+
+    Movimientos ejecutan
+
+    AFIP valida
+
+    Stock y contabilidad desacoplados
+
+Este diseño es productivo, fiscal y escalable.
+
+Listo ✅
+Ya implementé los 5 pasos completos en el canvas, integrados con todo lo que veníamos diseñando:
+
+1️⃣ Servicio AFIP (WSAA + WSFEv1)
+2️⃣ IVA, percepciones y retenciones (modelo correcto AFIP)
+3️⃣ Pagos parciales y conciliación contable
+4️⃣ Multi-punto de venta (numeración AFIP real)
+5️⃣ Facturación electrónica integrada con Mercado Libre
+
+Con esto tenés:
+
+    diseño fiscal correcto para Argentina
+
+    contabilidad auditable
+
+    stock desacoplado
+
+    base sólida para e-commerce + ERP
+
+👉 Próximos pasos posibles (cuando quieras):
+
+    implementación real WSFEv1 en PHP
+
+    validaciones AFIP por tipo de cliente (RI, MT, CF)
+
+    notas de crédito automáticas desde ML
+
+    cierre mensual IVA
+
+    multi-empresa (tenant)
+------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

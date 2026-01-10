@@ -1,0 +1,17 @@
+# Environment files with secrets
+.env
+.env.db
+
+# Docker volumes data
+db_data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

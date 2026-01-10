@@ -1,0 +1,75 @@
+
+  deploy:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: mbstring, intl, gd, pdo_mysql
+          coverage: none
+      - name: Composer install (production)
+        run: |
+          composer install --no-dev --optimize-autoloader
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+      # -----------------------------
+      # 4 - Crear artefacto comprimido
+      # -----------------------------
+      - name: Create deployment package
+        run: |
+          mkdir release
+          rsync -av --exclude=".git" --exclude="node_modules" ./ ./release/
+          tar -czf release.tar.gz -C release .
+      # -----------------------------
+      # 5 - Subir artefacto al servidor
+      # -----------------------------
+      - name: Upload package via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "release.tar.gz"
+          target: "/var/www/${{ secrets.APP_NAME }}/deployments"
+      # -----------------------------
+      # 6 - Desplegar en servidor vía SSH
+      # -----------------------------
+      - name: Deploy on server via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            APP_DIR="/var/www/${{ secrets.APP_NAME }}"
+            RELEASES="$APP_DIR/releases"
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            NEW_RELEASE="$RELEASES/$TIMESTAMP"
+            mkdir -p "$NEW_RELEASE"
+            # mover artefacto
+            mv "$APP_DIR/deployments/release.tar.gz" "$NEW_RELEASE/"
+            cd "$NEW_RELEASE"
+            tar -xzf release.tar.gz
+            rm release.tar.gz
+            # vincular .env compartido
+            ln -s $APP_DIR/shared/.env .env
+            # limpiezas Laravel
+            php artisan config:cache
+            php artisan route:cache
+            # correr migraciones
+            php artisan migrate --force
+            # actualizar symlink para cero downtime
+            ln -sfn "$NEW_RELEASE" "$APP_DIR/current"
+            echo "Deploy finalizado correctamente"
