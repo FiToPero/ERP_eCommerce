@@ -1,0 +1,292 @@
+Perfecto. A continuación te dejo una visión integral y ordenada de la estructura de Base de Datos para un ERP de E-commerce, pensada para Argentina, compatible con AFIP/ARCA, múltiples pasarelas de pago, marketplaces, stock, cuentas corrientes y envíos.
+
+👉 No es código SQL, sino modelo lógico relacional, con explicación de qué hace cada tabla y por qué existe, y cómo se relacionan.
+1️⃣ Seguridad y Usuarios
+users
+
+Entidad central del sistema
+campo	descripción
+id	
+name	
+email	
+password	
+status	
+created_at	
+
+📌 Por qué
+Un único modelo User para clientes, proveedores, admins y operadores.
+profiles
+
+Datos extendidos del usuario
+campo
+id
+user_id (FK)
+tipo_persona (fisica/juridica)
+razon_social
+cuit
+dni
+telefono
+direccion
+provincia
+pais
+
+📌 Por qué
+Separar identidad fiscal/comercial del login.
+roles
+campo
+id
+name
+description
+role_user
+campo
+user_id
+role_id
+
+📌 Por qué
+Control de permisos (RBAC).
+2️⃣ Productos y Canales de Venta
+products
+campo
+id
+sku
+nombre
+descripcion
+precio
+costo
+activo
+categoria_id
+
+📌 Por qué
+Producto base, independiente del canal.
+product_channels
+
+(Google, Meta, MercadoLibre, Web)
+campo
+id
+product_id
+canal (google/meta/ml/web)
+external_id
+precio
+estado
+
+📌 Por qué
+Un mismo producto puede existir en múltiples marketplaces con datos distintos.
+google_merchant
+campo
+product_channel_id
+google_category
+gtin
+mpn
+condition
+meta_merchant
+campo
+product_channel_id
+meta_category
+availability
+mercadolibre_merchant
+campo
+product_channel_id
+ml_category
+listing_type
+warranty
+
+📌 Por qué
+Cada marketplace exige campos propios.
+3️⃣ Stock y Trazabilidad
+stocks
+campo
+id
+product_id
+deposito_id
+stock_actual
+
+📌 Por qué
+Stock consolidado por producto y depósito.
+stock_movements
+campo
+id
+product_id
+tipo (ingreso/egreso/ajuste)
+referencia_tipo (venta/compra)
+referencia_id
+cantidad
+fecha
+
+📌 Por qué
+✔ Auditoría
+✔ Rehacer stock histórico
+✔ Control contable
+4️⃣ Ventas y Compras
+sales (ventas)
+campo
+id
+user_id (cliente)
+total
+estado
+fecha
+sale_items
+campo
+sale_id
+product_id
+cantidad
+precio_unitario
+
+📌 Por qué
+Venta normalizada (cabecera + detalle).
+purchases (compras)
+campo
+id
+proveedor_id
+total
+estado
+fecha
+purchase_items
+campo
+purchase_id
+product_id
+cantidad
+costo_unitario
+
+📌 Por qué
+Entrada de mercadería + impacto en stock.
+5️⃣ Pagos y Medios de Pago
+payment_methods
+campo
+id
+nombre (efectivo, tarjeta, MP, MODO)
+tipo
+payments
+campo
+id
+sale_id
+payment_method_id
+monto
+estado
+referencia_externa
+
+📌 Por qué
+Permite:
+
+    pagos parciales
+
+    múltiples medios por venta
+
+payment_gateway_details
+
+(Mercado Pago / Modo / Banco)
+campo
+payment_id
+gateway
+transaction_id
+raw_response
+
+📌 Por qué
+Guardar la respuesta exacta del proveedor.
+6️⃣ Cuentas Corrientes
+current_accounts
+campo
+id
+user_id
+saldo_actual
+
+📌 Por qué
+Saldo rápido sin recalcular todo.
+current_account_movements
+campo
+id
+current_account_id
+tipo (debe/haber)
+referencia_tipo
+referencia_id
+monto
+fecha
+
+📌 Por qué
+Libro mayor del cliente/proveedor.
+7️⃣ Bancos y Billeteras
+bank_accounts
+campo
+id
+banco
+cbu
+alias
+moneda
+wallet_accounts
+
+(Mercado Pago / MODO)
+campo
+id
+proveedor
+identificador
+user_id
+
+📌 Por qué
+Separar fondos propios del negocio.
+8️⃣ Envíos y Logística
+shipping_types
+campo
+id
+nombre
+proveedor
+costo_base
+shipments
+campo
+id
+sale_id
+shipping_type_id
+tracking
+estado
+
+📌 Por qué
+Desacoplar venta de logística.
+9️⃣ Documentos Fiscales AFIP / ARCA
+document_types
+campo
+id
+codigo_afip
+nombre
+tipo (factura, nc, nd, recibo)
+fiscal_documents
+campo
+id
+document_type_id
+user_id
+sale_id
+numero
+cae
+fecha_emision
+total
+
+📌 Por qué
+Cumplimiento legal + trazabilidad fiscal.
+🔗 Relaciones Clave (Resumen)
+
+User → Profile
+User → Roles
+User → Sales → Payments
+Sales → SaleItems → Products
+Products → Stock → StockMovements
+Sales → Shipments
+Payments → PaymentMethods
+Payments → GatewayDetails
+Sales → FiscalDocuments
+User → CurrentAccount → Movements
+
+✅ Beneficios de este diseño
+
+✔ Escalable
+✔ Compatible AFIP
+✔ Multi-canal
+✔ Multi-pasarela
+✔ Auditoría completa
+✔ Preparado para ERP real
+
+Si querés, en el próximo paso puedo:
+
+    📌 Convertir esto a diagrama ER
+
+    📌 Pasarlo a migraciones Laravel
+
+    📌 Optimizarlo para Filament
+
+    📌 Ajustarlo a Mercado Pago real (Argentina)
