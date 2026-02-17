@@ -57,6 +57,14 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
+    /**
+     * Get the login sessions for the user.
+     */
+    public function userSessions()
+    {
+        return $this->hasMany(UserSession::class);
+    }
+
     public function getNameAttribute(): string
     {
         return $this->user_name;
