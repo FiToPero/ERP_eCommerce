@@ -1,0 +1,127 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [ "develop" ]
+  pull_request:
+    branches: [ "develop" ]
+
+env:
+  PHP_VERSION: "8.3"
+  NODE_VERSION: "20"
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Copy environment files
+        run: |
+          cp .env.example .env
+          cp Laravel_app/.env.testing Laravel_app/.env
+
+      - name: Build containers
+        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml build --no-cache
+
+      - name: Start services
+        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for database..."
+          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
+          echo "Waiting for PHP-FPM..."
+          sleep 10
+
+      - name: Fix git safe directory warning
+        run: docker compose exec -T php git config --global --add safe.directory /var/www/html
+
+      - name: Fix permissions
+        run: |
+          sudo chown -R 1000:1000 Laravel_app
+          sudo chmod -R 775 Laravel_app/storage Laravel_app/bootstrap/cache
+
+      - name: Install PHP dependencies
+        run: docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate application key
+        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan key:generate
+
+      - name: Run migrations
+        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+
+      - name: Clear caches
+        run: |
+          docker compose exec -T -w /var/www/html/Laravel_app php php artisan cache:clear
+          docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:clear
+          docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:clear
+          docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:clear
+
+      - name: Run PHPUnit tests
+        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan test --parallel
+
+      - name: Run code quality checks
+        run: |
+          docker compose exec -T -w /var/www/html/Laravel_app php ./vendor/bin/phpstan analyse --memory-limit=2G || true
+
+      - name: Shutdown containers
+        if: always()
+        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v
+
+  deploy-dev:
+    name: Deploy to Dev Server
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          port: ${{ secrets.DEV_SSH_PORT || 22 }}
+          script: |
+            cd ${{ secrets.DEV_APP_PATH }}
+            
+            # Pull latest code
+            git fetch origin
+            git reset --hard origin/develop
+            
+            # Stop services
+            docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
+            
+            # Rebuild if needed
+            docker compose -f docker-compose.base.yml -f docker-compose.dev.yml build php
+            
+            # Start services
+            docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d
+            
+            # Wait for services
+            sleep 15
+            
+            # Install dependencies
+            docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
+            
+            # Run migrations
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+            
+            # Clear caches
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:cache
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:cache
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:cache
+            
+            # Restart PHP-FPM
+            docker compose restart php
+            
+            echo "✅ Deployment to DEV completed!"

@@ -1,0 +1,231 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ "main" ]
+  # Solo deploy manual en producción (descomentar para auto-deploy)
+  # workflow_dispatch:
+
+env:
+  PHP_VERSION: "8.3"
+  NODE_VERSION: "20"
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Copy environment files
+        run: |
+          cp .env.example .env
+          cp Laravel_app/.env.testing Laravel_app/.env
+
+      - name: Build containers
+        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build --no-cache
+
+      - name: Start services
+        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for database..."
+          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
+          echo "Waiting for PHP-FPM..."
+          sleep 20
+
+      - name: Fix permissions
+        run: |
+          sudo chown -R 1000:1000 Laravel_app
+          sudo chmod -R 775 Laravel_app/storage Laravel_app/bootstrap/cache
+
+      - name: Install PHP dependencies (production)
+        run: docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+      - name: Generate application key
+        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan key:generate
+
+      - name: Run migrations
+        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+
+      - name: Run PHPUnit tests
+        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan test --parallel
+
+      - name: Shutdown containers
+        if: always()
+        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down -v
+
+  build-assets:
+    name: Build Frontend Assets
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            Laravel_app/package-lock.json
+            Vue_app/package-lock.json
+
+      - name: Build Laravel assets
+        run: |
+          cd Laravel_app
+          npm ci
+          npm run build
+
+      - name: Build Vue.js assets
+        run: |
+          cd Vue_app
+          npm ci
+          npm run build
+
+      - name: Upload Laravel build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-assets
+          path: Laravel_app/public/build/
+          retention-days: 1
+
+      - name: Upload Vue.js build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vue-assets
+          path: Vue_app/dist/
+          retention-days: 1
+
+  deploy-prod:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: [test, build-assets]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://${{ secrets.PROD_DOMAIN }}
+    
+    steps:
+      - name: Download Laravel assets
+        uses: actions/download-artifact@v4
+        with:
+          name: laravel-assets
+          path: ./laravel-assets
+
+      - name: Download Vue.js assets
+        uses: actions/download-artifact@v4
+        with:
+          name: vue-assets
+          path: ./vue-assets
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT || 22 }}
+          command_timeout: 20m
+          script: |
+            set -e
+            
+            cd ${{ secrets.PROD_APP_PATH }}
+            
+            echo "🔄 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main
+            
+            echo "🛑 Putting application in maintenance mode..."
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan down --retry=60 || true
+            
+            echo "🐳 Stopping services..."
+            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
+            
+            echo "🔨 Rebuilding PHP container..."
+            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build --no-cache php
+            
+            echo "🚀 Starting services..."
+            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+            
+            echo "⏳ Waiting for services..."
+            sleep 30
+            
+            echo "📦 Installing PHP dependencies..."
+            docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            
+            echo "🔄 Running migrations..."
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force --no-interaction
+            
+            echo "🧹 Optimizing application..."
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:cache
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:cache
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:cache
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan event:cache
+            
+            echo "🔐 Generating Shield permissions..."
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan shield:generate --all --no-interaction || true
+            
+            echo "♻️ Restarting PHP-FPM..."
+            docker compose restart php
+            
+            echo "✅ Bringing application back online..."
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
+            
+            echo "🎉 Production deployment completed successfully!"
+
+      - name: Upload assets via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT || 22 }}
+          source: "./laravel-assets/*,./vue-assets/*"
+          target: "${{ secrets.PROD_APP_PATH }}/temp-assets/"
+          strip_components: 1
+
+      - name: Move assets to final location
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PROD_APP_PATH }}
+            mv temp-assets/laravel-assets/* Laravel_app/public/build/
+            mv temp-assets/vue-assets/* Vue_app/dist/
+            rm -rf temp-assets
+
+      - name: Health check
+        run: |
+          curl --fail --silent --show-error https://${{ secrets.PROD_DOMAIN }}/health || exit 1
+          echo "✅ Health check passed!"
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "🎉 Production deployment successful!"
+
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PROD_APP_PATH }}
+            git reset --hard HEAD~1
+            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml restart php
+            docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
+            echo "⚠️ Rollback completed!"

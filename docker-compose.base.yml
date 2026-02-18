@@ -1,0 +1,58 @@
+# docker-compose.base.yml
+# Configuración BASE compartida entre desarrollo y producción
+# NO ejecutar directamente, usar docker-compose.dev.yml o docker-compose.prod.yml
+
+services:
+  php:
+    image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+      - redis
+    user: "1000:1000"
+    networks:
+      - network_app
+
+  nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/${NGINX_CONF:-default.conf}:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - network_app
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - network_app
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - network_app
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  db_data:
+
+networks:
+  network_app:
+    driver: bridge
