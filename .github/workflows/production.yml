@@ -114,7 +114,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment:
       name: production
-      url: https://${{ secrets.PROD_DOMAIN }}
+      url: ${{ secrets.PROD_DOMAIN }}
     
     steps:
       - name: Download Laravel assets
