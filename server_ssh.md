@@ -78,19 +78,6 @@ cat ~/.ssh/github_actions
 
 **Copia TODO el contenido**, desde `-----BEGIN OPENSSH PRIVATE KEY-----` hasta `-----END OPENSSH PRIVATE KEY-----` incluyendo esas líneas.
 
-**Ejemplo de clave:**
-```
------BEGIN OPENSSH PRIVATE KEY-----
-b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-QyNTUxOQAAACBqxxV0Ys5jFZbW9d5Y8OUXMZ4XPGDoE8gGi2KqPyL4lwAAAJhvXS1Ab10t
-QAAAAAtzc2gtZWQyNTUxOQAAACBqxxV0Ys5jFZbW9d5Y8OUXMZ4XPGDoE8gGi2KqPyL4lw
-AAAEBz+jwXYxGnXqMJoKLQg9M6pNp7V/3a0FkRvH1FPQb5T2rHFXRizmMVltb13ljw5Rcx
-nhc8YOgTyAaLYqo/IviXAAAAFGdpdGh1Yi1hY3Rpb25zQGRldi5jb20BAgMEBQ==
------END OPENSSH PRIVATE KEY-----
-```
-
----
-
 ## 📍 Paso 5: Obtener Información del Servidor
 
 ```bash

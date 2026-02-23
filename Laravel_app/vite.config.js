@@ -1,53 +1,37 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-        }),
-        tailwindcss(),
-    ],
-    server: {
-        host: '0.0.0.0',
-        port: 5173,
-        hmr: {
-            host: 'localhost',
-            port: 5173,
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '');
+
+    return {
+        plugins: [
+            laravel({
+                input: ['resources/css/app.css', 'resources/js/app.js'],
+                refresh: true,
+            }),
+            tailwindcss(),
+        ],
+        server: {
+            host: '0.0.0.0',
+            port: env.VITE_HMR_PORT || 5173,
+            strictPort: true,
+            allowedHosts: [
+                'localhost',
+                'cap-erp-ecommer.com',
+                env.VITE_HMR_HOST,
+            ].filter(Boolean),
+            hmr: {
+                host: env.VITE_HMR_HOST || 'localhost',
+                port: env.VITE_HMR_PORT || 5173,
+                protocol: env.VITE_HMR_PROTOCOL || 'ws',
+            },
+            watch: {
+                ignored: ['**/storage/framework/views/**'],
+                usePolling: true,
+            },
         },
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
-        },
-    },
+    };
 });
 
-// import { defineConfig, loadEnv } from 'vite';
-// import laravel from 'laravel-vite-plugin';
-
-// export default defineConfig(({ mode }) => {
-//     const env = loadEnv(mode, process.cwd(), '');
-
-//     return {
-//         server: {
-//             host: '0.0.0.0',
-//             port: env.VITE_HMR_PORT,
-//             strictPort: true,
-//             watch: {
-//                 usePolling:'true',
-//             },
-//             hmr: {
-//                 host: env.VITE_HMR_HOST,
-//                 port: env.VITE_HMR_PORT,
-//                 protocol: env.VITE_HMR_PROTOCOL,
-//             }
-//         },
-//         plugins: [
-//             laravel({
-//                 input: ['resources/css/app.css', 'resources/js/app.js'],
-//                 refresh: true,
-//             }),
-//         ],
-//     };
-// });

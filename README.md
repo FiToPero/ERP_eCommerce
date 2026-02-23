@@ -79,12 +79,8 @@ git pull origin develop
 ```
 
 **Si usas SSH y no tienes clave configurada:**
-```bash
-# Generar clave SSH en el servidor
-ssh-keygen -t ed25519 -C "servidor-dev@tuempresa.com"
-cat ~/.ssh/id_ed25519.pub
-# Copiar la clave y agregarla en: GitHub → Settings → SSH keys → New SSH key
-```
+
+hacer los pasos del archivo server_ssh.md
 
 ### Paso 4: Configurar .env
 
