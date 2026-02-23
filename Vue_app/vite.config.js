@@ -11,4 +11,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    host: '0.0.0.0',
+    port: 5174,
+    strictPort: true,
+    allowedHosts: [
+      'localhost',
+      'cap-erp-ecommer.com',
+    ],
+    watch: {
+      usePolling: true,
+    },
+  },
 })
