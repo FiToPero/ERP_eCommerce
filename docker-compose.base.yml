@@ -21,25 +21,14 @@ services:
       - ./docker/nginx/${NGINX_CONF:-default.conf}:/etc/nginx/conf.d/default.conf
     depends_on:
       - php
-      - vue
     networks:
       - network_app
-
-  vue:
-    image: node:20-alpine
-    command: echo "Placeholder vue service for build"
-    networks:
-      - network_app
-    profiles:
-      - dev
 
   node:
     image: node:20-alpine
     command: echo "Placeholder node service for build"
     networks:
       - network_app
-    profiles:
-      - dev
 
   db:
     image: postgres:16-alpine
