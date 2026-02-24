@@ -98,9 +98,6 @@ jobs:
             # Stop services
             docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
             
-            # Rebuild if needed
-            docker compose -f docker-compose.base.yml -f docker-compose.dev.yml build php
-            
             # Start services
             docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d
             
