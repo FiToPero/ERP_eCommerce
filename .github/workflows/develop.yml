@@ -72,7 +72,7 @@ jobs:
 
       - name: Shutdown containers
         if: always()
-        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v
+        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
 
   deploy-dev:
     name: Deploy to Dev Server

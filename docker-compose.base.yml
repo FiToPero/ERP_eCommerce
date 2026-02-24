@@ -30,12 +30,16 @@ services:
     command: echo "Placeholder vue service for build"
     networks:
       - network_app
+    profiles:
+      - dev
 
   node:
     image: node:20-alpine
     command: echo "Placeholder node service for build"
     networks:
       - network_app
+    profiles:
+      - dev
 
   db:
     image: postgres:16-alpine
