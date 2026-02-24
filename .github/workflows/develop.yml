@@ -26,7 +26,7 @@ jobs:
 
       - name: Copy environment files
         run: |
-          cp .env.example .env
+          cp .env.testing .env
           cp Laravel_app/.env.testing Laravel_app/.env
 
       - name: Build containers
