@@ -30,9 +30,6 @@ jobs:
           cp Laravel_app/.env.testing Laravel_app/.env
 
       - name: Build containers
-        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml build --no-cache
-
-      - name: Start services
         run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d
 
       - name: Wait for services to be ready
