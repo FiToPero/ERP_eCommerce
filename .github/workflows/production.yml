@@ -112,10 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, build-assets]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: ${{ secrets.PROD_DOMAIN }}
-    
+        
     steps:
       - name: Download Laravel assets
         uses: actions/download-artifact@v4
