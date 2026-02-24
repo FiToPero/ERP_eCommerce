@@ -28,8 +28,6 @@ services:
       - "5173:5173"
     networks:
       - network_app
-    profiles:
-      - dev
 
   vue:
     image: node:20-alpine
@@ -42,8 +40,6 @@ services:
       - "5174:5174"
     networks:
       - network_app
-    profiles:
-      - dev
 
   nginx:
     ports:
