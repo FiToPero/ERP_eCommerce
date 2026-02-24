@@ -181,7 +181,7 @@ Click en **Add secret**
 **Secret 5: DEV_APP_PATH**
 ```
 Name: DEV_APP_PATH
-Secret: /var/www/erp-filament
+Secret: /home/fito/ERP_develop
 ```
 
 El path absoluto donde está clonado tu proyecto en el servidor.
