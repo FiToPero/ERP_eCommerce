@@ -31,6 +31,12 @@ services:
     networks:
       - network_app
 
+  node:
+    image: node:20-alpine
+    command: echo "Placeholder node service for build"
+    networks:
+      - network_app
+
   db:
     image: postgres:16-alpine
     environment:
