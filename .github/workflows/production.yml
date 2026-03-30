@@ -3,6 +3,8 @@ name: Deploy to Production
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   # Solo deploy manual en producción (descomentar para auto-deploy)
   # workflow_dispatch:
 
@@ -139,47 +141,47 @@ jobs:
             
             cd ${{ secrets.PROD_APP_PATH }}
             
-            echo "🔄 Pulling latest code..."
+            echo "Pulling latest code..."
             git fetch origin
             git reset --hard origin/main
             
-            echo "🛑 Putting application in maintenance mode..."
+            echo "Putting application in maintenance mode..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan down --retry=60 || true
             
-            echo "🐳 Stopping services..."
+            echo "Stopping services..."
             docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
             
-            echo "🔨 Rebuilding PHP container..."
+            echo "Rebuilding PHP container..."
             docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build --no-cache php
             
-            echo "🚀 Starting services..."
+            echo "Starting services..."
             docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
             
-            echo "⏳ Waiting for services..."
+            echo "Waiting for services..."
             sleep 30
             
-            echo "📦 Installing PHP dependencies..."
+            echo "Installing PHP dependencies..."
             docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
             
-            echo "🔄 Running migrations..."
+            echo "Running migrations..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force --no-interaction
             
-            echo "🧹 Optimizing application..."
+            echo "Optimizing application..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:cache
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:cache
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:cache
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan event:cache
             
-            echo "🔐 Generating Shield permissions..."
+            echo "Generating Shield permissions..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan shield:generate --all --no-interaction || true
             
-            echo "♻️ Restarting PHP-FPM..."
+            echo "Restarting PHP-FPM..."
             docker compose restart php
             
-            echo "✅ Bringing application back online..."
+            echo "Bringing application back online..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
             
-            echo "🎉 Production deployment completed successfully!"
+            echo "Production deployment completed successfully!"
 
       - name: Upload assets via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -207,11 +209,11 @@ jobs:
       - name: Health check
         run: |
           curl --fail --silent --show-error https://${{ secrets.PROD_DOMAIN }}/health || exit 1
-          echo "✅ Health check passed!"
+          echo "Health check passed!"
 
       - name: Notify deployment success
         if: success()
-        run: echo "🎉 Production deployment successful!"
+        run: echo "Production deployment successful!"
 
       - name: Rollback on failure
         if: failure()
@@ -225,4 +227,4 @@ jobs:
             git reset --hard HEAD~1
             docker compose -f docker-compose.base.yml -f docker-compose.prod.yml restart php
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
-            echo "⚠️ Rollback completed!"
+            echo "Rollback completed!"

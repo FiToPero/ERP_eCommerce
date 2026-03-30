@@ -129,4 +129,12 @@ class Product extends Model
             ->where('channel_id', $channel->id)
             ->first();
     }
+
+    /**
+     * Listado de Google Merchant Center para este producto.
+     */
+    public function productGoogle()
+    {
+        return $this->hasOne(ProductGoogle::class);
+    }
 }

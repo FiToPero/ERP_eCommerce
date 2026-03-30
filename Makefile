@@ -96,44 +96,44 @@ assets-build: ## Compilar assets producción
 ##@ Database
 
 db-backup: ## Backup de base de datos
-	docker compose exec db pg_dump -U postgres -d ${POSTGRES_DB} > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	$(COMPOSE_DEV) exec db pg_dump -U postgres -d ${POSTGRES_DB} > backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "✅ Backup creado"
 
 db-restore: ## Restaurar backup (usar: make db-restore FILE=backup.sql)
-	docker compose exec -T db psql -U postgres -d ${POSTGRES_DB} < $(FILE)
+	$(COMPOSE_DEV) exec -T db psql -U postgres -d ${POSTGRES_DB} < $(FILE)
 	@echo "✅ Base de datos restaurada"
 
 db-connect: ## Conectar a PostgreSQL
-	docker compose exec db psql -U postgres -d ${POSTGRES_DB}
+	$(COMPOSE_DEV) exec db psql -U postgres -d ${POSTGRES_DB}
 
 ##@ Docker
 
 ps: ## Ver contenedores corriendo
-	docker compose ps
+	$(COMPOSE_DEV) --profile dev ps
 
 logs: ## Ver logs
-	docker compose logs -f
+	$(COMPOSE_DEV) --profile dev logs -f
 
 restart: ## Reiniciar servicios
-	docker compose restart
+	$(COMPOSE_DEV) --profile dev restart
 
 shell-php: ## Shell en contenedor PHP
-	docker compose exec php bash
+	$(COMPOSE_DEV) exec -it php bash
 
 shell-db: ## Shell en contenedor DB
-	docker compose exec db bash
+	$(COMPOSE_DEV) exec -it db bash
 
 clean: ## Limpiar contenedores y volúmenes
-	docker compose down -v
+	$(COMPOSE_DEV) down -v
 	docker system prune -f
 
 health: ## Verificar salud de servicios
 	@echo "Verificando servicios..."
-	@docker compose ps
+	@$(COMPOSE_DEV) --profile dev ps
 	@echo "\nVerificando PostgreSQL..."
-	@docker compose exec -T db pg_isready -U postgres
+	@$(COMPOSE_DEV) exec -T db pg_isready -U postgres
 	@echo "\nVerificando Redis..."
-	@docker compose exec -T redis redis-cli ping
+	@$(COMPOSE_DEV) exec -T redis redis-cli ping
 
 ##@ Deploy
 

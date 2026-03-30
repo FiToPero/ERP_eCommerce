@@ -14,26 +14,24 @@ return new class extends Migration
     {
         Schema::create('channels', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // 'Google Shopping', 'Meta Catalog', 'MercadoLibre'
-            $table->string('code')->unique(); // 'google', 'meta', 'meli'
+            $table->string('name');
+            $table->string('code')->unique();
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->json('config')->nullable(); // Configuración específica del canal
+            $table->string('api_url')->nullable();
+            $table->json('config')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
 
-        // Insertar los canales iniciales
         DB::table('channels')->insert([
             [
                 'name' => 'Google Shopping',
                 'code' => 'google',
                 'slug' => 'google-shopping',
                 'description' => 'Google Merchant Center / Google Shopping Feed',
-                'is_active' => true,
+                'api_url' => 'https://merchantcenter.google.com',
                 'config' => json_encode([
-                    'api_url' => 'https://merchantcenter.google.com',
                     'required_fields' => ['gtin', 'mpn', 'condition', 'availability']
                 ]),
                 'created_at' => now(),
@@ -44,9 +42,8 @@ return new class extends Migration
                 'code' => 'meta',
                 'slug' => 'meta-catalog',
                 'description' => 'Facebook & Instagram Product Catalog',
-                'is_active' => true,
+                'api_url' => 'https://graph.facebook.com',
                 'config' => json_encode([
-                    'api_url' => 'https://graph.facebook.com',
                     'required_fields' => ['availability', 'condition']
                 ]),
                 'created_at' => now(),
@@ -57,10 +54,21 @@ return new class extends Migration
                 'code' => 'meli',
                 'slug' => 'mercadolibre',
                 'description' => 'MercadoLibre Marketplace',
-                'is_active' => true,
+                'api_url' => 'https://api.mercadolibre.com',
                 'config' => json_encode([
-                    'api_url' => 'https://api.mercadolibre.com',
                     'required_fields' => ['listing_type', 'category_id']
+                ]),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'cap erp ecommer',
+                'code' => 'cap',
+                'slug' => 'cap-erp-ecommer',
+                'description' => 'CAP ERP E-commerce My',
+                'api_url' => 'http://cap-erp-ecommer.com',
+                'config' => json_encode([
+                    'required_fields' => ['lived', 'category_id']
                 ]),
                 'created_at' => now(),
                 'updated_at' => now(),
