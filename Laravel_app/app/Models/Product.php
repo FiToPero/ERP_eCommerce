@@ -24,13 +24,19 @@ class Product extends Model
         'identifier_exists',
         'condition',
         'availability_date',
+        'web_requirements',
         'google_requirements',
+        'ml_requirements',
+        'meta_requirements',
     ];
 
     protected $casts = [
-        'identifier_exists'   => 'boolean',
-        'availability_date'   => 'datetime',
+        'identifier_exists'  => 'boolean',
+        'availability_date'  => 'datetime',
+        'web_requirements'   => 'array',
         'google_requirements' => 'array',
+        'ml_requirements'    => 'array',
+        'meta_requirements'  => 'array',
     ];
 
     /**
@@ -67,5 +73,13 @@ class Product extends Model
     public function productGoogle()
     {
         return $this->hasOne(ProductGoogle::class);
+    }
+
+    /**
+     * Datos de publicación en Meta (Facebook/Instagram) para este producto.
+     */
+    public function productMeta()
+    {
+        return $this->hasOne(ProductMeta::class);
     }
 }

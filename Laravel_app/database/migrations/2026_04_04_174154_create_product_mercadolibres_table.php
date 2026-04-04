@@ -38,7 +38,6 @@ return new class extends Migration
 
             //  RECOMENDADOS
             $table->json('sale_terms')->nullable()->comment('Términos de venta (warranty, etc)');
-            $table->json('sale_terms')->nullable()->comment('Términos de venta (warranty, etc)');
             $table->json('shipping')->nullable()->comment('Configuración de envío');
             $table->string('video_id')->nullable()->comment('Video del producto');
             $table->string('warranty')->nullable()->comment('Garantía');
