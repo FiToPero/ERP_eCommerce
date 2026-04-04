@@ -9,6 +9,7 @@ on:
 env:
   PHP_VERSION: "8.3"
   NODE_VERSION: "20"
+  COMPOSE_FILE: docker-compose.base.yml:docker-compose.dev.yml
 
 jobs:
   test:
@@ -30,7 +31,7 @@ jobs:
           cp Laravel_app/.env.testing Laravel_app/.env
 
       - name: Build containers
-        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d
+        run: docker compose --profile dev up -d
 
       - name: Wait for services to be ready
         run: |
@@ -72,7 +73,7 @@ jobs:
 
       - name: Shutdown containers
         if: always()
-        run: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
+        run: docker compose down
 
   deploy-dev:
     name: Deploy to Dev Server
@@ -90,16 +91,17 @@ jobs:
           port: ${{ secrets.DEV_SSH_PORT || 22 }}
           script: |
             cd ${{ secrets.DEV_APP_PATH }}
+            export COMPOSE_FILE=docker-compose.base.yml:docker-compose.dev.yml
             
             # Pull latest code
             git fetch origin
             git reset --hard origin/develop
             
             # Stop services
-            docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
+            docker compose down
             
             # Start services
-            docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d
+            docker compose --profile dev up -d
             
             # Wait for services
             sleep 15
