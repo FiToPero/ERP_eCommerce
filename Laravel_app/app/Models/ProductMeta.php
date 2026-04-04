@@ -6,73 +6,56 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductGoogle extends Model
+class ProductMeta extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductGoogleFactory> */
+    /** @use HasFactory<\Database\Factories\ProductMetaFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        // Estado sincronización
         'product_id',
-
-        // Estado de sincronización
         'is_active',
         'status',
-        'google_id',
-        'google_url',
+        'meta_id',
+        'permalink',
         'last_synced_at',
         'sync_errors',
 
         // Required
         'title',
         'description',
+        'availability',
+        'condition',
+        'price',
         'link',
         'image_link',
-        'price',
-        'currency',
-        'availability',
 
         // Recommended
+        'additional_image_links',
+        'item_group_id',
+        'color',
+        'size',
         'google_product_category',
         'product_type',
-        'additional_image_links',
         'sale_price',
         'sale_price_start',
         'sale_price_end',
-        'item_group_id',
     ];
 
     protected $casts = [
         'is_active'              => 'boolean',
-        'last_synced_at'         => 'datetime',
         'sync_errors'            => 'array',
-        'price'                  => 'decimal:2',
+        'additional_image_links' => 'array',
         'sale_price'             => 'decimal:2',
+        'last_synced_at'         => 'datetime',
         'sale_price_start'       => 'datetime',
         'sale_price_end'         => 'datetime',
-        'additional_image_links' => 'array',
     ];
 
-    /**
-     * The product this record belongs to.
-     */
+    // Relationships
+
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    /**
-     * Scope: only active (enabled for Google sync).
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope: filter by sync status.
-     */
-    public function scopeWithStatus($query, string $status)
-    {
-        return $query->where('status', $status);
     }
 }

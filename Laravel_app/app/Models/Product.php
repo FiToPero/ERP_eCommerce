@@ -14,16 +14,23 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'sku',
         'slug',
         'short_description',
         'description',
-        'price',
-        'is_active',
+        'brand',
+        'barcode',
+        'mpn',
+        'identifier_exists',
+        'condition',
+        'availability_date',
+        'google_requirements',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'is_active' => 'boolean',
+        'identifier_exists'   => 'boolean',
+        'availability_date'   => 'datetime',
+        'google_requirements' => 'array',
     ];
 
     /**
@@ -32,22 +39,6 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
-    }
-
-    /**
-     * Get the details for the product.
-     */
-    public function detail()
-    {
-        return $this->hasOne(Detail::class);
-    }
-
-    /**
-     * Get the images for the product.
-     */
-    public function images()
-    {
-        return $this->hasMany(ProductImage::class)->orderBy('priority');
     }
 
     /**
@@ -68,66 +59,6 @@ class Product extends Model
             ->value('total');
 
         return (float) $total;
-    }
-
-    /**
-     * Get the product channels (pivot records).
-     */
-    public function productChannels()
-    {
-        return $this->hasMany(ProductChannel::class);
-    }
-
-    /**
-     * Get all channels this product is in.
-     */
-    public function channels()
-    {
-        return $this->belongsToMany(Channel::class, 'product_channels')
-            ->withPivot([
-                'is_active',
-                'published_at',
-                'custom_title',
-                'custom_description',
-                'custom_price',
-                'metadata',
-                'last_synced_at',
-                'external_id',
-                'external_url',
-            ])
-            ->withTimestamps();
-    }
-
-    /**
-     * Get active channels for this product.
-     */
-    public function activeChannels()
-    {
-        return $this->channels()->wherePivot('is_active', true);
-    }
-
-    /**
-     * Check if product is in a specific channel.
-     */
-    public function isInChannel(string $channelCode): bool
-    {
-        return $this->channels()->where('code', $channelCode)->exists();
-    }
-
-    /**
-     * Get product channel by channel code.
-     */
-    public function getChannelData(string $channelCode): ?ProductChannel
-    {
-        $channel = Channel::where('code', $channelCode)->first();
-        
-        if (!$channel) {
-            return null;
-        }
-
-        return $this->productChannels()
-            ->where('channel_id', $channel->id)
-            ->first();
     }
 
     /**

@@ -25,7 +25,7 @@ dev-build: ## Construir e iniciar desarrollo
 	$(COMPOSE_DEV) --profile dev up -d
 
 dev-stop: ## Detener desarrollo
-	$(COMPOSE_DEV) down
+	$(COMPOSE_DEV) --profile dev down
 
 dev-logs: ## Ver logs de desarrollo
 	$(COMPOSE_DEV) logs -f

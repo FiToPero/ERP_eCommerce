@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('product_details', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('product_id')->unique()->constrained('products')->cascadeOnDelete();
 
             // ─── Variantes (Apparel & variantes en general) ──────────────────     
             $table->string('color', 100)->nullable();
