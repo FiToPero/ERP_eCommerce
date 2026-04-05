@@ -26,7 +26,6 @@ class ProductGoogle extends Model
         'title',
         'description',
         'link',
-        'image_link',
         'price',
         'currency',
         'availability',
@@ -34,7 +33,6 @@ class ProductGoogle extends Model
         // Recommended
         'google_product_category',
         'product_type',
-        'additional_image_links',
         'sale_price',
         'sale_price_start',
         'sale_price_end',
@@ -49,7 +47,6 @@ class ProductGoogle extends Model
         'sale_price'             => 'decimal:2',
         'sale_price_start'       => 'datetime',
         'sale_price_end'         => 'datetime',
-        'additional_image_links' => 'array',
     ];
 
     /**

@@ -36,21 +36,13 @@ class ProductMercadolibreFactory extends Factory
             'available_quantity' => $this->faker->optional()->numberBetween(0, 500),
             'buying_mode'        => 'buy_it_now',
             'listing_type_id'    => $this->faker->optional()->randomElement(['gold_special', 'gold_pro', 'free']),
-            'condition'          => $this->faker->randomElement(['new', 'used']),
-            'pictures'           => $this->faker->optional()->randomElements(
-                array_map(fn () => ['source' => $this->faker->imageUrl(800, 800, 'products')], range(1, 5)),
-                $this->faker->numberBetween(1, 4)
-            ),
 
             // Conditional
-            'brand'              => $this->faker->optional()->company(),
-            'gtin'               => $this->faker->optional()->ean13(),
             'attributes'         => null,
 
             // Recommended
             'sale_terms'         => null,
             'shipping'           => null,
-            'video_id'           => $this->faker->optional()->bothify('??????????'),
             'warranty'           => $this->faker->optional()->randomElement(['12 meses', '6 meses', 'Sin garantía']),
             'variations'         => null,
         ];

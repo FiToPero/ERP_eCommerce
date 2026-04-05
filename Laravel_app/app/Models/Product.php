@@ -24,6 +24,9 @@ class Product extends Model
         'identifier_exists',
         'condition',
         'availability_date',
+        'image_link',
+        'additional_image_links',
+        'video_link',
         'web_requirements',
         'google_requirements',
         'ml_requirements',
@@ -33,6 +36,7 @@ class Product extends Model
     protected $casts = [
         'identifier_exists'  => 'boolean',
         'availability_date'  => 'datetime',
+        'additional_image_links' => 'array',
         'web_requirements'   => 'array',
         'google_requirements' => 'array',
         'ml_requirements'    => 'array',
@@ -76,10 +80,34 @@ class Product extends Model
     }
 
     /**
+     * Datos de publicación en el sitio web para este producto.
+     */
+    public function productWeb()
+    {
+        return $this->hasOne(ProductWeb::class);
+    }
+
+    /**
+     * Datos de publicación en MercadoLibre para este producto.
+     */
+    public function productMercadolibre()
+    {
+        return $this->hasOne(ProductMercadolibre::class);
+    }
+
+    /**
      * Datos de publicación en Meta (Facebook/Instagram) para este producto.
      */
     public function productMeta()
     {
         return $this->hasOne(ProductMeta::class);
+    }
+
+    /**
+     * Información extendida del producto.
+     */
+    public function productDetail()
+    {
+        return $this->hasOne(ProductDetail::class);
     }
 }

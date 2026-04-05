@@ -28,10 +28,8 @@ class ProductMeta extends Model
         'condition',
         'price',
         'link',
-        'image_link',
 
         // Recommended
-        'additional_image_links',
         'item_group_id',
         'color',
         'size',
@@ -45,7 +43,6 @@ class ProductMeta extends Model
     protected $casts = [
         'is_active'              => 'boolean',
         'sync_errors'            => 'array',
-        'additional_image_links' => 'array',
         'sale_price'             => 'decimal:2',
         'last_synced_at'         => 'datetime',
         'sale_price_start'       => 'datetime',

@@ -31,7 +31,6 @@ return new class extends Migration
             $table->integer('available_quantity')->nullable()->comment('Stock disponible (REQUIRED)');
             $table->enum('buying_mode', ['buy_it_now'])->default('buy_it_now')->comment('Modo de compra');
             $table->string('listing_type_id')->nullable()->comment('Tipo de publicación (REQUIRED)');
-            $table->json('pictures')->nullable()->comment('Imágenes (REQUIRED)');
 
             //  CONDICIONALES
             $table->json('attributes')->nullable()->comment('Atributos dinámicos según categoría (CRÍTICO)');
@@ -39,7 +38,6 @@ return new class extends Migration
             //  RECOMENDADOS
             $table->json('sale_terms')->nullable()->comment('Términos de venta (warranty, etc)');
             $table->json('shipping')->nullable()->comment('Configuración de envío');
-            $table->string('video_id')->nullable()->comment('Video del producto');
             $table->string('warranty')->nullable()->comment('Garantía');
             $table->json('variations')->nullable()->comment('Variantes del producto');
 

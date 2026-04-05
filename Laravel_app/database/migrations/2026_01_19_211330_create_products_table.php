@@ -25,6 +25,10 @@ return new class extends Migration
             $table->boolean('identifier_exists')->default(true)->comment('Indica si existen identificadores validos (brand/gtin/mpn)');
             $table->enum('condition', ['new', 'refurbished', 'used'])->default('new')->comment('Estado del producto (REQUIRED IF APPLICABLE)');
             $table->timestamp('availability_date')->nullable()->comment('Fecha disponibilidad (REQUIRED si preorder)');
+            $table->string('image_link', 2000)->nullable()->comment('Imagen principal del producto (REQUIRED)');
+            $table->json('additional_image_links')->nullable()->comment('Imágenes adicionales (RECOMMENDED)');
+            $table->string('video_link', 2000)->nullable()->comment('Video del producto (RECOMMENDED)');
+
 
             // Resumen de Requerimientos google, Mercado Libre, Meta y WEB
             $table->json('web_requirements')->nullable()

@@ -24,7 +24,7 @@ class ProductGoogleFactory extends Factory
         $saleEnd     = $hasSale ? $this->faker->dateTimeBetween('+8 days', '+30 days') : null;
 
         return [
-            'product_id' => Product::inRandomOrder()->value('id') ?? Product::factory(),
+            'product_id' => Product::factory(),
 
             // ─── Estado de sincronización ─────────────────────────────────────
             'is_active'      => $isActive,
@@ -42,7 +42,6 @@ class ProductGoogleFactory extends Factory
             'title'        => $this->faker->words(5, true),
             'description'  => $this->faker->paragraph(3),
             'link'         => $this->faker->url(),
-            'image_link'   => 'https://via.placeholder.com/800x800.jpg?text=' . urlencode($this->faker->word()),
             'price'        => $this->faker->randomFloat(2, 5, 999),
             'currency'     => $this->faker->randomElement(['USD', 'EUR', 'MXN', 'COP']),
             'availability' => $this->faker->randomElement(['in_stock', 'out_of_stock', 'preorder', 'backorder']),
@@ -56,11 +55,6 @@ class ProductGoogleFactory extends Factory
                 'Toys & Games',
             ]),
             'product_type'           => $this->faker->optional(0.6)->words(3, true),
-            'additional_image_links' => $this->faker->optional(0.5)->passthrough(
-                collect(range(1, $this->faker->numberBetween(1, 4)))->map(fn () =>
-                    'https://via.placeholder.com/800x800.jpg?text=' . urlencode($this->faker->word())
-                )->all()
-            ),
             'sale_price'       => $hasSale ? $this->faker->randomFloat(2, 1, 500) : null,
             'sale_price_start' => $saleStart,
             'sale_price_end'   => $saleEnd,

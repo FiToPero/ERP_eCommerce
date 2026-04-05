@@ -27,16 +27,11 @@ class ProductMercadolibre extends Model
         'available_quantity',
         'buying_mode',
         'listing_type_id',
-        'condition',
-        'pictures',
         // Conditional
-        'brand',
-        'gtin',
         'attributes',
         // Recommended
         'sale_terms',
         'shipping',
-        'video_id',
         'warranty',
         'variations',
     ];
@@ -47,7 +42,6 @@ class ProductMercadolibre extends Model
         'available_quantity' => 'integer',
         'last_synced_at'  => 'datetime',
         'sync_errors'     => 'array',
-        'pictures'        => 'array',
         'attributes'      => 'array',
         'sale_terms'      => 'array',
         'shipping'        => 'array',

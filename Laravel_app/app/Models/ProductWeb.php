@@ -16,9 +16,7 @@ class ProductWeb extends Model
         'is_active',
         'status',
         'link',
-        'image_link',
         'product_type',
-        'additional_image_links',
         'sale_price',
         'sale_price_start',
         'sale_price_end',
@@ -27,7 +25,6 @@ class ProductWeb extends Model
 
     protected $casts = [
         'is_active'              => 'boolean',
-        'additional_image_links' => 'array',
         'sale_price'             => 'decimal:2',
         'sale_price_start'       => 'datetime',
         'sale_price_end'         => 'datetime',

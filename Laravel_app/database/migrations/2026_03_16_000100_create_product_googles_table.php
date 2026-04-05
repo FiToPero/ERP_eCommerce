@@ -36,8 +36,6 @@ return new class extends Migration
                 ->comment('Descripción del producto (REQUIRED)');
             $table->string('link', 2000)->nullable()
                 ->comment('URL de la pagina del producto en tu tienda (REQUIRED)');
-            $table->string('image_link', 2000)->nullable()
-                ->comment('Imagen principal del producto (REQUIRED)');
             $table->decimal('price', 12, 2)->nullable()
                 ->comment('Precio del producto (REQUIRED)');
             $table->char('currency', 3)->default('USD')
@@ -50,8 +48,6 @@ return new class extends Migration
                 ->comment('Categoría oficial de Google (RECOMMENDED)');
             $table->string('product_type', 750)->nullable()
                 ->comment('Categoría propia del comercio. NOTA: deberia crearce automaticamente de categories (RECOMMENDED)');
-            $table->json('additional_image_links')->nullable()
-                ->comment('Imágenes adicionales (RECOMMENDED)');
             $table->decimal('sale_price', 12, 2)->nullable()
                 ->comment('Precio en oferta (RECOMMENDED)');
             $table->timestamp('sale_price_start')->nullable()

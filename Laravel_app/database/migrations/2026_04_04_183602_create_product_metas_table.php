@@ -30,10 +30,8 @@ return new class extends Migration
             $table->enum('condition', ['new','used','refurbished'])->default('new')->comment('Condición (REQUIRED)');
             $table->string('price')->nullable()->comment('Precio con moneda, ej: 100 ARS (REQUIRED)');
             $table->string('link', 2000)->nullable()->comment('URL del producto (REQUIRED)');
-            $table->string('image_link', 2000)->nullable()->comment('Imagen principal (REQUIRED)');
 
             // RECOMMENDED
-            $table->json('additional_image_links')->nullable()->comment('Imágenes adicionales (RECOMMENDED)');
             $table->string('item_group_id')->nullable()->comment('Grupo de variantes (RECOMMENDED)');
             $table->string('color')->nullable()->comment('Color (RECOMMENDED si hay variantes)');
             $table->string('size')->nullable()->comment('Tamaño (RECOMMENDED si aplica)');

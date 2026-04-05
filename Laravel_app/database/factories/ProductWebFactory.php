@@ -27,12 +27,7 @@ class ProductWebFactory extends Factory
             'is_active'              => false,
             'status'                 => $this->faker->randomElement(['draft', 'pending', 'active', 'disapproved']),
             'link'                   => $this->faker->optional()->url(),
-            'image_link'             => $this->faker->optional()->imageUrl(800, 800, 'products'),
             'product_type'           => $this->faker->optional()->words(3, true),
-            'additional_image_links' => $this->faker->optional()->randomElements(
-                array_map(fn() => $this->faker->imageUrl(800, 800, 'products'), range(1, 5)),
-                $this->faker->numberBetween(1, 4)
-            ),
             'sale_price'             => $this->faker->optional()->randomFloat(2, 1, 9999),
             'sale_price_start'       => $saleStart,
             'sale_price_end'         => $saleEnd,

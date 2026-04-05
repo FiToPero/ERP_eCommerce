@@ -39,12 +39,8 @@ class ProductMetaFactory extends Factory
             'condition'    => $this->faker->randomElement(['new', 'used', 'refurbished']),
             'price'        => $this->faker->randomFloat(2, 10, 1000) . ' ARS',
             'link'         => $this->faker->url(),
-            'image_link'   => $this->faker->imageUrl(800, 800, 'products'),
 
             // Recommended
-            'additional_image_links' => $this->faker->optional(0.5)->passthrough(
-                array_map(fn() => $this->faker->imageUrl(800, 800, 'products'), range(1, rand(1, 4)))
-            ),
             'item_group_id'           => $this->faker->optional(0.5)->bothify('group-####'),
             'color'                   => $this->faker->optional(0.6)->safeColorName(),
             'size'                    => $this->faker->optional(0.5)->randomElement(['XS', 'S', 'M', 'L', 'XL', 'XXL']),

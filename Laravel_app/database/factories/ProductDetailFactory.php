@@ -21,7 +21,7 @@ class ProductDetailFactory extends Factory
         $weightUnit    = $this->faker->randomElement(['kg', 'lb', 'g', 'oz']);
 
         return [
-            'product_id' => Product::inRandomOrder()->value('id') ?? Product::factory(),
+            'product_id' => Product::factory(),
 
             // ─── Variantes ────────────────────────────────────────────────────
             'color'       => $this->faker->optional(0.7)->safeColorName(),
