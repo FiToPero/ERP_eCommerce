@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -42,6 +43,22 @@ class Product extends Model
         'ml_requirements'    => 'array',
         'meta_requirements'  => 'array',
     ];
+
+    public static function resolveImageUrl(?string $imageLink, string $disk = 'public'): ?string
+    {
+        if (blank($imageLink)) {
+            return null;
+        }
+
+        if (filter_var($imageLink, FILTER_VALIDATE_URL) !== false || str($imageLink)->startsWith('data:')) {
+            return $imageLink;
+        }
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk($disk);
+
+        return $storage->url($imageLink);
+    }
 
     /**
      * Get the category that owns the product.

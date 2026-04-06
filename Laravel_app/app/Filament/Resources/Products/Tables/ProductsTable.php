@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Models\Product;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -9,6 +10,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -59,6 +61,10 @@ class ProductsTable
                         'used'        => 'danger',
                         default       => 'gray',
                     }),
+                ImageColumn::make('image_link')
+                    ->label('Imagen')
+                    ->getStateUsing(fn (Product $record): ?string => Product::resolveImageUrl($record->image_link))
+                    ->square(),
 
                 IconColumn::make('identifier_exists')
                     ->label('Identificadores')

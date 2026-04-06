@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\Product;
 use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -66,9 +67,16 @@ class ProductInfolist
                     ->dateTime()
                     ->placeholder('-'),
 
-                TextEntry::make('image_link')
+                ImageEntry::make('image_link')
                     ->label('Imagen principal')
-                    ->url(fn (?string $state) => $state)
+                    ->getStateUsing(fn (Product $record): ?string => Product::resolveImageUrl($record->image_link))
+                    ->imageHeight(220)
+                    ->square()
+                    ->columnSpanFull(),
+
+                TextEntry::make('image_link')
+                    ->label('URL imagen principal')
+                    ->url(fn (?string $state) => Product::resolveImageUrl($state))
                     ->openUrlInNewTab()
                     ->placeholder('-')
                     ->columnSpanFull(),

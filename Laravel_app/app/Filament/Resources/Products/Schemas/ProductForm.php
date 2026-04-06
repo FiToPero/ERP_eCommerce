@@ -2,13 +2,17 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Models\Product;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ProductForm
@@ -89,9 +93,34 @@ class ProductForm
 
                 TextInput::make('image_link')
                     ->label('Imagen principal')
+                    ->live(onBlur: true)
                     ->url()
+                    ->helperText('Acepta una URL publica o una ruta de archivo en el disco publico.')
                     ->maxLength(2000)
                     ->columnSpanFull(),
+
+                Section::make('Vista previa de imagen')
+                    ->visible(fn (Get $get): bool => filled($get('image_link')))
+                    ->columnSpanFull()
+                    ->components([
+                        Html::make(function (Get $get): HtmlString {
+                            $imageUrl = Product::resolveImageUrl($get('image_link'));
+                            $imageAlt = e($get('name') ?: 'Imagen principal');
+
+                            if (blank($imageUrl)) {
+                                return new HtmlString('');
+                            }
+
+                            $escapedUrl = e($imageUrl);
+
+                            return new HtmlString(<<<HTML
+<div class="flex flex-col gap-3">
+    <img src="{$escapedUrl}" alt="{$imageAlt}" class="max-h-80 w-auto rounded-xl border border-gray-200 object-contain" loading="lazy">
+    <a href="{$escapedUrl}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-primary-600 hover:underline">Abrir imagen en una nueva pestaña</a>
+</div>
+HTML);
+                        }),
+                    ]),
 
                 Textarea::make('additional_image_links')
                     ->label('Imágenes adicionales')
