@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Models\Product;
+use Dom\Text;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -22,15 +23,20 @@ class ProductsTable
     {
         return $table
             ->columns([
-                TextColumn::make('category.name')
-                    ->label('Categoría')
-                    ->sortable()
-                    ->searchable(),
-
                 TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
+
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable()
+                    ->sortable(),
+                                    
+                TextColumn::make('category.name')
+                    ->label('Categoría')
+                    ->sortable()
+                    ->searchable(),
 
                 TextColumn::make('sku')
                     ->label('SKU')

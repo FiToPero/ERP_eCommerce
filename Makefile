@@ -6,7 +6,7 @@
 # Variables
 COMPOSE_DEV = docker compose -f docker-compose.base.yml -f docker-compose.dev.yml
 COMPOSE_PROD = docker compose -f docker-compose.base.yml -f docker-compose.prod.yml
-PHP_EXEC = docker compose exec -w /var/www/html/Laravel_app php
+PHP_EXEC = $(COMPOSE_DEV)7 exec -w /var/www/html/Laravel_app php
 
 help: ## Mostrar esta ayuda
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -50,6 +50,9 @@ prod-logs: ## Ver logs de producción
 
 install: ## Instalar dependencias PHP
 	$(PHP_EXEC) composer install
+
+make: ## ejecuto comando make de Laravel
+	$(PHP_EXEC) php artisan make:$(CMD) $(NAME) $(ARGS)
 
 migrate: ## Ejecutar migraciones
 	$(PHP_EXEC) php artisan migrate

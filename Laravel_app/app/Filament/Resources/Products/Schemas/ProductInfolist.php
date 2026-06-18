@@ -16,11 +16,14 @@ class ProductInfolist
         return $schema
             ->columns(2)
             ->components([
-                TextEntry::make('category.name')
-                    ->label('Categoría'),
+                TextEntry::make('id')
+                    ->label('ID'),
 
                 TextEntry::make('name')
                     ->label('Nombre'),
+
+                TextEntry::make('category.name')
+                    ->label('Categoría'),
 
                 TextEntry::make('sku')
                     ->label('SKU'),

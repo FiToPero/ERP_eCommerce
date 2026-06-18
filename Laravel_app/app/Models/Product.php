@@ -73,7 +73,7 @@ class Product extends Model
      */
     public function stockMovements()
     {
-        return $this->hasMany(StockMovement::class);
+        return $this->hasMany(StockMovement::class, 'product_id');
     }
 
     /**

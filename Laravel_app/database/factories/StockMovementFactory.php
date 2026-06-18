@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Product;
 use App\Models\Storage;
+use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,9 +15,18 @@ class StockMovementFactory extends Factory
     public function definition(): array
     {
         $direction = fake()->randomElement(['in', 'out']);
+
         $type = $direction === 'in'
-            ? fake()->randomElement(['purchase', 'return', 'adjust', 'transfer_in'])
-            : fake()->randomElement(['sale', 'damage', 'adjust', 'transfer_out']);
+            ? fake()->randomElement([
+                'purchase',
+                'adjust',
+                'transfer_in',
+            ])
+            : fake()->randomElement([
+                'sale',
+                'adjust',
+                'transfer_out',
+            ]);
 
         return [
             'product_id' => Product::factory(),

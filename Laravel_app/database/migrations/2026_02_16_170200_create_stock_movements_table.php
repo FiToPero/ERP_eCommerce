@@ -13,9 +13,9 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('storage_id')->constrained('storages')->cascadeOnDelete();
 
-            $table->string('direction', 3); // in | out
-            $table->string('type', 32); // purchase, sale, adjust, transfer_in, transfer_out
-            $table->decimal('quantity', 12, 2);
+            $table->enum('direction', ['in', 'out']);
+            $table->enum('type', ['purchase', 'sale', 'adjust', 'transfer_in', 'transfer_out']);
+            $table->decimal('quantity', 10);
             $table->decimal('unit_cost', 12, 2)->nullable();
 
             $table->string('reference_type')->nullable();

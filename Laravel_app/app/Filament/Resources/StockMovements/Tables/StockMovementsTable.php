@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StockMovements\Tables;
 
+use App\Models\StockMovement;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,15 +19,18 @@ class StockMovementsTable
     {
         return $table
             ->columns([
-                TextColumn::make('product_id')
-                    ->numeric()
+                TextColumn::make('product.name')
+                    ->label('Product')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('storage_id')
-                    ->numeric()
+                TextColumn::make('storage.name')
+                    ->label('Storage')
                     ->sortable(),
                 TextColumn::make('direction')
+                    ->formatStateUsing(fn (?string $state): string => StockMovement::directionOptions()[$state] ?? (string) $state)
                     ->searchable(),
                 TextColumn::make('type')
+                    ->formatStateUsing(fn (?string $state): string => StockMovement::typeOptions()[$state] ?? (string) $state)
                     ->searchable(),
                 TextColumn::make('quantity')
                     ->numeric()

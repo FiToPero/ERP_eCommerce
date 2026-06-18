@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\StockMovements\Schemas;
 
+use App\Models\StockMovement;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
@@ -13,15 +15,20 @@ class StockMovementForm
     {
         return $schema
             ->components([
-                TextInput::make('product_id')
-                    ->required()
-                    ->numeric(),
+                Select::make('product_id')
+                    ->label('Product')
+                    ->relationship('product', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 TextInput::make('storage_id')
                     ->required()
                     ->numeric(),
-                TextInput::make('direction')
+                Select::make('direction')
+                    ->options(StockMovement::directionOptions())
                     ->required(),
-                TextInput::make('type')
+                Select::make('type')
+                    ->options(StockMovement::typeOptions())
                     ->required(),
                 TextInput::make('quantity')
                     ->required()

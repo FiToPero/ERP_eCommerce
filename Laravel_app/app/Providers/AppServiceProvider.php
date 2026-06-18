@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Listeners\TrackUserLogin;
 use App\Listeners\TrackUserLogout;
+use App\Models\StockMovement;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Event;
@@ -26,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(Login::class, [TrackUserLogin::class, 'handle']);
         Event::listen(Logout::class, [TrackUserLogout::class, 'handle']);
+        StockMovement::observe(\App\Observers\StockMovementObserver::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -32,12 +33,47 @@ class StockMovement extends Model
         'metadata' => 'array',
     ];
 
+    public static function directionOptions(): array
+    {
+        return [
+            'in'  => 'In',
+            'out' => 'Out',
+        ];
+    }
+
+    public static function typeOptions(): array
+    {
+        return [
+            'purchase'     => 'Purchase',
+            'sale'         => 'Sale',
+            'adjust'       => 'Adjustment',
+            'transfer_in'  => 'Transfer In',
+            'transfer_out' => 'Transfer Out',
+        ];
+    }
+
     /**
      * Product of this movement.
      */
+    public function productDetail()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    /**
+     * Backward-compatible alias for the related product.
+     */
+    public function productDetails()
+    {
+        return $this->productDetail();
+    }
+
+    /**
+     * Backward-compatible alias for the related product.
+     */
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->productDetail();
     }
 
     /**

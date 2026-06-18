@@ -12,12 +12,14 @@ class StockMovementInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('product_id')
-                    ->numeric(),
+                TextEntry::make('product.name')
+                    ->label('Product'),
                 TextEntry::make('storage_id')
                     ->numeric(),
-                TextEntry::make('direction'),
-                TextEntry::make('type'),
+                TextEntry::make('direction')
+                    ->formatStateUsing(fn (?string $state): string => StockMovement::directionOptions()[$state] ?? (string) $state),
+                TextEntry::make('type')
+                    ->formatStateUsing(fn (?string $state): string => StockMovement::typeOptions()[$state] ?? (string) $state),
                 TextEntry::make('quantity')
                     ->numeric(),
                 TextEntry::make('unit_cost')

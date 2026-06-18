@@ -66,4 +66,24 @@ class ProductDetail extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Stock movements for this product detail (via shared product_id).
+     */
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class, 'product_id', 'product_id');
+    }
+
+    /**
+     * Get current stock based on movements.
+     */
+    public function getStockAttribute(): float
+    {
+        $total = $this->stockMovements()
+            ->selectRaw("COALESCE(SUM(CASE WHEN direction = 'in' THEN quantity ELSE -quantity END), 0) as total")
+            ->value('total');
+
+        return (float) $total;
+    }
 }
