@@ -114,11 +114,11 @@ class ProductForm
                             $escapedUrl = e($imageUrl);
 
                             return new HtmlString(<<<HTML
-<div class="flex flex-col gap-3">
-    <img src="{$escapedUrl}" alt="{$imageAlt}" class="max-h-80 w-auto rounded-xl border border-gray-200 object-contain" loading="lazy">
-    <a href="{$escapedUrl}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-primary-600 hover:underline">Abrir imagen en una nueva pestaña</a>
-</div>
-HTML);
+                                <div class="flex flex-col gap-3">
+                                    <img src="{$escapedUrl}" alt="{$imageAlt}" class="max-h-80 w-auto rounded-xl border border-gray-200 object-contain" loading="lazy">
+                                    <a href="{$escapedUrl}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-primary-600 hover:underline">Abrir imagen en una nueva pestaña</a>
+                                </div>
+                                HTML);
                         }),
                     ]),
 
