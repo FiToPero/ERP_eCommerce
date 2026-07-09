@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,6 +21,9 @@ class DatabaseSeeder extends Seeder
 
          // Crear roles y permisos primero
         $this->command->call('shield:generate', ['--all' => true]);
+
+        // Asegurar que el rol guest existe
+        Role::firstOrCreate(['name' => 'guest', 'guard_name' => 'web']);
 
         // Crear usuario admin
         $admin = User::factory()->create([

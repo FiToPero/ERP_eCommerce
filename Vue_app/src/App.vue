@@ -1,9 +1,9 @@
 <script setup>
-import Welcome from '@/Pages/Welcome.vue'
+import { RouterView, RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <Welcome />
+  <RouterView />
 </template>
 
 <style scoped>

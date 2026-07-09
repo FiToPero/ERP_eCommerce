@@ -32,13 +32,12 @@
                     >
                         Log in
                     </a>
-
-                    <a
-                        {{-- href="{{ route('filament.admin.auth.register') }}" --}}
+                    {{-- <a
+                        href="{{ route('filament.admin.auth.register') }}"
                         class="w-full text-center px-5 py-2 dark:bg-gray-500 dark:text-[#EDEDEC] border border-[#19140035] hover:border-[#1915014a] text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal transition-colors"
                     >
                         Register
-                    </a>
+                    </a> --}}
                 @endauth
             </div>
             <div class="bg-[#fff2f2] dark:bg-[#033221] rounded-lg w-full shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]">
