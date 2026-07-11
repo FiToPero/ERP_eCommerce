@@ -3,20 +3,29 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ApplicationLogo from '../Components/ApplicationLogo.vue'
 import NavLink from '../Components/NavLink.vue'
-
 import ButtonColor from '../Components/ButtonColor.vue'
-import { useLayoutStore } from '../Stores/useLayoutStore'
+import { useAuthStore } from '../Stores/useAuthStore'
 import { storeToRefs } from 'pinia'
 
-
 ///// pinia ////
-const storeLayout = useLayoutStore()
-const {  } = storeToRefs(storeLayout)
-const { showLogin } = storeLayout
+const authStore = useAuthStore()
+const { isLoggedIn } = storeToRefs(authStore)
 
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090'
 
 const router = useRouter()
 
+const logout = async () => {
+    try {
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authStore.token}`, 'Accept': 'application/json' },
+        })
+    } finally {
+        authStore.clearToken()
+        router.push('/login')
+    }
+}
 </script>
 
 <template>
@@ -42,21 +51,16 @@ const router = useRouter()
                     </div>
                 </div>
                 <div class="">
-                    <ButtonColor text="white" bg="gray" @click="router.push('/register')" class="m-3 " >Register</ButtonColor>
-                    <ButtonColor text="white" bg="gray" @click="router.push('/login')" class="m-3 ">Login</ButtonColor>
-                </div>
-                   
-                  
-     
-
+                    <template v-if="!isLoggedIn">
+                        <ButtonColor text="white" bg="gray" @click="router.push('/register')" class="m-3">Register</ButtonColor>
+                        <ButtonColor text="white" bg="gray" @click="router.push('/login')" class="m-3">Login</ButtonColor>
+                    </template>
+                    <template v-else>
+                        <ButtonColor text="white" bg="red" @click="logout" class="m-3">Logout</ButtonColor>
+                    </template>
                 </div>
             </div>
-        
-
-        <!-- Responsive Navigation Menu -->
-  
-
-        
+        </div>    
     </nav>
 
     <!-- Page Heading -->

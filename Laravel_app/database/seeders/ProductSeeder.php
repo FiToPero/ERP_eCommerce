@@ -139,12 +139,6 @@ class ProductSeeder extends Seeder
                 'brand' => 'Apple',
                 'barcode' => '0190199559574',
                 'mpn' => 'MTXT3LL/A',
-                'image_link' => 'https://www.apple.com/newsroom/images/2023/09/apple-introduces-iphone-15-pro-and-iphone-15-pro-max/article/Apple-iPhone-15-Pro-lineup-hero-230912_Full-Bleed-Image.jpg.large.jpg',
-                'additional_image_links' => [
-                    'https://www.apple.com/v/iphone-15-pro/a/images/overview/welcome/hero_endframe__d19t8cya2x0i_xlarge.jpg',
-                    'https://www.apple.com/v/iphone-15-pro/a/images/overview/design/design_hero_endframe__f4saxkdyib2a_xlarge.jpg',
-                ],
-                'video_link' => 'https://www.youtube.com/watch?v=xqyUdNxWazA',
             ],
             [
                 'category_slug' => 'iphone',
@@ -156,12 +150,6 @@ class ProductSeeder extends Seeder
                 'brand' => 'Apple',
                 'barcode' => '0195949729085',
                 'mpn' => 'MPWH3LL/A',
-                'image_link' => 'https://www.apple.com/newsroom/images/product/iphone/standard/Apple-iPhone-14-lineup-yellow-hero-230307_big.jpg.large.jpg',
-                'additional_image_links' => [
-                    'https://www.apple.com/v/iphone-14/a/images/overview/design/colors_midnight__bqgdhxaqc5w2_large.jpg',
-                    'https://www.apple.com/v/iphone-14/a/images/overview/camera/camera_hero_endframe__e6khcva4hkeq_large.jpg',
-                ],
-                'video_link' => 'https://www.youtube.com/watch?v=sa_xd2LxFuc',
             ],
             [
                 'category_slug' => 'samsung-galaxy',
@@ -173,12 +161,6 @@ class ProductSeeder extends Seeder
                 'brand' => 'Samsung',
                 'barcode' => '8806095364861',
                 'mpn' => 'SM-S928BZKPEUB',
-                'image_link' => 'https://images.samsung.com/is/image/samsung/p6pim/ar/2401/gallery/ar-galaxy-s24-s928-sm-s928bzkjaro-thumb-539342727',
-                'additional_image_links' => [
-                    'https://images.samsung.com/is/image/samsung/assets/latin/smartphones/galaxy-s24-ultra/images/galaxy-s24-ultra-highlights-color-titanium-black-back.jpg',
-                    'https://images.samsung.com/is/image/samsung/assets/latin/smartphones/galaxy-s24-ultra/images/galaxy-s24-ultra-highlights-kv.jpg',
-                ],
-                'video_link' => 'https://www.youtube.com/watch?v=JH8vPBh_mTg',
             ],
             [
                 'category_slug' => 'laptops',
@@ -190,12 +172,6 @@ class ProductSeeder extends Seeder
                 'brand' => 'Apple',
                 'barcode' => '195949628503',
                 'mpn' => 'MRX33LL/A',
-                'image_link' => 'https://www.apple.com/newsroom/images/2023/10/apple-unveils-new-macbook-pro-featuring-m3-chips/article/Apple-MacBook-Pro-14-inch-space-black-231030_big.jpg.large.jpg',
-                'additional_image_links' => [
-                    'https://www.apple.com/v/macbook-pro-14-and-16/a/images/overview/hero/hero_intro_endframe__e6khcva4hkeq_large.jpg',
-                    'https://www.apple.com/v/macbook-pro-14-and-16/a/images/overview/performance/performance_hero_endframe__b4w3wzd9a8uq_large.jpg',
-                ],
-                'video_link' => 'https://www.youtube.com/watch?v=ctkW3V0Mh-k',
             ],
             [
                 'category_slug' => 'laptops',
@@ -207,12 +183,6 @@ class ProductSeeder extends Seeder
                 'brand' => 'Dell',
                 'barcode' => '884116346273',
                 'mpn' => 'XPS9530-7759SLV-PUS',
-                'image_link' => 'https://i.dell.com/is/image/DellContent/content/dam/images/products/laptops-and-2-in-1s/xps/15-9530/media-gallery/silver/laptop-xps-9530-t-sl-gallery-1.psd',
-                'additional_image_links' => [
-                    'https://i.dell.com/is/image/DellContent/content/dam/images/products/laptops-and-2-in-1s/xps/15-9530/media-gallery/silver/laptop-xps-9530-t-sl-gallery-2.psd',
-                    'https://i.dell.com/is/image/DellContent/content/dam/images/products/laptops-and-2-in-1s/xps/15-9530/media-gallery/silver/laptop-xps-9530-t-sl-gallery-3.psd',
-                ],
-                'video_link' => 'https://www.youtube.com/watch?v=oS4sjC1Z2Aw',
             ],
             [
                 'category_slug' => 'motorola',

@@ -4,8 +4,10 @@ import { useRouter } from 'vue-router'
 import InputFull from '../Components/InputFull.vue'
 import ButtonColor from '../Components/ButtonColor.vue'
 import CardMobile from '../Components/CardMobile.vue'
+import { useAuthStore } from '../Stores/useAuthStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const form = reactive({
     user_name: '',
@@ -42,7 +44,8 @@ const submit = async () => {
         })
         const data = await response.json()
         if (response.ok) {
-            router.push('/login')
+            authStore.setToken(data.token)
+            router.push('/')
         } else {
             errors.user_name = data.errors?.user_name?.[0] ?? ''
             errors.email     = data.errors?.email?.[0] ?? ''
@@ -66,7 +69,7 @@ const submit = async () => {
                     {{ $t('Register') }}
                 </span>
                 <div class="w-1/12 flex justify-end">
-                    <ButtonColor @click="router.push('/login')" text="white" bg="gray">
+                    <ButtonColor @click="router.push('/')" text="white" bg="gray">
                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                         </svg>

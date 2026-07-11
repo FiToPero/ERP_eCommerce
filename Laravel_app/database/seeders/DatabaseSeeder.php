@@ -23,7 +23,11 @@ class DatabaseSeeder extends Seeder
         $this->command->call('shield:generate', ['--all' => true]);
 
         // Asegurar que el rol guest existe
-        Role::firstOrCreate(['name' => 'guest', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'sales', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'warehouse', 'guard_name' => 'web']);
 
         // Crear usuario admin
         $admin = User::factory()->create([

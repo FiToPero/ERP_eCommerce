@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,13 +27,23 @@ class AuthController extends Controller
             'password'  => Hash::make($data['password']),
         ]);
 
-        $user->assignRole('guest');
+        $user->assignRole('customer');
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $newToken = $user->createToken('api-token');
+
+        UserSession::create([
+            'user_id'          => $user->id,
+            'session_id'       => (string) $newToken->accessToken->id,
+            'ip_address'       => $request->ip(),
+            'user_agent'       => (string) $request->userAgent(),
+            'login_at'         => now(),
+            'last_activity_at' => now(),
+            'is_active'        => true,
+        ]);
 
         return response()->json([
             'user'  => $user,
-            'token' => $token,
+            'token' => $newToken->plainTextToken,
         ], 201);
     }
 
@@ -51,16 +62,58 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->tokens()->delete();
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $newToken = $user->createToken('api-token');
+
+        $existingActive = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('session_id', (string) $newToken->accessToken->id)
+            ->whereNull('logout_at')
+            ->first();
+
+        if ($existingActive) {
+            $existingActive->update([
+                'last_activity_at' => now(),
+                'is_active'        => true,
+            ]);
+        } else {
+            UserSession::create([
+                'user_id'          => $user->id,
+                'session_id'       => (string) $newToken->accessToken->id,
+                'ip_address'       => $request->ip(),
+                'user_agent'       => (string) $request->userAgent(),
+                'login_at'         => now(),
+                'last_activity_at' => now(),
+                'is_active'        => true,
+            ]);
+        }
 
         return response()->json([
             'user'  => $user,
-            'token' => $token,
+            'token' => $newToken->plainTextToken,
         ]);
     }
 
     public function logout(Request $request): JsonResponse
     {
+        $tokenId = (string) $request->user()->currentAccessToken()->id;
+
+        $activeSession = UserSession::query()
+            ->where('user_id', $request->user()->id)
+            ->where('session_id', $tokenId)
+            ->whereNull('logout_at')
+            ->where('is_active', true)
+            ->latest('login_at')
+            ->first();
+
+        if ($activeSession) {
+            $activeSession->update([
+                'logout_at'        => now(),
+                'last_activity_at' => now(),
+                'logout_reason'    => 'logout',
+                'is_active'        => false,
+            ]);
+        }
+
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully.']);

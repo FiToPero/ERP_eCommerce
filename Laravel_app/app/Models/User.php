@@ -71,4 +71,15 @@ class User extends Authenticatable
         return $this->user_name;
     }
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasAnyRole([
+            'super_admin',
+            'admin',
+            'manager',
+            'sales',
+            'warehouse',
+        ]);
+    }
+
 }

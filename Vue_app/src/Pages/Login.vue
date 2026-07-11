@@ -5,13 +5,14 @@ import InputFull from '../Components/InputFull.vue'
 import ButtonColor from '../Components/ButtonColor.vue'
 import Checkbox from '../Components/Checkbox.vue'
 import CardMobile from '../Components/CardMobile.vue'
+import { useAuthStore } from '../Stores/useAuthStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const form = reactive({
     email: '',
     password: '',
-    remember: false,
 })
 const processing = ref(false)
 const emailError = ref('')
@@ -27,9 +28,11 @@ const submit = async () => {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({ email: form.email, password: form.password, remember: form.remember }),
+            body: JSON.stringify({ email: form.email, password: form.password }),
         })
         if (response.ok) {
+            const data = await response.json()
+            authStore.setToken(data.token)
             router.push('/')
         } else {
             const data = await response.json()
@@ -51,7 +54,7 @@ const submit = async () => {
         <div class="flex justify-center items-center mb-5">
             <span class="w-11/12 flex justify-center text-white dark:text-gray-300 text-3xl font-bold">{{ $t('Login') }}</span>
             <div class="w-1/12 flex justify-end">
-                <ButtonColor @click="" text="white" bg="gray" class="">
+                <ButtonColor @click="router.push('/')" text="white" bg="gray" class="">
                     <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                     </svg>
@@ -77,13 +80,6 @@ const submit = async () => {
                 :type="'password'"
                 :id="'password'"
                 ref="password"
-            />
-        </div>
-        <div class="mt-4 block">
-            <Checkbox
-                name="remember"
-                v-model:checked="form.remember"
-                :label="$t('Remember me')"
             />
         </div>
         <div class="mt-4 flex items-center justify-between">
