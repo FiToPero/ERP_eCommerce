@@ -63,6 +63,7 @@ docker compose version
 ```bash
 # Ir a directorio de trabajo
 cd /var/www
+cd   /opt
 
 # Clonar proyecto (con SSH - recomendado)
 sudo git clone git@github.com:tuempresa/erp-filament.git

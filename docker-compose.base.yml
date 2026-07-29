@@ -4,7 +4,10 @@
 
 services:
   php:
-    image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
     volumes:
       - .:/var/www/html
     depends_on:

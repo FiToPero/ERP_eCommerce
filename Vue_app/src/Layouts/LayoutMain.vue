@@ -62,6 +62,7 @@ const logout = async () => {
             </div>
         </div>    
     </nav>
+    
 
     <!-- Page Heading -->
     <header class="bg-white dark:bg-gray-800 shadow" v-if="$slots.header">
