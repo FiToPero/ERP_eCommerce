@@ -135,6 +135,9 @@ cd ..
 
 ### Paso 5: Iniciar Servicios Docker
 
+# Login en dockerhub
+docker login -u <nombre usuario>
+
 ```bash
 # Construir e iniciar contenedores (incluye node + vue para HMR)
 docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d --build
