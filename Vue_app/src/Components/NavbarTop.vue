@@ -110,7 +110,7 @@
     </div>
   </header>
 </template>
-<script lang="ts" setup>
+<script setup>
 import { ref } from 'vue';
 
 const actionItems = [

@@ -55,6 +55,7 @@
           </label>
         </form>
         <nav class="flex flex-nowrap justify-end items-center md:ml-10 gap-x-1">
+          <!-- Recorre actionItems y crea un boton por cada accion disponible en la barra. -->
           <button
             v-for="actionItem in actionItems"
             :key="actionItem.ariaLabel"
@@ -64,54 +65,18 @@
             @click="actionItem.onClick()"
           >
             <svg
-              v-if="actionItem.icon === 'theme' && isDarkMode"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 fill-current"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 17.5q-2.3 0-3.9-1.6Q6.5 14.3 6.5 12t1.6-3.9Q9.7 6.5 12 6.5t3.9 1.6q1.6 1.6 1.6 3.9t-1.6 3.9q-1.6 1.6-3.9 1.6M12 22q-.425 0-.712-.288A.97.97 0 0 1 11 21v-1.025q0-.425.288-.712A.97.97 0 0 1 12 18.975q.424 0 .712.288.288.287.288.712V21q0 .425-.288.712A.97.97 0 0 1 12 22m0-16.975q-.425 0-.712-.288A.97.97 0 0 1 11 4.025V3q0-.425.288-.712A.97.97 0 0 1 12 2q.424 0 .712.288Q13 2.575 13 3v1.025q0 .424-.288.712a.97.97 0 0 1-.712.288M4.925 6.35l-.725-.7q-.3-.3-.3-.713 0-.411.3-.712.275-.3.7-.3.425 0 .725.3l.7.725q.3.3.287.7-.012.4-.287.675-.275.3-.687.313-.413.012-.713-.288m13.7 13.725-.725-.725q-.3-.3-.3-.712 0-.413.3-.688.275-.3.688-.312.412-.013.712.287l.725.7q.3.3.3.725t-.3.7q-.3.3-.712.3-.413 0-.688-.275M19.975 13q-.425 0-.712-.288a.97.97 0 0 1-.288-.712q0-.425.288-.712a.97.97 0 0 1 .712-.288H21q.425 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 21 13zm-16.975 0q-.425 0-.712-.288A.97.97 0 0 1 2 12q0-.425.288-.712A.97.97 0 0 1 3 11h1.025q.424 0 .712.288Q5.025 11.575 5.025 12q0 .424-.288.712a.97.97 0 0 1-.712.288zm2.625 7.075q-.3.275-.712.275-.413 0-.713-.3-.3-.275-.3-.688 0-.412.3-.712l.725-.725q.3-.3.712-.288.413.013.688.313.275.275.288.688.012.412-.288.712zm13.7-13.7q-.3.3-.7.288-.4-.013-.675-.313-.3-.275-.312-.687-.013-.413.287-.713l.7-.725q.3-.3.725-.3t.7.3q.3.3.313.712.012.413-.288.713z" />
-            </svg>
-            <svg
-              v-else-if="actionItem.icon === 'theme'"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 fill-current"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12.05 21q-3.775 0-6.413-2.625Q3 15.75 3 12.025q0-3.05 1.8-5.537 1.8-2.488 4.675-3.338.35-.1.638.013.287.112.437.387t.138.587a.94.94 0 0 1-.263.588q-.725.85-1.075 1.85t-.35 2.05q0 2.075 1.463 3.538Q11.925 13.625 14 13.625q1.05 0 2.05-.35t1.85-1.075q.25-.225.575-.25.325-.025.6.125t.4.425q.15.25.05.625-.85 2.875-3.325 4.675Q15.725 21 12.675 21z" />
-            </svg>
-            <svg
-              v-else-if="actionItem.icon === 'cart'"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 fill-current"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M7 22q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 20q0-.824.588-1.413A1.93 1.93 0 0 1 7 18q.824 0 1.412.587Q9 19.176 9 20t-.588 1.413A1.93 1.93 0 0 1 7 22m10 0q-.825 0-1.412-.587A1.93 1.93 0 0 1 15 20q0-.824.588-1.413A1.93 1.93 0 0 1 17 18q.824 0 1.413.587Q19 19.176 19 20t-.587 1.413A1.93 1.93 0 0 1 17 22M6.15 6l2.4 5h7l2.75-5zM7 17q-1.125 0-1.7-.988-.575-.987-.05-1.962L6.6 11.6 3 4H1.975a.93.93 0 0 1-.7-.288A1 1 0 0 1 1 3q0-.424.288-.712A.97.97 0 0 1 2 2h1.625q.274 0 .525.15.25.15.375.425L5.2 4h14.75q.675 0 .925.5t-.025 1.05l-3.55 6.4a2.03 2.03 0 0 1-.725.775q-.45.275-1.025.275H8.1L7 15h11.025q.425 0 .7.287.275.288.275.713 0 .424-.288.712A.97.97 0 0 1 18 17z" />
-            </svg>
-            <svg
-              v-else-if="actionItem.icon === 'wishlist'"
               xmlns="http://www.w3.org/2000/svg"
               class="h-6 w-6 fill-current"
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
               <path
-                fill-rule="evenodd"
-                d="M19.664 4.99c-2.64-1.8-5.9-.96-7.66 1.1-1.76-2.06-5.02-2.91-7.66-1.1-1.4.96-2.28 2.58-2.34 4.29-.14 3.88 3.3 6.99 8.55 11.76l.1.09c.76.69 1.93.69 2.69-.01l.11-.1c5.25-4.76 8.68-7.87 8.55-11.75-.06-1.7-.94-3.32-2.34-4.28m-7.56 14.56-.1.1-.1-.1c-4.76-4.31-7.9-7.16-7.9-10.05 0-2 1.5-3.5 3.5-3.5 1.54 0 3.04.99 3.57 2.36h1.87c.52-1.37 2.02-2.36 3.56-2.36 2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05"
-                clip-rule="evenodd"
+                :d="actionItem.icon.path"
+                :fill-rule="actionItem.icon.fillRule"
+                :clip-rule="actionItem.icon.clipRule"
               />
             </svg>
-            <svg
-              v-else
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 fill-current"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 12q-1.65 0-2.825-1.175T8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12m6 8H6q-.824 0-1.412-.587A1.93 1.93 0 0 1 4 18v-.8q0-.85.438-1.563A2.9 2.9 0 0 1 5.6 14.55a15 15 0 0 1 3.15-1.163A13.8 13.8 0 0 1 12 13q1.65 0 3.25.387 1.6.388 3.15 1.163.724.375 1.162 1.087T20 17.2v.8q0 .825-.587 1.413A1.93 1.93 0 0 1 18 20M6 18h12v-.8a.94.94 0 0 0-.137-.5 1 1 0 0 0-.363-.35q-1.35-.675-2.725-1.013a11.6 11.6 0 0 0-5.55 0Q7.85 15.675 6.5 16.35a.97.97 0 0 0-.5.85zm6-8q.825 0 1.413-.588Q14 8.825 14 8q0-.824-.587-1.412A1.93 1.93 0 0 0 12 6q-.825 0-1.412.588A1.92 1.92 0 0 0 10 8q0 .825.588 1.412Q11.175 10 12 10" />
-            </svg>
+            <!-- Solo algunos roles muestran texto junto al icono: autenticacion y tema. -->
             <p v-if="actionItem.role === 'auth' || actionItem.role === 'auth-text' || actionItem.role === 'theme'" class="hidden lg:inline-flex whitespace-nowrap mr-2">
               {{ actionItem.label }}
             </p>
@@ -119,6 +84,7 @@
               v-if="actionItem.badge"
               class="absolute -right-1 top-0 inline-flex min-w-5 items-center justify-center rounded-full border border-green-700 bg-white px-1.5 text-xs font-semibold leading-5 text-neutral-900 dark:border-green-900 dark:bg-green-200"
             >
+              <!-- Si el item trae badge, muestra el contador formateado en la esquina del boton. -->
               {{ formatBadge(actionItem.badge.content, actionItem.badge.max) }}
             </span>
           </button>
@@ -151,13 +117,7 @@
       <nav>
         <ul
           class="hidden border-b border-b-neutral-200 bg-white px-6 py-2 dark:border-b-green-700 dark:bg-green-950 md:flex"
-          @blur="
-            (event) => {
-              if (!(event.currentTarget as Element).contains(event.relatedTarget as Element)) {
-                close();
-              }
-            }
-          "
+          @blur="handleDesktopBlur"
         >
           <li v-for="(menuNode, index) in content.children" :key="menuNode.key">
             <button
@@ -314,13 +274,13 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../Stores/useAuthStore';
 
-const findNode = (keys: string[], node: Node): Node => {
+const findNode = (keys, node) => {
   if (keys.length > 1) {
     const [currentKey, ...restKeys] = keys;
     return findNode(restKeys, node.children?.find((child) => child.key === currentKey) || node);
@@ -331,10 +291,10 @@ const findNode = (keys: string[], node: Node): Node => {
 
 const isOpen = ref(false);
 const isDarkMode = ref(false);
-const drawerRef = ref<HTMLElement | null>(null);
-const megaMenuRef = ref<HTMLElement | null>(null);
-const triggerRefs = ref<(HTMLElement | null)[]>([]);
-const activeNode = ref<string[]>([]);
+const drawerRef = ref(null);
+const megaMenuRef = ref(null);
+const triggerRefs = ref([]);
+const activeNode = ref([]);
 const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
@@ -343,9 +303,17 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090';
 const activeMenu = computed(() => findNode(activeNode.value, content));
 const bannerNode = computed(() => findNode(activeNode.value.slice(0, 1), content));
 
-const setTriggerRef = (element: Element | { $el?: Element } | null, index: number) => {
+const setTriggerRef = (element, index) => {
   const resolvedElement = element && '$el' in element ? element.$el : element;
-  triggerRefs.value[index] = resolvedElement as HTMLElement | null;
+  triggerRefs.value[index] = resolvedElement ?? null;
+};
+
+const handleDesktopBlur = (event) => {
+  const currentTarget = event.currentTarget;
+
+  if (currentTarget instanceof Element && !currentTarget.contains(event.relatedTarget)) {
+    close();
+  }
 };
 
 const close = () => {
@@ -353,12 +321,12 @@ const close = () => {
   activeNode.value = [];
 };
 
-const openMenu = (menuType: string[]) => {
+const openMenu = (menuType) => {
   activeNode.value = menuType;
   isOpen.value = true;
 };
 
-const applyTheme = (nextIsDark: boolean) => {
+const applyTheme = (nextIsDark) => {
   isDarkMode.value = nextIsDark;
   document.documentElement.classList.toggle('dark', nextIsDark);
   localStorage.setItem('theme', nextIsDark ? 'dark' : 'light');
@@ -372,11 +340,11 @@ const goBack = () => {
   activeNode.value = activeNode.value.slice(0, activeNode.value.length - 1);
 };
 
-const goNext = (key: string) => {
+const goNext = (key) => {
   activeNode.value = [...activeNode.value, key];
 };
 
-const focusTrigger = (index: number) => {
+const focusTrigger = (index) => {
   close();
   triggerRefs.value[index]?.focus();
 };
@@ -408,14 +376,46 @@ onMounted(() => {
   applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
 });
 
-const formatBadge = (content: number, max: number) => {
+const formatBadge = (content, max) => {
   return content > max ? `${max}+` : `${content}`;
+};
+
+const getActionIcon = (iconName) => {
+  if (iconName === 'theme' && isDarkMode.value) {
+    return {
+      path: 'M12 17.5q-2.3 0-3.9-1.6Q6.5 14.3 6.5 12t1.6-3.9Q9.7 6.5 12 6.5t3.9 1.6q1.6 1.6 1.6 3.9t-1.6 3.9q-1.6 1.6-3.9 1.6M12 22q-.425 0-.712-.288A.97.97 0 0 1 11 21v-1.025q0-.425.288-.712A.97.97 0 0 1 12 18.975q.424 0 .712.288.288.287.288.712V21q0 .425-.288.712A.97.97 0 0 1 12 22m0-16.975q-.425 0-.712-.288A.97.97 0 0 1 11 4.025V3q0-.425.288-.712A.97.97 0 0 1 12 2q.424 0 .712.288Q13 2.575 13 3v1.025q0 .424-.288.712a.97.97 0 0 1-.712.288M4.925 6.35l-.725-.7q-.3-.3-.3-.713 0-.411.3-.712.275-.3.7-.3.425 0 .725.3l.7.725q.3.3.287.7-.012.4-.287.675-.275.3-.687.313-.413.012-.713-.288m13.7 13.725-.725-.725q-.3-.3-.3-.712 0-.413.3-.688.275-.3.688-.312.412-.013.712.287l.725.7q.3.3.3.725t-.3.7q-.3.3-.712.3-.413 0-.688-.275M19.975 13q-.425 0-.712-.288a.97.97 0 0 1-.288-.712q0-.425.288-.712a.97.97 0 0 1 .712-.288H21q.425 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 21 13zm-16.975 0q-.425 0-.712-.288A.97.97 0 0 1 2 12q0-.425.288-.712A.97.97 0 0 1 3 11h1.025q.424 0 .712.288Q5.025 11.575 5.025 12q0 .424-.288.712a.97.97 0 0 1-.712.288zm2.625 7.075q-.3.275-.712.275-.413 0-.713-.3-.3-.275-.3-.688 0-.412.3-.712l.725-.725q.3-.3.712-.288.413.013.688.313.275.275.288.688.012.412-.288.712zm13.7-13.7q-.3.3-.7.288-.4-.013-.675-.313-.3-.275-.312-.687-.013-.413.287-.713l.7-.725q.3-.3.725-.3t.7.3q.3.3.313.712.012.413-.288.713z',
+    };
+  }
+
+  if (iconName === 'theme') {
+    return {
+      path: 'M12.05 21q-3.775 0-6.413-2.625Q3 15.75 3 12.025q0-3.05 1.8-5.537 1.8-2.488 4.675-3.338.35-.1.638.013.287.112.437.387t.138.587a.94.94 0 0 1-.263.588q-.725.85-1.075 1.85t-.35 2.05q0 2.075 1.463 3.538Q11.925 13.625 14 13.625q1.05 0 2.05-.35t1.85-1.075q.25-.225.575-.25.325-.025.6.125t.4.425q.15.25.05.625-.85 2.875-3.325 4.675Q15.725 21 12.675 21z',
+    };
+  }
+
+  if (iconName === 'cart') {
+    return {
+      path: 'M7 22q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 20q0-.824.588-1.413A1.93 1.93 0 0 1 7 18q.824 0 1.412.587Q9 19.176 9 20t-.588 1.413A1.93 1.93 0 0 1 7 22m10 0q-.825 0-1.412-.587A1.93 1.93 0 0 1 15 20q0-.824.588-1.413A1.93 1.93 0 0 1 17 18q.824 0 1.413.587Q19 19.176 19 20t-.587 1.413A1.93 1.93 0 0 1 17 22M6.15 6l2.4 5h7l2.75-5zM7 17q-1.125 0-1.7-.988-.575-.987-.05-1.962L6.6 11.6 3 4H1.975a.93.93 0 0 1-.7-.288A1 1 0 0 1 1 3q0-.424.288-.712A.97.97 0 0 1 2 2h1.625q.274 0 .525.15.25.15.375.425L5.2 4h14.75q.675 0 .925.5t-.025 1.05l-3.55 6.4a2.03 2.03 0 0 1-.725.775q-.45.275-1.025.275H8.1L7 15h11.025q.425 0 .7.287.275.288.275.713 0 .424-.288.712A.97.97 0 0 1 18 17z',
+    };
+  }
+
+  if (iconName === 'wishlist') {
+    return {
+      path: 'M19.664 4.99c-2.64-1.8-5.9-.96-7.66 1.1-1.76-2.06-5.02-2.91-7.66-1.1-1.4.96-2.28 2.58-2.34 4.29-.14 3.88 3.3 6.99 8.55 11.76l.1.09c.76.69 1.93.69 2.69-.01l.11-.1c5.25-4.76 8.68-7.87 8.55-11.75-.06-1.7-.94-3.32-2.34-4.28m-7.56 14.56-.1.1-.1-.1c-4.76-4.31-7.9-7.16-7.9-10.05 0-2 1.5-3.5 3.5-3.5 1.54 0 3.04.99 3.57 2.36h1.87c.52-1.37 2.02-2.36 3.56-2.36 2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05',
+      fillRule: 'evenodd',
+      clipRule: 'evenodd',
+    };
+  }
+
+  return {
+    path: 'M12 12q-1.65 0-2.825-1.175T8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12m6 8H6q-.824 0-1.412-.587A1.93 1.93 0 0 1 4 18v-.8q0-.85.438-1.563A2.9 2.9 0 0 1 5.6 14.55a15 15 0 0 1 3.15-1.163A13.8 13.8 0 0 1 12 13q1.65 0 3.25.387 1.6.388 3.15 1.163.724.375 1.162 1.087T20 17.2v.8q0 .825-.587 1.413A1.93 1.93 0 0 1 18 20M6 18h12v-.8a.94.94 0 0 0-.137-.5 1 1 0 0 0-.363-.35q-1.35-.675-2.725-1.013a11.6 11.6 0 0 0-5.55 0Q7.85 15.675 6.5 16.35a.97.97 0 0 0-.5.85zm6-8q.825 0 1.413-.588Q14 8.825 14 8q0-.824-.587-1.412A1.93 1.93 0 0 0 12 6q-.825 0-1.412.588A1.92 1.92 0 0 0 10 8q0 .825.588 1.412Q11.175 10 12 10',
+  };
 };
 
 const actionItems = computed(() => {
   const commonItems = [
     {
-      icon: 'theme',
+      icon: getActionIcon('theme'),
       label: isDarkMode.value ? 'Light mode' : 'Dark mode',
       ariaLabel: isDarkMode.value ? 'Activate light mode' : 'Activate dark mode',
       role: 'theme',
@@ -423,7 +423,7 @@ const actionItems = computed(() => {
       onClick: toggleDarkMode,
     },
     {
-      icon: 'cart',
+      icon: getActionIcon('cart'),
       label: '',
       ariaLabel: 'Cart',
       role: 'button',
@@ -434,7 +434,7 @@ const actionItems = computed(() => {
       onClick: () => {},
     },
     {
-      icon: 'wishlist',
+      icon: getActionIcon('wishlist'),
       label: '',
       ariaLabel: 'Wishlist',
       role: 'button',
@@ -447,7 +447,7 @@ const actionItems = computed(() => {
     return [
       ...commonItems,
       {
-        icon: 'login',
+        icon: getActionIcon('login'),
         label: 'Log out',
         ariaLabel: 'Log out',
         role: 'auth',
@@ -460,7 +460,7 @@ const actionItems = computed(() => {
   return [
     ...commonItems,
     {
-      icon: 'login',
+      icon: getActionIcon('login'),
       label: 'Log in',
       ariaLabel: 'Log in',
       role: 'auth',
@@ -468,7 +468,7 @@ const actionItems = computed(() => {
       onClick: () => router.push('/login'),
     },
     {
-      icon: undefined,
+      icon: getActionIcon(),
       label: 'Register',
       ariaLabel: 'Register',
       role: 'auth-text',
@@ -478,20 +478,7 @@ const actionItems = computed(() => {
   ];
 });
 
-type Node = {
-  key: string;
-  value: {
-    label: string;
-    counter: number;
-    link?: string;
-    banner?: string;
-    bannerTitle?: string;
-  };
-  children?: Node[];
-  isLeaf: boolean;
-};
-
-const content: Node = {
+const content = {
   key: 'root',
   value: { label: '', counter: 0 },
   isLeaf: false,

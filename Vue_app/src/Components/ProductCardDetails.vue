@@ -292,7 +292,7 @@
   </section>
 </template>
 
-<script lang="ts" setup>
+<script setup>
 import { ref, useId } from 'vue';
 
 const inputId = useId();
@@ -320,11 +320,11 @@ const galleryImages = [
 ];
 const selectedImage = ref(galleryImages[0]);
 
-function clamp(value: number, lower: number, upper: number) {
+function clamp(value, lower, upper) {
   return Math.min(Math.max(value, lower), upper);
 }
 
-function set(nextValue: number) {
+function set(nextValue) {
   count.value = clamp(nextValue, min.value, max.value);
 }
 
@@ -336,8 +336,8 @@ function dec() {
   set(count.value - 1);
 }
 
-function handleOnChange(event: Event) {
-  const currentValue = (event.target as HTMLInputElement)?.value;
+function handleOnChange(event) {
+  const currentValue = event.target instanceof HTMLInputElement ? event.target.value : undefined;
   const nextValue = parseFloat(currentValue);
   set(Number.isNaN(nextValue) ? min.value : nextValue);
 }
