@@ -296,8 +296,10 @@ const megaMenuRef = ref(null);
 const triggerRefs = ref([]);
 const activeNode = ref([]);
 const router = useRouter();
+/// pinia store for authentication
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090';
 
 const activeMenu = computed(() => findNode(activeNode.value, content));
@@ -359,10 +361,7 @@ const logout = async () => {
   try {
     await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        Accept: 'application/json',
-      },
+      headers: {'Authorization': `Bearer ${authStore.token}`, 'Accept': 'application/json'},
     });
   } finally {
     authStore.clearToken();

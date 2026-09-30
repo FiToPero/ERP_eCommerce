@@ -1,11 +1,23 @@
+<script setup>
+import { defineProps } from 'vue';
+
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true
+  }
+});
+</script>
+
 <template>
+  <!-- <div class="text-white">{{ product }}</div> -->
   <article
     class="group relative z-0 max-w-75 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/30 dark:hover:shadow-black/50"
   >
     <div class="relative bg-neutral-100 dark:bg-gray-900">
       <a href="#" class="block">
         <img
-          src="https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/sneakers.png"
+          :src="product.image_link"
           alt="Great product"
           class="block aspect-square h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.09]"
           width="300"
@@ -39,7 +51,7 @@
             href="#"
             class="mt-1 line-clamp-2 text-base font-semibold leading-6 text-neutral-900 transition-colors hover:text-neutral-700 dark:text-gray-100 dark:hover:text-white"
           >
-            Athletic mens walking sneakers
+            {{ product.name }}
           </a>
         </div>
         <span class="rounded-full bg-lime-100 px-2.5 py-1 text-xs font-semibold text-lime-700 dark:bg-lime-950 dark:text-lime-300">In stock</span>
@@ -61,13 +73,13 @@
       </div>
 
       <p class="py-3 text-sm font-normal leading-5 text-neutral-700 dark:text-gray-300">
-        Lightweight • Non slip • Flexible outsole • Easy to wear on and off
+        {{ product.description }}
       </p>
 
       <div class="flex items-end justify-between gap-3 pb-1">
         <div>
-          <p class="text-xs text-neutral-500 line-through dark:text-gray-500">$2599,99</p>
-          <span class="block text-2xl font-bold leading-none text-neutral-900 dark:text-gray-100">$2345,99</span>
+          <p class="text-xs text-neutral-500 line-through dark:text-gray-500">{{ product.product_web.sale_price }}</p>
+          <span class="block text-2xl font-bold leading-none text-neutral-900 dark:text-gray-100">{{ product.product_web.sale_price }}</span>
         </div>
         <span class="rounded-full bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-white dark:bg-gray-100 dark:text-gray-900">-10%</span>
       </div>
