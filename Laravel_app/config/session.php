@@ -156,7 +156,8 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    // Este dominio usa primero `SESSION_DOMAIN` y, si falta, cae al host de `APP_URL` para no perder coherencia.
+    'domain' => env('SESSION_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
 
     /*
     |--------------------------------------------------------------------------

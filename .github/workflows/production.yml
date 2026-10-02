@@ -9,8 +9,14 @@ on:
   # workflow_dispatch:
 
 env:
+  # Esta versión fija de PHP mantiene el runner alineado con la imagen de producción de Laravel.
   PHP_VERSION: "8.3"
+  # Esta versión fija de Node mantiene reproducibles los builds de assets de Laravel y Vue.
   NODE_VERSION: "20"
+  # Este dominio representa el panel Laravel publicado en producción.
+  PROD_ADMIN_DOMAIN: cap-erp-admin.com
+  # Este dominio representa el storefront Vue publicado en producción.
+  PROD_STOREFRONT_DOMAIN: cap-erp-ecommerce.com
 
 jobs:
   test:
@@ -137,8 +143,10 @@ jobs:
           port: ${{ secrets.PROD_SSH_PORT || 22 }}
           command_timeout: 20m
           script: |
+            # Este `set -e` detiene el despliegue de inmediato ante cualquier error real.
             set -e
             
+            # Este cambio de directorio sitúa el script dentro de la copia desplegada del proyecto.
             cd ${{ secrets.PROD_APP_PATH }}
             
             echo "Pulling latest code..."
@@ -177,6 +185,12 @@ jobs:
             
             echo "Restarting PHP-FPM..."
             docker compose restart php
+
+            echo "Validating admin virtual host locally..."
+            curl --fail --silent --show-error -k --resolve ${{ env.PROD_ADMIN_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_ADMIN_DOMAIN }}/health
+
+            echo "Validating storefront virtual host locally..."
+            curl --fail --silent --show-error -k --resolve ${{ env.PROD_STOREFRONT_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_STOREFRONT_DOMAIN }}/
             
             echo "Bringing application back online..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
@@ -208,8 +222,12 @@ jobs:
 
       - name: Health check
         run: |
-          curl --fail --silent --show-error https://${{ secrets.PROD_DOMAIN }}/health || exit 1
-          echo "Health check passed!"
+          # Este curl verifica desde Internet que el dominio del admin responde por HTTPS y expone `/health`.
+          curl --fail --silent --show-error https://${{ env.PROD_ADMIN_DOMAIN }}/health || exit 1
+          # Este curl verifica desde Internet que el dominio público de Vue responde por HTTPS.
+          curl --fail --silent --show-error https://${{ env.PROD_STOREFRONT_DOMAIN }}/ || exit 1
+          # Este mensaje resume que ambos dominios externos respondieron como se esperaba.
+          echo "Health checks passed for admin and storefront!"
 
       - name: Notify deployment success
         if: success()

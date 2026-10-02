@@ -6,12 +6,15 @@ import NavLink from '../Components/NavLink.vue'
 import ButtonColor from '../Components/ButtonColor.vue'
 import { useAuthStore } from '../Stores/useAuthStore'
 import { storeToRefs } from 'pinia'
+// Este import concentra la URL base de la API para evitar repetir hostnames y puertos en cada pantalla.
+import { defaultApiOrigin } from '@/config/runtimeUrls'
 
 ///// pinia ////
 const authStore = useAuthStore()
 const { isLoggedIn } = storeToRefs(authStore)
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090'
+// Esta constante apunta al dominio correcto del backend incluso cuando falta un `.env` específico de Vue.
+const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
 
 const router = useRouter()
 

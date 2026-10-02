@@ -300,7 +300,11 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090';
+// Este import centraliza los fallbacks de dominios para que la SPA no dependa otra vez de puertos explícitos.
+import { defaultApiOrigin } from '@/config/runtimeUrls'
+
+// Esta constante usa primero el valor configurado en Vite y, si no existe, cae al dominio del admin correcto.
+const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin;
 
 const activeMenu = computed(() => findNode(activeNode.value, content));
 const bannerNode = computed(() => findNode(activeNode.value.slice(0, 1), content));

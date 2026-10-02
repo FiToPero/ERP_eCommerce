@@ -7,9 +7,16 @@ on:
     branches: [ "develop" ]
 
 env:
+  # Esta versión fija de PHP mantiene el runner alineado con el contenedor principal de Laravel.
   PHP_VERSION: "8.3"
+  # Esta versión fija de Node mantiene consistencia con los contenedores Vite del proyecto.
   NODE_VERSION: "20"
+  # Esta combinación selecciona el compose base más el override del entorno de desarrollo.
   COMPOSE_FILE: docker-compose.base.yml:docker-compose.dev.yml
+  # Este dominio representa el panel Laravel publicado por Nginx en desarrollo.
+  DEV_ADMIN_DOMAIN: cap-erp-admin-dev.com
+  # Este dominio representa la SPA de Vue publicada por Nginx en desarrollo.
+  DEV_STOREFRONT_DOMAIN: cap-erp-ecommerce-dev.com
 
 jobs:
   test:
@@ -90,7 +97,12 @@ jobs:
           key: ${{ secrets.DEV_SSH_KEY }}
           port: ${{ secrets.DEV_SSH_PORT || 22 }}
           script: |
+            # Este `set -e` hace que el deploy se detenga inmediatamente si cualquier comando falla.
+            set -e
+
+            # Este cambio de directorio sitúa el shell en la carpeta real del proyecto desplegado.
             cd ${{ secrets.DEV_APP_PATH }}
+            # Este export fuerza a `docker compose` a usar la combinación base + desarrollo en todos los comandos posteriores.
             export COMPOSE_FILE=docker-compose.base.yml:docker-compose.dev.yml
             
             # Pull latest code
@@ -119,5 +131,11 @@ jobs:
             
             # Restart PHP-FPM
             docker compose restart php
+
+            # Este curl comprueba localmente el virtual host del admin sin depender del DNS externo del runner de GitHub.
+            curl --fail --silent --show-error --header "Host: ${{ env.DEV_ADMIN_DOMAIN }}" http://127.0.0.1/
+
+            # Este curl comprueba localmente el virtual host del storefront Vue usando el mismo Nginx del servidor.
+            curl --fail --silent --show-error --header "Host: ${{ env.DEV_STOREFRONT_DOMAIN }}" http://127.0.0.1/
             
             echo "✅ Deployment to DEV completed!"

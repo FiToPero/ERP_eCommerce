@@ -6,8 +6,11 @@ import ProductCardDetails from '../Components/ProductCardDetails.vue';
 import Banner from '../Components/Banner.vue';
 import NavbarTop from '../Components/NavbarTop.vue';
 import NavbarTopMenu from '../Components/NavbarTopMenu.vue';
+// Este import centraliza la URL de la API para el catálogo público de la SPA.
+import { defaultApiOrigin } from '@/config/runtimeUrls';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090/api';
+// Esta constante usa el origen de la API por dominio y evita caer al puerto 8090 antiguo.
+const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin;
 const products = ref([]);
 
 onMounted(async () => {

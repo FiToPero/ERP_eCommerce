@@ -108,7 +108,10 @@ nano .env
 APP_NAME="ERP Development"
 APP_ENV=development
 APP_DEBUG=true
-APP_URL=http://dev.ejemplo.com
+APP_URL=http://cap-erp-admin-dev.com
+FRONTEND_URL=http://cap-erp-ecommerce-dev.com
+SESSION_DOMAIN=cap-erp-admin-dev.com
+SANCTUM_STATEFUL_DOMAINS=cap-erp-admin-dev.com,cap-erp-ecommerce-dev.com
 
 DB_CONNECTION=pgsql
 DB_HOST=db
@@ -126,6 +129,12 @@ REDIS_PASSWORD=null
 REDIS_PORT=6379
 
 VITE_APP_NAME="${APP_NAME}"
+VITE_HMR_HOST=cap-erp-admin-dev.com
+VITE_HMR_PORT=5173
+VITE_HMR_CLIENT_PORT=80
+VITE_HMR_PROTOCOL=ws
+VITE_HMR_PATH=/vite-hmr
+VITE_DEV_SERVER_URL=http://cap-erp-admin-dev.com
 ```
 
 **Volver al root:**
@@ -372,6 +381,30 @@ docker compose logs -f node
 
 # Ver logs de Vue dev server
 docker compose logs -f vue
+```
+
+**Hosts locales para desarrollo por dominio sin puerto:**
+
+```text
+# Estas entradas hacen que tu PC resuelva ambos dominios de desarrollo hacia la misma IP.
+127.0.0.1 cap-erp-admin-dev.com
+127.0.0.1 cap-erp-ecommerce-dev.com
+```
+
+**Hosts equivalentes si pruebas contra un servidor de desarrollo remoto:**
+
+```text
+# Sustituye `TU_IP_DEV` por la IP real del servidor donde corre el stack Docker de desarrollo.
+TU_IP_DEV cap-erp-admin-dev.com
+TU_IP_DEV cap-erp-ecommerce-dev.com
+```
+
+**Dominios finales esperados por Nginx:**
+
+```text
+# Producción usa estos dos dominios separados detrás del mismo Nginx.
+https://cap-erp-admin.com
+https://cap-erp-ecommerce.com
 ```
 
 #### Base de Datos

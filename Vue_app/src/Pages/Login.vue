@@ -6,6 +6,8 @@ import ButtonColor from '../Components/ButtonColor.vue'
 import Checkbox from '../Components/Checkbox.vue'
 import CardMobile from '../Components/CardMobile.vue'
 import { useAuthStore } from '../Stores/useAuthStore'
+// Este import usa una URL base compartida para que el login no dependa de `localhost:8090`.
+import { defaultApiOrigin } from '@/config/runtimeUrls'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -18,7 +20,8 @@ const processing = ref(false)
 const emailError = ref('')
 const passwordError = ref('')
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8090'
+// Esta constante resuelve el backend del admin por dominio cuando no se inyectó `VITE_API_URL`.
+const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
 
 const submit = async () => {
     emailError.value = ''
