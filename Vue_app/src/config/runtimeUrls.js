@@ -5,7 +5,7 @@ const currentHostname = typeof window !== 'undefined' ? window.location.hostname
 const isDevelopmentDomain = currentHostname === 'cap-erp-ecommerce-dev.com' || currentHostname === 'cap-erp-admin-dev.com'
 
 // Este origen define el dominio base del admin de Laravel cuando no se suministró ninguna variable Vite explícita.
-export const defaultAdminOrigin = isDevelopmentDomain ? 'http://cap-erp-admin-dev.com' : 'https://cap-erp-admin.com'
+export const defaultAdminOrigin = isDevelopmentDomain ? 'https://cap-erp-admin-dev.com' : 'https://cap-erp-admin.com'
 
 // Este origen define la URL base de la API pública de Laravel respetando el dominio del entorno actual.
 export const defaultApiOrigin = `${defaultAdminOrigin}/api`

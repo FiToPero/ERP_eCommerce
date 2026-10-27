@@ -21,8 +21,10 @@ return [
 
     'allowed_origins' => [
         // Esta variable permite sobrescribir el frontend principal sin tocar el código por entorno.
-        env('FRONTEND_URL', 'http://cap-erp-ecommerce-dev.com'),
-        // Este dominio permite a la SPA de Vue en desarrollo consumir la API de Laravel sin usar puertos explícitos.
+        env('FRONTEND_URL', 'https://cap-erp-ecommerce-dev.com'),
+        // Este dominio permite a la SPA de Vue en desarrollo consumir la API de Laravel por HTTPS (nginx dev ya fuerza TLS).
+        'https://cap-erp-ecommerce-dev.com',
+        // Este dominio se conserva por compatibilidad si algún cliente antiguo todavía llama por HTTP plano.
         'http://cap-erp-ecommerce-dev.com',
         // Este dominio permite al frontend productivo consumir la API o Sanctum desde su hostname final.
         'https://cap-erp-ecommerce.com',

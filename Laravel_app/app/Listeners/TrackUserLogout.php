@@ -17,6 +17,12 @@ class TrackUserLogout
         }
 
         $request = request();
+
+        // Los tokens de la API se cierran en AuthController.
+        if ($request && $request->is('api/*')) {
+            return;
+        }
+
         $sessionId = $request && $request->hasSession()
             ? $request->session()->getId()
             : null;

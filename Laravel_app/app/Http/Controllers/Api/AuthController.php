@@ -29,7 +29,7 @@ class AuthController extends Controller
 
         $user->assignRole('customer');
 
-        $newToken = $user->createToken('api-token');
+        $newToken = $user->createToken('api-token', ['*'], now()->addMinutes(120));
 
         UserSession::create([
             'user_id'          => $user->id,
@@ -62,7 +62,7 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->tokens()->delete();
 
-        $newToken = $user->createToken('api-token');
+        $newToken = $user->createToken('api-token', ['*'], now()->addMinutes(120));
 
         $existingActive = UserSession::query()
             ->where('user_id', $user->id)
@@ -119,6 +119,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully.']);
     }
 
+    /// solo dev hay que eliminar despues
     public function me(Request $request): JsonResponse
     {
         return response()->json($request->user());

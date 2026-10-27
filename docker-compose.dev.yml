@@ -45,9 +45,12 @@ services:
       - network_app
 
   nginx:
-    # Sólo se publica el puerto 80 porque Nginx decidirá el proyecto por dominio y no por puerto.
+    # Se publican los puertos 80 y 443 porque el admin usa cookies `secure` y necesita HTTPS incluso en dev.
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/ssl/dev:/etc/nginx/ssl:ro  # Certificado autofirmado para HTTPS local
     depends_on:
       - php
       - node
