@@ -1,0 +1,11 @@
+{
+    "auth": {
+        "login": "Accedi",
+        "register": "Registrati",
+        "logout": "Disconnettersi"
+    },
+
+    "home": {
+        "welcome": "Benvenuto"
+    }
+}

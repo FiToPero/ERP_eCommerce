@@ -465,7 +465,6 @@ const actionItems = computed(() => {
       onClick: () => router.push('/login'),
     },
     {
-      icon: getActionIcon('register'),
       label: 'Register',
       ariaLabel: 'Register',
       role: 'auth-text',
