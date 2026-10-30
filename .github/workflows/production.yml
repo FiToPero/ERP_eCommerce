@@ -9,14 +9,12 @@ on:
   # workflow_dispatch:
 
 env:
-  # Esta versión fija de PHP mantiene el runner alineado con la imagen de producción de Laravel.
-  PHP_VERSION: "8.3"
-  # Esta versión fija de Node mantiene reproducibles los builds de assets de Laravel y Vue.
-  NODE_VERSION: "20"
-  # Este dominio representa el panel Laravel publicado en producción.
+  PHP_VERSION: "8.4"
+  NODE_VERSION: "24"
   PROD_ADMIN_DOMAIN: cap-erp-admin.com
   # Este dominio representa el storefront Vue publicado en producción.
-  PROD_STOREFRONT_DOMAIN: cap-erp-ecommerce.com
+  PROD_ECOMMERCE_DOMAIN: cap-erp-ecommerce.com
+  PROD_VENTAS_DOMAIN: cap-erp-ventas.com
 
 jobs:
   test:
@@ -38,10 +36,10 @@ jobs:
           cp Laravel_app/.env.testing Laravel_app/.env
 
       - name: Build containers
-        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build --no-cache
+        run: docker compose -f docker-compose.prod.yml build --no-cache
 
       - name: Start services
-        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+        run: docker compose -f docker-compose.prod.yml up -d
 
       - name: Wait for services to be ready
         run: |
@@ -69,7 +67,7 @@ jobs:
 
       - name: Shutdown containers
         if: always()
-        run: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down -v
+        run: docker compose -f docker-compose.prod.yml down -v
 
   build-assets:
     name: Build Frontend Assets
@@ -157,13 +155,13 @@ jobs:
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan down --retry=60 || true
             
             echo "Stopping services..."
-            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml down
             
             echo "Rebuilding PHP container..."
-            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build --no-cache php
+            docker compose -f docker-compose.prod.yml build --no-cache php
             
             echo "Starting services..."
-            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml up -d
             
             echo "Waiting for services..."
             sleep 30
@@ -190,8 +188,11 @@ jobs:
             curl --fail --silent --show-error -k --resolve ${{ env.PROD_ADMIN_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_ADMIN_DOMAIN }}/health
 
             echo "Validating storefront virtual host locally..."
-            curl --fail --silent --show-error -k --resolve ${{ env.PROD_STOREFRONT_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_STOREFRONT_DOMAIN }}/
+            curl --fail --silent --show-error -k --resolve ${{ env.PROD_ECOMMERCE_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_ECOMMERCE_DOMAIN }}/
             
+            echo "Validating ventas virtual host locally..."
+            curl --fail --silent --show-error -k --resolve ${{ env.PROD_VENTAS_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_VENTAS_DOMAIN }}/
+
             echo "Bringing application back online..."
             docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
             
@@ -225,9 +226,11 @@ jobs:
           # Este curl verifica desde Internet que el dominio del admin responde por HTTPS y expone `/health`.
           curl --fail --silent --show-error https://${{ env.PROD_ADMIN_DOMAIN }}/health || exit 1
           # Este curl verifica desde Internet que el dominio público de Vue responde por HTTPS.
-          curl --fail --silent --show-error https://${{ env.PROD_STOREFRONT_DOMAIN }}/ || exit 1
-          # Este mensaje resume que ambos dominios externos respondieron como se esperaba.
-          echo "Health checks passed for admin and storefront!"
+          curl --fail --silent --show-error https://${{ env.PROD_ECOMMERCE_DOMAIN }}/ || exit 1
+          # Este curl verifica desde Internet que el dominio de ventas responde por HTTPS.
+          curl --fail --silent --show-error https://${{ env.PROD_VENTAS_DOMAIN }}/ || exit 1
+          # Este mensaje resume que todos los dominios externos respondieron como se esperaba.
+          echo "Health checks passed for admin, storefront, and ventas!"
 
       - name: Notify deployment success
         if: success()

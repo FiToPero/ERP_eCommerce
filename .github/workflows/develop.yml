@@ -7,8 +7,8 @@ on:
     branches: [ "develop" ]
 
 env:
-  PHP_VERSION: "8.3"
-  NODE_VERSION: "20"
+  PHP_VERSION: "8.4"
+  NODE_VERSION: "24"
   COMPOSE_FILE: docker-compose.dev.yml
   DEV_ADMIN_DOMAIN: cap-erp-admin-dev.com
   # Este dominio representa la SPA de Vue publicada por Nginx en desarrollo.
@@ -99,7 +99,7 @@ jobs:
 
             # Este cambio de directorio sitúa el shell en la carpeta real del proyecto desplegado.
             cd ${{ secrets.DEV_APP_PATH }}
-            # Este export fuerza a `docker compose` a usar la combinación base + desarrollo en todos los comandos posteriores.
+            # Este export fuerza a `docker compose` a usar la desarrollo en todos los comandos posteriores.
             export COMPOSE_FILE=${{ env.COMPOSE_FILE }}
             
             # Pull latest code

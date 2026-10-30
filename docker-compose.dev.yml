@@ -4,10 +4,10 @@
 
 services:
   php:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    #image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: fitopero/erp_php84_26:v1
     volumes:
       - .:/var/www/html
     depends_on:
@@ -16,11 +16,8 @@ services:
     user: "1000:1000"
     networks:
       - network_app
-    # Estas variables activan el modo local de Laravel dentro del contenedor PHP.
     environment:
-      # `APP_ENV=local` habilita convenciones de desarrollo dentro de Laravel.
       APP_ENV: local
-      # `APP_DEBUG=true` muestra trazas y errores detallados durante el desarrollo.
       APP_DEBUG: "true"
       # Desactivar Opcache evita que PHP conserve código viejo en memoria mientras editas.
       PHP_OPCACHE_ENABLE: 0
@@ -36,7 +33,7 @@ services:
           memory: 256M
 
   node:
-    image: node:20-alpine
+    image: node:24-alpine
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
@@ -46,7 +43,7 @@ services:
       - network_app
 
   vue_ecommerce:
-    image: node:20-alpine
+    image: node:24-alpine
     user: "1000:1000"
     working_dir: /app
     volumes:
@@ -57,7 +54,7 @@ services:
       - network_app
 
   vue_ventas:
-    image: node:20-alpine
+    image: node:24-alpine
     user: "1000:1000"
     working_dir: /app
     volumes:
