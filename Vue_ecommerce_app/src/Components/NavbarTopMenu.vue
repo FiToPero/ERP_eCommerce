@@ -65,6 +65,7 @@
             @click="actionItem.onClick()"
           >
             <svg
+              v-if="actionItem.icon"
               xmlns="http://www.w3.org/2000/svg"
               class="h-6 w-6 fill-current"
               viewBox="0 0 24 24"
@@ -436,14 +437,7 @@ const actionItems = computed(() => {
       },
       onClick: () => {},
     },
-    {
-      icon: getActionIcon('wishlist'),
-      label: '',
-      ariaLabel: 'Wishlist',
-      role: 'button',
-      badge: undefined,
-      onClick: () => {},
-    },
+
   ];
 
   if (isLoggedIn.value) {
@@ -451,8 +445,8 @@ const actionItems = computed(() => {
       ...commonItems,
       {
         icon: getActionIcon('login'),
-        label: 'Log out',
-        ariaLabel: 'Log out',
+        label: 'Logout',
+        ariaLabel: 'Logout',
         role: 'auth',
         badge: undefined,
         onClick: logout,
@@ -464,14 +458,14 @@ const actionItems = computed(() => {
     ...commonItems,
     {
       icon: getActionIcon('login'),
-      label: 'Log in',
-      ariaLabel: 'Log in',
+      label: 'Login',
+      ariaLabel: 'Login',
       role: 'auth',
       badge: undefined,
       onClick: () => router.push('/login'),
     },
     {
-      icon: getActionIcon(),
+      icon: getActionIcon('register'),
       label: 'Register',
       ariaLabel: 'Register',
       role: 'auth-text',

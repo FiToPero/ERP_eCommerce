@@ -344,7 +344,7 @@ Los contenedores `node` y `vue` ya ejecutan automáticamente `npm run dev` cuand
 **Los assets se recargan automáticamente** al guardar cambios en:
 - `Laravel_app/resources/js/**`
 - `Laravel_app/resources/css/**`
-- `Vue_app/src/**`
+- `Vue_ecommerce_app/src/**`
 
 **Si necesitas instalar/actualizar dependencias:**
 
@@ -357,7 +357,7 @@ docker compose exec vue npm install
 
 # O manualmente en tu máquina local (también válido):
 cd Laravel_app && npm install && cd ..
-cd Vue_app && npm install && cd ..
+cd Vue_ecommerce_app && npm install && cd ..
 ```
 
 **Para compilar assets en producción (solo antes de deploy):**
@@ -368,9 +368,9 @@ cd Laravel_app
 npm install
 npm run build  # Genera Laravel_app/public/build/
 
-cd ../Vue_app
+cd ../Vue_ecommerce_app
 npm install
-npm run build  # Genera Vue_app/dist/
+npm run build  # Genera Vue_ecommerce_app/dist/
 ```
 
 **Ver logs de los contenedores de frontend:**
@@ -475,7 +475,7 @@ docker compose down -v
 
 3. **Editar código:**
    - **Frontend Laravel:** Modifica `Laravel_app/resources/js/**` o `Laravel_app/resources/css/**`
-   - **Frontend Vue:** Modifica `Vue_app/src/**`
+   - **Frontend Vue:** Modifica `Vue_ecommerce_app/src/**`
    - **Backend PHP:** Modifica `Laravel_app/app/**` o `Laravel_app/routes/**`
 
 4. **Ver cambios automáticamente:**
@@ -529,7 +529,7 @@ rm -rf node_modules  # Limpiar después de compilar
 cd ..
 
 # Compilar Vue.js assets
-cd Vue_app
+cd Vue_ecommerce_app
 npm ci --omit=optional --no-audit --no-fund
 npm run build
 rm -rf node_modules  # Limpiar después de compilar
@@ -544,7 +544,7 @@ cd ..
 
 **Resultado esperado:**
 - `Laravel_app/public/build/` → Assets compilados de Laravel
-- `Vue_app/dist/` → Assets compilados de Vue
+- `Vue_ecommerce_app/dist/` → Assets compilados de Vue
 
 ---
 
@@ -715,7 +715,7 @@ docker compose ps | grep vue
 
 # 4. Verificar que assets compilados existen
 ls -lh Laravel_app/public/build/
-ls -lh Vue_app/dist/
+ls -lh Vue_ecommerce_app/dist/
 # Deben existir archivos .js y .css
 ```
 
@@ -919,11 +919,11 @@ docker compose restart nginx
 ```bash
 # En tu máquina local:
 cd Laravel_app && npm install && npm run build && cd ..
-cd Vue_app && npm install && npm run build && cd ..
+cd Vue_ecommerce_app && npm install && npm run build && cd ..
 
 # Subir solo los assets compilados al servidor
 rsync -avz Laravel_app/public/build/ usuario@servidor:/ruta/proyecto/Laravel_app/public/build/
-rsync -avz Vue_app/dist/ usuario@servidor:/ruta/proyecto/Vue_app/dist/
+rsync -avz Vue_ecommerce_app/dist/ usuario@servidor:/ruta/proyecto/Vue_ecommerce_app/dist/
 ```
 
 ---
@@ -1056,7 +1056,7 @@ Laravel_app/
   ├── storage/app/        → Archivos subidos por usuarios
   └── .env                → Configuración
 
-Vue_app/
+Vue_ecommerce_app/
   └── dist/               → Assets compilados de Vue
 
 docker/

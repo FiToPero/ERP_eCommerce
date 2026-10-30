@@ -87,7 +87,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             Laravel_app/package-lock.json
-            Vue_app/package-lock.json
+            Vue_ecommerce_app/package-lock.json
 
       - name: Build Laravel assets
         run: |
@@ -97,7 +97,7 @@ jobs:
 
       - name: Build Vue.js assets
         run: |
-          cd Vue_app
+          cd Vue_ecommerce_app
           npm ci
           npm run build
 
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vue-assets
-          path: Vue_app/dist/
+          path: Vue_ecommerce_app/dist/
           retention-days: 1
 
   deploy-prod:
@@ -217,7 +217,7 @@ jobs:
           script: |
             cd ${{ secrets.PROD_APP_PATH }}
             mv temp-assets/laravel-assets/* Laravel_app/public/build/
-            mv temp-assets/vue-assets/* Vue_app/dist/
+            mv temp-assets/vue-assets/* Vue_ecommerce_app/dist/
             rm -rf temp-assets
 
       - name: Health check

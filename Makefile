@@ -4,8 +4,8 @@
 .PHONY: help dev prod start stop restart logs build clean test migrate seed fresh deploy health
 
 # Variables
-COMPOSE_DEV = docker compose -f docker-compose.base.yml -f docker-compose.dev.yml
-COMPOSE_PROD = docker compose -f docker-compose.base.yml -f docker-compose.prod.yml
+COMPOSE_DEV = docker compose -f docker-compose.dev.yml
+COMPOSE_PROD = docker compose -f docker-compose.prod.yml
 PHP_EXEC = $(COMPOSE_DEV) exec -w /var/www/html/Laravel_app php
 
 help: ## Mostrar esta ayuda
@@ -19,6 +19,7 @@ dev: ## Iniciar ambiente de desarrollo
 	@echo "Laravel: http://localhost:8090"
 	@echo "Vue.js: http://localhost:8081"
 	@echo "Mailpit: http://localhost:8025"
+	@echo "configurar archivo /etc/hosts:  127.0.0.1 cap-erp-admin-dev.com / cap-erp-ecommerce-dev.com" 
 
 dev-build: ## Construir e iniciar desarrollo
 	$(COMPOSE_DEV) --profile dev build --no-cache
@@ -26,6 +27,7 @@ dev-build: ## Construir e iniciar desarrollo
 
 dev-stop: ## Detener desarrollo
 	$(COMPOSE_DEV) --profile dev down
+	@echo "✅ Ambiente de desarrollo detenido"
 
 dev-logs: ## Ver logs de desarrollo
 	$(COMPOSE_DEV) logs -f
@@ -42,6 +44,7 @@ prod-build: ## Construir e iniciar producción
 
 prod-stop: ## Detener producción
 	$(COMPOSE_PROD) down
+	@echo "✅ Ambiente de producción detenido"
 
 prod-logs: ## Ver logs de producción
 	$(COMPOSE_PROD) logs -f
@@ -90,11 +93,11 @@ optimize: ## Optimizar aplicación
 
 assets-dev: ## Compilar assets desarrollo
 	cd Laravel_app && npm install && npm run dev &
-	cd Vue_app && npm install && npm run dev &
+	cd Vue_ecommerce_app && npm install && npm run dev &
 
 assets-build: ## Compilar assets producción
 	cd Laravel_app && npm install && npm run build
-	cd Vue_app && npm install && npm run build
+	cd Vue_ecommerce_app && npm install && npm run build
 
 ##@ Database
 
@@ -157,3 +160,17 @@ initial-setup: ## Setup inicial del proyecto
 	$(PHP_EXEC) php artisan migrate:fresh --seed
 	$(PHP_EXEC) php artisan shield:super-admin
 	@echo "✅ Setup completado!"
+
+
+### cron server 
+##  file crontab -e
+##  agregar la siguiente línea para ejecutar el cron cada minuto
+##  */10 * * * * cd /opt/ERP_eCommerce && docker compose -f docker-compose.dev.yml exec -T php php artisan schedule:run >> /opt/ERP_eCommerce/storage/logs/scheduler.log 2>&1
+
+# ┌───(fito@FiTo)-[~/AAdocker/ERP_filament][develop*] 
+# └─$ docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan schedule:list 
+#  */10 * * * *  php artisan sessions:close-stale ............................................................................................. Next Due: 7 minutes from now
+
+
+cron: ## Ejecutar tareas programadas de Laravel
+	$(PHP_EXEC) php artisan schedule:run

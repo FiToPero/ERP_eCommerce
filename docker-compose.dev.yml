@@ -1,9 +1,21 @@
 # docker-compose.dev.yml
 # Configuración para DESARROLLO (rama develop)
-# Uso: docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up -d
+# Uso: docker compose -f docker-compose.dev.yml --profile dev up -d
 
 services:
   php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+      - redis
+    user: "1000:1000"
+    networks:
+      - network_app
     # Estas variables activan el modo local de Laravel dentro del contenedor PHP.
     environment:
       # `APP_ENV=local` habilita convenciones de desarrollo dentro de Laravel.
@@ -38,18 +50,23 @@ services:
     user: "1000:1000"
     working_dir: /app
     volumes:
-      - ./Vue_app:/app
+      - ./Vue_ecommerce_app:/app
     # Este comando levanta el dev server de la SPA de Vue escuchando en todas las interfaces internas.
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5174"
     networks:
       - network_app
 
   nginx:
+    image: nginx:1.27-alpine
+    networks:
+      - network_app
     # Se publican los puertos 80 y 443 porque el admin usa cookies `secure` y necesita HTTPS incluso en dev.
     ports:
       - "80:80"
       - "443:443"
     volumes:
+      - .:/var/www/html
+      - ./docker/nginx/default.dev.conf:/etc/nginx/conf.d/default.conf
       - ./docker/nginx/ssl/dev:/etc/nginx/ssl:ro  # Certificado autofirmado para HTTPS local
     depends_on:
       - php
@@ -59,14 +76,35 @@ services:
       NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
 
   db:
+    image: postgres:16-alpine
     ports:
       - "5432:5432"  # Expuesto para herramientas externas (pgAdmin, DBeaver)
     environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=es_ES.UTF-8 --lc-ctype=es_ES.UTF-8"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - network_app
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
   redis:
+    image: redis:7-alpine
     ports:
       - "6379:6379"  # Expuesto para Redis Commander
+    networks:
+      - network_app
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   mailpit:
     image: 'axllent/mailpit:latest'
@@ -78,7 +116,9 @@ services:
     profiles:
       - dev
 
-# Sin límites estrictos en desarrollo
+volumes:
+  db_data:
+
 networks:
   network_app:
     driver: bridge

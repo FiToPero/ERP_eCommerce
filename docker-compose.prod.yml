@@ -1,9 +1,21 @@
 # docker-compose.prod.yml
 # Configuración para PRODUCCIÓN (rama main)
-# Uso: docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+# Uso: docker compose -f docker-compose.prod.yml up -d
 
 services:
   php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+      - redis
+    user: "1000:1000"
+    networks:
+      - network_app
     restart: unless-stopped
     environment:
       APP_ENV: production
@@ -41,6 +53,11 @@ services:
   # Los assets ya están compilados con npm run build
 
   nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - php
+    networks:
+      - network_app
     restart: unless-stopped
     ports:
       - "80:80"
@@ -67,10 +84,18 @@ services:
       retries: 3
 
   db:
+    image: postgres:16-alpine
+    networks:
+      - network_app
     restart: unless-stopped
     # NO exponer puerto 5432 en producción (solo acceso interno)
     environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - db_data:/var/lib/postgresql/data
     deploy:
       replicas: 1
       restart_policy:
@@ -95,6 +120,9 @@ services:
       start_period: 30s
 
   redis:
+    image: redis:7-alpine
+    networks:
+      - network_app
     restart: unless-stopped
     # NO exponer puerto 6379 en producción
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
@@ -117,6 +145,9 @@ services:
 
   # Mailpit NO se incluye en producción (usar SMTP real)
   # Configurar MAIL_MAILER=smtp con credenciales reales en .env
+
+volumes:
+  db_data:
 
 # En producción, usar overlay network para Swarm (opcional)
 networks:
