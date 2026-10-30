@@ -100,7 +100,7 @@ jobs:
             # Este cambio de directorio sitúa el shell en la carpeta real del proyecto desplegado.
             cd ${{ secrets.DEV_APP_PATH }}
             # Este export fuerza a `docker compose` a usar la combinación base + desarrollo en todos los comandos posteriores.
-            export COMPOSE_FILE=docker-compose.base.yml:docker-compose.dev.yml
+            export COMPOSE_FILE=${{ env.COMPOSE_FILE }}
             
             # Pull latest code
             git fetch origin
