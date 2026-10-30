@@ -20,9 +20,10 @@ class DatabaseSeeder extends Seeder
 
 
          // Crear roles y permisos primero
-        $this->command->call('shield:generate', ['--all' => true]);
+        $this->command->call('shield:generate', ['--all' => true, '--panel' => 'admin']);
 
         // Asegurar que el rol guest existe
+        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'web']);
@@ -30,7 +31,7 @@ class DatabaseSeeder extends Seeder
         Role::firstOrCreate(['name' => 'warehouse', 'guard_name' => 'web']);
 
         // Crear usuario admin
-        $admin = User::factory()->create([
+        $admin = User::firstOrCreate([
             'user_name' => 'admin',
             'type' => 'business',
             'email' => 'admin@example.com',
