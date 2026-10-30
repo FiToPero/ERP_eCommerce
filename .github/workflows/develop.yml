@@ -7,16 +7,13 @@ on:
     branches: [ "develop" ]
 
 env:
-  # Esta versión fija de PHP mantiene el runner alineado con el contenedor principal de Laravel.
   PHP_VERSION: "8.3"
-  # Esta versión fija de Node mantiene consistencia con los contenedores Vite del proyecto.
   NODE_VERSION: "20"
-  # Esta combinación selecciona el compose base más el override del entorno de desarrollo.
-  COMPOSE_FILE: docker-compose.base.yml:docker-compose.dev.yml
-  # Este dominio representa el panel Laravel publicado por Nginx en desarrollo.
+  COMPOSE_FILE: docker-compose.dev.yml
   DEV_ADMIN_DOMAIN: cap-erp-admin-dev.com
   # Este dominio representa la SPA de Vue publicada por Nginx en desarrollo.
-  DEV_STOREFRONT_DOMAIN: cap-erp-ecommerce-dev.com
+  DEV_ECOMMERCE_DOMAIN: cap-erp-ecommerce-dev.com
+  DEV_VENTAS_DOMAIN: cap-erp-ventas-dev.com
 
 jobs:
   test:
@@ -136,6 +133,9 @@ jobs:
             curl --fail --silent --show-error --header "Host: ${{ env.DEV_ADMIN_DOMAIN }}" http://127.0.0.1/
 
             # Este curl comprueba localmente el virtual host del storefront Vue usando el mismo Nginx del servidor.
-            curl --fail --silent --show-error --header "Host: ${{ env.DEV_STOREFRONT_DOMAIN }}" http://127.0.0.1/
+            curl --fail --silent --show-error --header "Host: ${{ env.DEV_ECOMMERCE_DOMAIN }}" http://127.0.0.1/
+            
+            # Este curl comprueba localmente el virtual host del panel de ventas usando el mismo Nginx del servidor.
+            curl --fail --silent --show-error --header "Host: ${{ env.DEV_VENTAS_DOMAIN }}" http://127.0.0.1/
             
             echo "✅ Deployment to DEV completed!"
