@@ -35,17 +35,17 @@ jobs:
           cp Laravel_app/.env.testing Laravel_app/.env
 
       - name: Build containers
-        run: docker compose --profile dev up -d
+        run: docker compose -f ${{ env.COMPOSE_FILE }} --profile dev up -d
 
       - name: Wait for services to be ready
         run: |
           echo "Waiting for database..."
-          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
+          timeout 60 bash -c 'until docker compose -f ${{ env.COMPOSE_FILE }} exec -T db pg_isready -U postgres; do sleep 2; done'
           echo "Waiting for PHP-FPM..."
           sleep 10
 
       - name: Fix git safe directory warning
-        run: docker compose exec -T php git config --global --add safe.directory /var/www/html
+        run: docker compose -f ${{ env.COMPOSE_FILE }} exec -T php git config --global --add safe.directory /var/www/html
 
       - name: Fix permissions
         run: |
@@ -53,31 +53,31 @@ jobs:
           sudo chmod -R 775 Laravel_app/storage Laravel_app/bootstrap/cache
 
       - name: Install PHP dependencies
-        run: docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Generate application key
-        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan key:generate
+        run: docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan key:generate
 
       - name: Run migrations
-        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+        run: docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
 
       - name: Clear caches
         run: |
-          docker compose exec -T -w /var/www/html/Laravel_app php php artisan cache:clear
-          docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:clear
-          docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:clear
-          docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:clear
+          docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan cache:clear
+          docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan config:clear
+          docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan route:clear
+          docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan view:clear
 
       - name: Run PHPUnit tests
-        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan test
+        run: docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan test
 
       - name: Run code quality checks
         run: |
-          docker compose exec -T -w /var/www/html/Laravel_app php ./vendor/bin/phpstan analyse --memory-limit=2G || true
+          docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php ./vendor/bin/phpstan analyse --memory-limit=2G || true
 
       - name: Shutdown containers
         if: always()
-        run: docker compose down
+        run: docker compose -f ${{ env.COMPOSE_FILE }} down
 
   deploy-dev:
     name: Deploy to Dev Server
@@ -99,7 +99,7 @@ jobs:
 
             # Este cambio de directorio sitúa el shell en la carpeta real del proyecto desplegado.
             cd ${{ secrets.DEV_APP_PATH }}
-            # Este export fuerza a `docker compose` a usar la desarrollo en todos los comandos posteriores.
+            # Este export fuerza a `docker compose` a usar la configuración de desarrollo en todos los comandos posteriores.
             export COMPOSE_FILE=${{ env.COMPOSE_FILE }}
             
             # Pull latest code
@@ -107,24 +107,24 @@ jobs:
             git reset --hard origin/develop
             
             # Stop services
-            docker compose down
+            docker compose -f ${{ env.COMPOSE_FILE }} down
             
             # Start services
-            docker compose --profile dev up -d
+            docker compose -f ${{ env.COMPOSE_FILE }} --profile dev up -d
             
             # Wait for services
             sleep 15
             
             # Install dependencies
-            docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
             
             # Run migrations
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
-            
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate:refresh --seed --force
+               
             # Clear caches
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:cache
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:cache
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:cache
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan config:cache
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan route:cache
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan view:cache
             
             # Restart PHP-FPM
             docker compose restart php

@@ -44,7 +44,7 @@ jobs:
       - name: Wait for services to be ready
         run: |
           echo "Waiting for database..."
-          timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
+          timeout 60 bash -c 'until docker compose -f docker-compose.prod.yml exec -T db pg_isready -U postgres; do sleep 2; done'
           echo "Waiting for PHP-FPM..."
           sleep 20
 
@@ -54,16 +54,16 @@ jobs:
           sudo chmod -R 775 Laravel_app/storage Laravel_app/bootstrap/cache
 
       - name: Install PHP dependencies (production)
-        run: docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+        run: docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
       - name: Generate application key
-        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan key:generate
+        run: docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan key:generate
 
       - name: Run migrations
-        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+        run: docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
 
       - name: Run PHPUnit tests
-        run: docker compose exec -T -w /var/www/html/Laravel_app php php artisan test --parallel
+        run: docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan test --parallel
 
       - name: Shutdown containers
         if: always()
@@ -152,7 +152,7 @@ jobs:
             git reset --hard origin/main
             
             echo "Putting application in maintenance mode..."
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan down --retry=60 || true
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan down --retry=60 || true
             
             echo "Stopping services..."
             docker compose -f docker-compose.prod.yml down
@@ -167,22 +167,22 @@ jobs:
             sleep 30
             
             echo "Installing PHP dependencies..."
-            docker compose exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
             
             echo "Running migrations..."
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan migrate --force --no-interaction
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan migrate --force --no-interaction
             
             echo "Optimizing application..."
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan config:cache
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan route:cache
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan view:cache
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan event:cache
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan config:cache
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan route:cache
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan view:cache
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan event:cache
             
             echo "Generating Shield permissions..."
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan shield:generate --all --no-interaction || true
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan shield:generate --all --no-interaction || true
             
             echo "Restarting PHP-FPM..."
-            docker compose restart php
+            docker compose -f docker-compose.prod.yml restart php
 
             echo "Validating admin virtual host locally..."
             curl --fail --silent --show-error -k --resolve ${{ env.PROD_ADMIN_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_ADMIN_DOMAIN }}/health
@@ -194,7 +194,7 @@ jobs:
             curl --fail --silent --show-error -k --resolve ${{ env.PROD_VENTAS_DOMAIN }}:443:127.0.0.1 https://${{ env.PROD_VENTAS_DOMAIN }}/
 
             echo "Bringing application back online..."
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan up
             
             echo "Production deployment completed successfully!"
 
@@ -228,7 +228,7 @@ jobs:
           # Este curl verifica desde Internet que el dominio público de Vue responde por HTTPS.
           curl --fail --silent --show-error https://${{ env.PROD_ECOMMERCE_DOMAIN }}/ || exit 1
           # Este curl verifica desde Internet que el dominio de ventas responde por HTTPS.
-          curl --fail --silent --show-error https://${{ env.PROD_VENTAS_DOMAIN }}/ || exit 1
+          curl --fail --silent --show-error https://${{ env.PROD_VENTAS_DOMAIN }}/health || exit 1
           # Este mensaje resume que todos los dominios externos respondieron como se esperaba.
           echo "Health checks passed for admin, storefront, and ventas!"
 
@@ -246,6 +246,7 @@ jobs:
           script: |
             cd ${{ secrets.PROD_APP_PATH }}
             git reset --hard HEAD~1
-            docker compose -f docker-compose.base.yml -f docker-compose.prod.yml restart php
-            docker compose exec -T -w /var/www/html/Laravel_app php php artisan up
+            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml exec -T -w /var/www/html/Laravel_app php php artisan up
             echo "Rollback completed!"
