@@ -7,7 +7,7 @@ services:
     # build:
     #   context: .
     #   dockerfile: Dockerfile
-    image: fitopero/erp_php84_26:v1
+    image: fitopero/erp_php84_26:latest
     volumes:
       - .:/var/www/html
     depends_on:
