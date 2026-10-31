@@ -5,10 +5,14 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  // Este host representa el dominio público del frontend Vue en el servidor de desarrollo.
   const devFrontendHost = env.VITE_DEV_FRONTEND_HOST
-  // Este host adicional representa el dominio público productivo del frontend.
   const prodFrontendHost = env.VITE_PROD_FRONTEND_HOST
+
+  console.log('ECOMMERCE VITE CONFIG:', {
+      mode,
+      devFrontendHost,
+      prodFrontendHost,
+  })
 
   return {
     plugins: [vue(), tailwindcss()],
@@ -24,7 +28,6 @@ export default defineConfig(({ mode }) => {
       // Este origin publica la SPA con el dominio portless visible para el navegador.
       origin: `http://${devFrontendHost}`,
       allowedHosts: [
-        // `localhost` se conserva para pruebas locales puntuales fuera del proxy.
         'localhost',
         prodFrontendHost,
         devFrontendHost,
