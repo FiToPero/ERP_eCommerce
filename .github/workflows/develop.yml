@@ -107,7 +107,7 @@ jobs:
             git reset --hard origin/develop
             
             # Stop services
-            docker compose -f ${{ env.COMPOSE_FILE }} down
+            docker compose -f ${{ env.COMPOSE_FILE }} --profile devdown
             
             # Start services
             docker compose -f ${{ env.COMPOSE_FILE }} --profile dev up -d

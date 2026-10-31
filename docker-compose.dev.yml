@@ -122,8 +122,6 @@ services:
       - "1025:1025"  # SMTP
     networks:
       - network_app
-    profiles:
-      - dev
 
 volumes:
   db_data:
