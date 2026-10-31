@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      port: 5175,
+      port: 5174,
       strictPort: true,
       // Este origin publica la SPA con el dominio portless visible para el navegador.
       origin: `http://${devFrontendHost}`,
