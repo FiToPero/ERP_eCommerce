@@ -8,6 +8,10 @@ import CardMobile from '../Components/CardMobile.vue'
 import { useAuthStore } from '../Stores/useAuthStore'
 // Este import usa una URL base compartida para que el login no dependa de `localhost:8090`.
 import { defaultApiOrigin } from '@/config/runtimeUrls'
+// Mensage de Verificación
+import { useRoute } from 'vue-router'
+const route = useRoute()
+const verifiedMessage = route.query.verified === '1' ? 'Email verified. You can log in now.' : ''
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -19,9 +23,42 @@ const form = reactive({
 const processing = ref(false)
 const emailError = ref('')
 const passwordError = ref('')
+const forgotProcessing = ref(false)
+const forgotMessage = ref('')
+const forgotError = ref('')
 
 // Esta constante resuelve el backend del admin por dominio cuando no se inyectó `VITE_API_URL`.
 const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
+
+const sendResetLink = async () => {
+    forgotMessage.value = ''
+    forgotError.value = ''
+
+    if (!form.email.trim()) {
+        forgotError.value = 'Enter your email address first.'
+        return
+    }
+
+    forgotProcessing.value = true
+    try {
+        const response = await fetch(`${API_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ email: form.email }),
+        })
+        const data = await response.json()
+
+        if (response.ok) {
+            forgotMessage.value = data.message ?? 'If the email is registered, a password reset link will be sent.'
+        } else {
+            forgotError.value = data.errors?.email?.[0] ?? data.message ?? 'Unable to send the password reset link.'
+        }
+    } catch (e) {
+        forgotError.value = 'Connection error'
+    } finally {
+        forgotProcessing.value = false
+    }
+}
 
 const submit = async () => {
     emailError.value = ''
@@ -75,6 +112,23 @@ const submit = async () => {
                 :autofocus="true"
             />
         </div>
+        <div class="mx-2 mt-1 text-right">
+            <a
+                href="#"
+                class="text-sm text-gray-400 hover:text-white"
+                :class="{ 'pointer-events-none opacity-50': forgotProcessing }"
+                :aria-busy="forgotProcessing"
+                @click.prevent="sendResetLink"
+            >
+                {{ forgotProcessing ? 'Sending...' : 'Forgot password?' }}
+            </a>
+        </div>
+        <p v-if="forgotMessage" class="mx-2 mt-2 text-sm text-green-400" role="status">
+            {{ forgotMessage }}
+        </p>
+        <p v-if="forgotError" class="mx-2 mt-2 text-sm text-red-400" role="alert">
+            {{ forgotError }}
+        </p>
         <div class="mx-2">
         <InputFull
                 v-model:model="form.password"
@@ -104,12 +158,3 @@ const submit = async () => {
     </CardMobile>
 </div>
 </template>
-<!-- 
-<script setup>
-
-</script>
-<template>
-<div tabindex="0" class="p-10  overflow-auto flex justify-center items-center bg-white dark:bg-gray-900/80 dark:bg-gradient-to-bl from-gray-800/80 via-transparent dark:ring-1 dark:ring-inset dark:ring-white/5 rounded-lg shadow-2xl shadow-gray-500/20 dark:shadow-none motion-safe:hover:scale-[1.01] transition-all duration-250 focus:outline focus:outline-2 focus:outline-blue-500">
-    <slot />
-</div>  
-</template> -->

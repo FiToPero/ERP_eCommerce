@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('customer_name');
             $table->enum('type', ['personal', 'business'])->default('personal');
             $table->string('web')->nullable();
-            $table->string('email')->unique();
+            $table->string('email');
+            $table->unique(['email', 'web']);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

@@ -49,8 +49,7 @@ const submit = async () => {
         })
         const data = await response.json()
         if (response.ok) {
-            authStore.setToken(data.token)
-            router.push('/')
+            router.push({ path: '/verify-email', query: { email: form.email } })
         } else {
             errors.customer_name = data.errors?.customer_name?.[0] ?? ''
             errors.email     = data.errors?.email?.[0] ?? ''
