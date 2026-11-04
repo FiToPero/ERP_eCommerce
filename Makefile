@@ -170,7 +170,23 @@ initial-setup: ## Setup inicial del proyecto
 # ┌───(fito@FiTo)-[~/AAdocker/ERP_filament][develop*] 
 # └─$ docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan schedule:list 
 #  */10 * * * *  php artisan sessions:close-stale ............................................................................................. Next Due: 7 minutes from now
+#  
+# o ejecutar directamente el comando: php artisan sessions:close-stale dentro del contenedor.
 
+#############################################3
+# Agregar en servidor cron crontab
+# en el server abrir crontab con:
+# crontab -e
+# y agregar la línea:
+# 
+# * * * * * cd /ruta/al/proyecto && docker compose -f docker-compose.dev.yml exec -T -w /var/www/html/Laravel_app php php artisan schedule:run >> /dev/null 2>&1
+#
+# Guardar y comprueba que quedó registrado con crontab -l.
+#############################################
+
+# Para probar sin esperar al cron,
+# ejecuta esa misma línea a mano (sin los cinco asteriscos)
+# o php artisan sessions:close-stale dentro del contenedor.
 
 cron: ## Ejecutar tareas programadas de Laravel
 	$(PHP_EXEC) php artisan schedule:run

@@ -12,16 +12,17 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const form = reactive({
-    user_name: '',
+    customer_name: '',
     email: '',
     password: '',
     password_confirmation: '',
 })
 const processing = ref(false)
 const errors = reactive({
-    user_name: '',
+    customer_name: '',
     email: '',
     password: '',
+    password_confirmation: '',
     general: '',
 })
 
@@ -29,9 +30,10 @@ const errors = reactive({
 const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
 
 const submit = async () => {
-    errors.user_name = ''
+    errors.customer_name = ''
     errors.email = ''
     errors.password = ''
+    errors.password_confirmation = ''
     errors.general = ''
     processing.value = true
     try {
@@ -39,7 +41,7 @@ const submit = async () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({
-                user_name: form.user_name,
+                customer_name: form.customer_name,
                 email: form.email,
                 password: form.password,
                 password_confirmation: form.password_confirmation,
@@ -50,9 +52,10 @@ const submit = async () => {
             authStore.setToken(data.token)
             router.push('/')
         } else {
-            errors.user_name = data.errors?.user_name?.[0] ?? ''
+            errors.customer_name = data.errors?.customer_name?.[0] ?? ''
             errors.email     = data.errors?.email?.[0] ?? ''
             errors.password  = data.errors?.password?.[0] ?? ''
+            errors.password_confirmation = data.errors?.password_confirmation?.[0] ?? ''
             errors.general   = (!data.errors && data.message) ? data.message : ''
         }
     } catch (e) {
@@ -86,11 +89,11 @@ const submit = async () => {
 
             <div class="mx-2">
                 <InputFull
-                    v-model:model="form.user_name"
-                    v-model:errors="errors.user_name"
+                    v-model:model="form.customer_name"
+                    v-model:errors="errors.customer_name"
                     :label="$t('Name')"
                     type="text"
-                    id="user_name"
+                    id="customer_name"
                     :autofocus="true"
                 />
             </div>
@@ -115,7 +118,7 @@ const submit = async () => {
             <div class="mx-2">
                 <InputFull
                     v-model:model="form.password_confirmation"
-                    v-model:errors="errors.password"
+                    v-model:errors="errors.password_confirmation"
                     :label="$t('Confirm Password')"
                     type="password"
                     id="password_confirmation"

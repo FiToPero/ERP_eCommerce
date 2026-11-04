@@ -29,20 +29,20 @@ onMounted(async () => {
         <!-- <Banner /> -->
 
         <!-- <div class="my-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"> -->
-        <div class="my-5 flex flex-wrap items-start justify-center gap-6">
+        <!-- <div class="my-5 flex flex-wrap items-start justify-center gap-6">
             <ProductCardVertical
                 v-for="product in products"
                 :key="product.id"
                 :product="product"
             />
-        </div>
+        </div> -->
         <!-- <div class="my-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 place-items-center"> -->
         <div class="my-5 flex flex-wrap items-start justify-center gap-6">
-            <!-- <ProductCardHorizontal />
-            <ProductCardHorizontal />
-            <ProductCardHorizontal />
-            <ProductCardHorizontal />
-            <ProductCardHorizontal /> -->
+            <ProductCardHorizontal
+                v-for="product in products"
+                :key="product.id"
+                :product="product"
+            />
         </div>
     </section>
     <!-- <ProductCardDetails /> -->

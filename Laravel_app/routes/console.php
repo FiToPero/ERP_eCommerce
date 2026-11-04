@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('sessions:close-stale')->everyTenMinutes();
+Schedule::command('customer-sessions:close-stale')->everyTenMinutes();
