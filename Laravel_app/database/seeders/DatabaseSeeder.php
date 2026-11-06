@@ -40,13 +40,13 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Asignar rol super_admin
-        $admin->assignRole('super_admin');
+        $admin->syncRoles('super_admin');
 
         // Seedear categorías y productos
         $this->call([
-            CategorySeeder::class,
-            ProductSeeder::class,
-            StorageSeeder::class,
+            FactoriesSeeders\CategorySeeder::class,
+            FactoriesSeeders\ProductSeeder::class,
+            FactoriesSeeders\StorageSeeder::class,
         ]);
     }
 }

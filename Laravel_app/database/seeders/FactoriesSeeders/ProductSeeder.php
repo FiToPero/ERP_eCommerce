@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\FactoriesSeeders;
 
 use App\Models\Category;
 use App\Models\Product;
@@ -1051,17 +1051,16 @@ class ProductSeeder extends Seeder
 
     private function productWebAttributes(Product $product): array
     {
-        $hasSale = fake()->boolean(35);
-
+        $price = $this->basePrice($product);
         return [
             'product_id' => $product->id,
             'is_active' => true,
             'status' => 'active',
             'link' => $this->productUrl($product),
             'product_type' => $this->categoryBreadcrumb($product),
-            'sale_price' => $hasSale ? round($this->basePrice($product) * 0.92, 2) : null,
-            'sale_price_start' => $hasSale ? now() : null,
-            'sale_price_end' => $hasSale ? now()->addDays(14) : null,
+            'sale_price' => $price,
+            'sale_price_start' => now(),
+            'sale_price_end' => now()->addDays(14)
             'item_group_id' => $product->slug,
         ];
     }
@@ -1069,8 +1068,6 @@ class ProductSeeder extends Seeder
     private function productGoogleAttributes(Product $product): array
     {
         $price = $this->basePrice($product);
-        $hasSale = fake()->boolean(30);
-
         return [
             'product_id' => $product->id,
             'is_active' => true,
@@ -1087,9 +1084,9 @@ class ProductSeeder extends Seeder
             'availability' => $this->googleAvailability($product),
             'google_product_category' => $this->categoryBreadcrumb($product),
             'product_type' => $this->categoryBreadcrumb($product),
-            'sale_price' => $hasSale ? round($price * 0.9, 2) : null,
-            'sale_price_start' => $hasSale ? now() : null,
-            'sale_price_end' => $hasSale ? now()->addDays(10) : null,
+            'sale_price' => round($price * 0.9, 2),
+            'sale_price_start' => now(),
+            'sale_price_end' => now()->addDays(10),
             'item_group_id' => $product->slug,
         ];
     }
@@ -1150,7 +1147,6 @@ class ProductSeeder extends Seeder
     private function productMetaAttributes(Product $product): array
     {
         $price = $this->basePrice($product);
-        $hasSale = fake()->boolean(25);
         $color = $this->derivedColor($product);
         $size = $this->derivedSize($product);
 
@@ -1173,9 +1169,9 @@ class ProductSeeder extends Seeder
             'size' => $size,
             'google_product_category' => $this->categoryBreadcrumb($product),
             'product_type' => $this->categoryBreadcrumb($product),
-            'sale_price' => $hasSale ? round($price * 0.9, 2) : null,
-            'sale_price_start' => $hasSale ? now() : null,
-            'sale_price_end' => $hasSale ? now()->addDays(7) : null,
+            'sale_price' => round($price * 0.9, 2),
+            'sale_price_start' => now(),
+            'sale_price_end' => now()->addDays(7),
         ];
     }
 

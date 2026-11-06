@@ -2,6 +2,37 @@
 
 Sistema ERP basado en Laravel + Filament con frontend Vue.js, completamente dockerizado.
 
+## Roles de usuarios del panel
+
+Cada usuario creado desde el panel tiene un rol. Las asignaciones permitidas son:
+`super_admin` puede asignar `super_admin`, `admin`, `manager`, `sales` y
+`warehouse`; `admin` puede asignar `manager`, `sales` y `warehouse`; y
+`manager` puede asignar `sales` y `warehouse`. Los demás roles no pueden asignar
+roles. La edición de usuarios y la gestión de roles también requieren sus permisos
+habituales; solo `super_admin` puede modificar roles y sus permisos en Shield.
+
+Un administrador puede cambiar su propio rol a uno permitido por la matriz,
+incluso si es el último `super_admin`. No puede modificar a otro usuario con un
+rol fuera de su ámbito. Los roles deben existir con el guard `web`.
+
+La migración `2026_11_06_000000_limit_users_to_one_role` impide asignar más de
+un rol a un `User` en PostgreSQL y SQLite. Si ya hay usuarios con varios roles,
+deben regularizarse antes de migrar; la migración no elimina datos. El índice
+permite usuarios sin rol, pero el formulario de creación exige uno. Ejecutar
+`php artisan migrate` después de desplegar; no es necesario hacer `migrate:fresh`.
+
+## Verificación del correo de usuarios
+
+Al crear un usuario se envía un enlace de verificación. Si se cambia su correo
+en edición, se elimina la fecha de verificación y se envía un enlace nuevo a la
+dirección guardada; los enlaces de la dirección anterior dejan de funcionar.
+Los enlaces caducan después de 60 minutos.
+
+En la edición de un usuario sin verificar, el botón **Reenviar correo de
+verificación** envía el enlace al correo guardado. Guarda primero los cambios
+del formulario. Si el envío falla, el usuario sigue sin verificar y el panel
+avisa para que se pueda volver a enviar.
+
 AO28
 ---
 
