@@ -1060,7 +1060,7 @@ class ProductSeeder extends Seeder
             'product_type' => $this->categoryBreadcrumb($product),
             'sale_price' => $price,
             'sale_price_start' => now(),
-            'sale_price_end' => now()->addDays(14)
+            'sale_price_end' => now()->addDays(14),
             'item_group_id' => $product->slug,
         ];
     }
