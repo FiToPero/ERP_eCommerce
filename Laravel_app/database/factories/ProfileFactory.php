@@ -17,16 +17,12 @@ class ProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
+            'customer_id' => \App\Models\Customer::factory(),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'company_name' => $this->faker->company(),
             'cuit' => $this->faker->unique()->numerify('##-########-#'),
             'phone' => $this->faker->phoneNumber(),
-            'address' => $this->faker->address(),
-            'city' => $this->faker->city(),
-            'state' => $this->faker->state(),
-            'zip_code' => $this->faker->postcode(),
             'birthdate' => $this->faker->date(),
             'bio' => $this->faker->text(),
             'website' => $this->faker->url(),

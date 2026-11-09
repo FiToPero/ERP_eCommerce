@@ -50,15 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             'password' => 'hashed',
         ];
     }
-
-    /**
-     * Get the profile associated with the user.
-     */
-    public function profile()
-    {
-        return $this->hasOne(Profile::class);
-    }
-
+    
     /**
      * Get the login sessions for the user.
      */

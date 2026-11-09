@@ -190,3 +190,13 @@ initial-setup: ## Setup inicial del proyecto
 
 cron: ## Ejecutar tareas programadas de Laravel
 	$(PHP_EXEC) php artisan schedule:run
+
+
+##########################  Para hacer el server VPS
+#   SERVER
+##   para hacer el el server VPS
+#################################
+# Install Fail2ban
+# sudo apt install fail2ban
+# sudo apt update && sudo apt upgrade -y ## automatico
+# Tailscale -> VPN privada ## opcional

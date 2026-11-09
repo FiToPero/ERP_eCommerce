@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
         Role::firstOrCreate(['name' => 'sales', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'warehouse', 'guard_name' => 'web']);
 
+        $this->call(FactoriesSeeders\RolePermissionSeeder::class);
+
         // Crear usuario admin
         $admin = User::firstOrCreate([
             'user_name' => 'admin',

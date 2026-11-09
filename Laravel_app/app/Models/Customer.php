@@ -47,5 +47,13 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
+    /**
+     * Get the profile associated with the customer.
+     */
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+
 }
 

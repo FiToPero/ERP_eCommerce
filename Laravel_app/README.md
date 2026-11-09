@@ -7,6 +7,12 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Asignación inicial de permisos
+
+`RolePermissionSeeder` agrega las asociaciones de permisos a roles indicadas por sus IDs, sin eliminar permisos existentes. Se ejecuta desde `DatabaseSeeder` después de generar los permisos de Shield y crear los roles, o individualmente con `php artisan db:seed --class=RolePermissionSeeder`.
+
+Antes de ejecutarlo, verifica que los IDs 1 a 6 de roles y 1 a 69 de permisos correspondan a los mismos roles y permisos de la base de datos de referencia. Los IDs pueden cambiar entre bases de datos; la existencia de un ID no garantiza que represente el mismo rol o permiso. Si falta alguno, el seeder falla sin guardar asignaciones parciales.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

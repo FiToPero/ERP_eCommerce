@@ -2,8 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\User;
-use App\Support\UserRoleAssignments;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -23,16 +21,12 @@ class UserPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:User')
-            && $authUser instanceof User
-            && app(UserRoleAssignments::class)->allowedRoles($authUser) !== [];
+        return $authUser->can('Create:User');
     }
 
-    public function update(AuthUser $authUser, User $user): bool
+    public function update(AuthUser $authUser): bool
     {
-        return $authUser->can('Update:User')
-            && $authUser instanceof User
-            && app(UserRoleAssignments::class)->canManageUser($authUser, $user);
+        return $authUser->can('Update:User');
     }
 
     public function delete(AuthUser $authUser): bool

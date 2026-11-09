@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;   
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Customer;
 
 class Profile extends Model
 {
@@ -17,7 +18,7 @@ class Profile extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'first_name',
         'last_name',
         'company_name',
@@ -38,11 +39,11 @@ class Profile extends Model
     ];
 
     /**
-     * Get the user that owns the profile.
+     * Get the customer that owns the profile.
      */
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
 }
