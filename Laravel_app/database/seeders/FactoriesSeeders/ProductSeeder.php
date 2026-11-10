@@ -8,7 +8,8 @@ use App\Models\ProductDetail;
 use App\Models\ProductGoogle;
 use App\Models\ProductMercadolibre;
 use App\Models\ProductMeta;
-use App\Models\ProductWeb;
+use App\Models\ProductWebEcommerce;
+use App\Models\ProductWebVenta;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
@@ -977,9 +978,14 @@ class ProductSeeder extends Seeder
             $this->productDetailAttributes($product)
         );
 
-        ProductWeb::updateOrCreate(
+        ProductWebEcommerce::updateOrCreate(
             ['product_id' => $product->id],
-            $this->productWebAttributes($product)
+            $this->productWebEcommerceAttributes($product)
+        );
+
+        ProductWebVenta::updateOrCreate(
+            ['product_id' => $product->id],
+            $this->productWebVentaAttributes($product)
         );
 
         ProductGoogle::updateOrCreate(
@@ -1049,7 +1055,23 @@ class ProductSeeder extends Seeder
         ];
     }
 
-    private function productWebAttributes(Product $product): array
+    private function productWebEcommerceAttributes(Product $product): array
+    {
+        $price = $this->basePrice($product);
+        return [
+            'product_id' => $product->id,
+            'is_active' => true,
+            'status' => 'active',
+            'link' => $this->productUrl($product),
+            'product_type' => $this->categoryBreadcrumb($product),
+            'sale_price' => $price,
+            'sale_price_start' => now(),
+            'sale_price_end' => now()->addDays(14),
+            'item_group_id' => $product->slug,
+        ];
+    }
+
+    private function productWebVentaAttributes(Product $product): array
     {
         $price = $this->basePrice($product);
         return [
