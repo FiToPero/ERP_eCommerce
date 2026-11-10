@@ -95,8 +95,8 @@ function handleOnChange(event) {
       </div>
       <div class="mt-4 flex flex-col gap-4 sm:mt-auto sm:flex-row sm:items-end">
         <div class="sm:order-1 sm:ml-auto sm:text-right">
-          <p class="text-xs text-neutral-500 line-through dark:text-gray-500">{{ product.product_web.sale_price }}</p>
-          <span class="text-lg font-bold text-neutral-900 dark:text-gray-100 sm:text-2xl">{{ product.product_web.sale_price }}</span>
+          <p class="text-xs text-neutral-500 line-through dark:text-gray-500">{{ product.product_web_venta.sale_price }}</p>
+          <span class="text-lg font-bold text-neutral-900 dark:text-gray-100 sm:text-2xl">{{ product.product_web_ecommerce.sale_price }}</span>
         </div>
         <div class="flex items-center justify-between gap-3 sm:flex-1">
           <div class="flex items-center rounded-full border border-neutral-300 bg-neutral-50 dark:border-gray-600 dark:bg-gray-900">

@@ -78,8 +78,8 @@ const props = defineProps({
 
       <div class="flex items-end justify-between gap-3 pb-1">
         <div>
-          <p class="text-xs text-neutral-500 line-through dark:text-gray-500">{{ product.product_web.sale_price }}</p>
-          <span class="block text-2xl font-bold leading-none text-neutral-900 dark:text-gray-100">{{ product.product_web.sale_price }}</span>
+          <p class="text-xs text-neutral-500 line-through dark:text-gray-500">{{ product.product_web_ecommerce.sale_price }}</p>
+          <span class="block text-2xl font-bold leading-none text-neutral-900 dark:text-gray-100">{{ product.product_web_ecommerce.sale_price }}</span>
         </div>
         <span class="rounded-full bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-white dark:bg-gray-100 dark:text-gray-900">-10%</span>
       </div>

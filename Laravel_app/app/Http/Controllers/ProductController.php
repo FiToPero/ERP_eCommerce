@@ -12,7 +12,8 @@ class ProductController extends Controller
             'category',
             'productDetail',
             'productGoogle',
-            'productWeb',
+            'productWebEcommerce',
+            'productWebVenta',
             'productMercadolibre',
             'productMeta',
         ])->get();

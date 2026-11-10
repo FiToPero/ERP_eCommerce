@@ -99,9 +99,17 @@ class Product extends Model
     /**
      * Datos de publicación en el sitio web para este producto.
      */
-    public function productWeb()
+    public function productWebEcommerce()
     {
-        return $this->hasOne(ProductWeb::class);
+        return $this->hasOne(ProductWebEcommerce::class);
+    }
+
+    /**
+     * Datos de publicación en el sitio web de venta para este producto.
+     */
+    public function productWebVenta()
+    {
+        return $this->hasOne(ProductWebVenta::class);
     }
 
     /**
