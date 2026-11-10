@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_webs', function (Blueprint $table) {
+        Schema::create('product_web_ventas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->unique()->constrained('products')->cascadeOnDelete();
 
@@ -48,6 +48,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_webs');
+        Schema::dropIfExists('product_web_ventas');
     }
 };

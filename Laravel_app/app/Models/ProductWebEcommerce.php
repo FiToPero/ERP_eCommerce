@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProductWeb extends Model
+class ProductWebEcommerce extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductWebFactory> */
+    /** @use HasFactory<\Database\Factories\ProductWebEcommerceFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

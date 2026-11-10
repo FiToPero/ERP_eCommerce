@@ -3,14 +3,15 @@
 namespace Database\Factories;
 
 use App\Models\Product;
+use App\Models\ProductWebVenta;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProductWeb>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProductWebVenta>
  */
-class ProductWebFactory extends Factory
+class ProductWebVentaFactory extends Factory
 {
-    /**
+   /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
