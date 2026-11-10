@@ -1,6 +1,6 @@
 # Makefile
 # Comandos útiles para desarrollo y producción
-
+# ssh -p5064 fito@66.87.43.244
 .PHONY: help dev prod start stop restart logs build clean test migrate seed fresh deploy health
 
 # Variables
