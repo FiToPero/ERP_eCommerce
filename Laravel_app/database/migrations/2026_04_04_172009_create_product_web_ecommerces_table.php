@@ -24,6 +24,8 @@ return new class extends Migration
             // REQUIRED
             $table->string('link', 2000)->nullable()
                 ->comment('URL de la pagina del producto en tu tienda (REQUIRED)');
+            $table->string('seo_title')->nullable();
+            $table->text('seo_description')->nullable();
             $table->string('product_type', 750)->nullable()
                 ->comment('Categoría propia del comercio. NOTA: deberia crearce automaticamente de categories (RECOMMENDED)');
             $table->decimal('sale_price', 12, 2)->nullable()

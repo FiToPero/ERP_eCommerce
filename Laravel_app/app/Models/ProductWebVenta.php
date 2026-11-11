@@ -16,6 +16,8 @@ class ProductWebVenta extends Model
         'is_active',
         'status',
         'link',
+        'seo_title',
+        'seo_description',
         'product_type',
         'sale_price',
         'sale_price_start',

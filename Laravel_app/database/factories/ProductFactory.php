@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -11,6 +12,15 @@ use Illuminate\Support\Str;
  */
 class ProductFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Product $product): void {
+            if (blank($product->image_directory)) {
+                $product->image_directory = Product::makeImageDirectory($product->name);
+            }
+        });
+    }
+
     /**
      * Define the model's default state.
      *
@@ -24,12 +34,6 @@ class ProductFactory extends Factory
         $barcode   = $this->faker->optional(0.7)->ean13();
         $mpn       = $this->faker->optional(0.6)->bothify('MPN-##??-####');
         $condition = $this->faker->randomElement(['new', 'refurbished', 'used']);
-        $imageLink = 'https://picsum.photos/seed/' . $slug . '/1200/1200';
-        $additionalImageLinks = $this->faker->optional(0.6)->passthrough(
-            collect(range(1, $this->faker->numberBetween(1, 4)))
-                ->map(fn (int $index) => 'https://picsum.photos/seed/' . $slug . '-' . $index . '/1200/1200')
-                ->all()
-        );
 
         return [
             'category_id'        => Category::inRandomOrder()->value('id') ?? Category::factory(),
@@ -46,8 +50,6 @@ class ProductFactory extends Factory
             'availability_date'  => $condition === 'new'
                 ? null
                 : $this->faker->optional(0.3)->dateTimeBetween('now', '+6 months'),
-            'image_link'         => $imageLink,
-            'additional_image_links' => $additionalImageLinks,
             'video_link'         => $this->faker->optional(0.35)->url(),
             'web_requirements'    => null,
             'google_requirements' => null,

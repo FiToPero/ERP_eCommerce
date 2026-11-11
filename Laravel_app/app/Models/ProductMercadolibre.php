@@ -21,6 +21,7 @@ class ProductMercadolibre extends Model
         'sync_errors',
         // Required
         'title',
+        'description',
         'category_id',
         'price',
         'currency_id',

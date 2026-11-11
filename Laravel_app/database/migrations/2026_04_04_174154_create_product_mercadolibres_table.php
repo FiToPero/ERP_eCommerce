@@ -25,6 +25,7 @@ return new class extends Migration
 
             // REQUIRED
             $table->string('title')->nullable()->comment('Título del producto (REQUIRED)');
+            $table->text('description')->nullable()->comment('Descripción de la publicación');
             $table->string('category_id')->nullable()->comment('Categoría MercadoLibre (REQUIRED)');
             $table->decimal('price', 12, 2)->nullable()->comment('Precio (REQUIRED)');
             $table->string('currency_id', 3)->default('ARS')->comment('Moneda (REQUIRED)');

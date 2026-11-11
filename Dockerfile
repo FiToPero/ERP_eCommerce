@@ -14,10 +14,11 @@ RUN apk add --no-cache \
     libxml2-dev \
     freetype-dev \
     libjpeg-turbo-dev \
-    libpng-dev
+    libpng-dev \
+    libwebp-dev
 
 # Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo \
     pdo_pgsql \
@@ -30,6 +31,12 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     pcntl \
     bcmath \
     gd
+
+RUN printf '%s\n' \
+    'upload_max_filesize = 6M' \
+    'post_max_size = 8M' \
+    'memory_limit = 256M' \
+    > /usr/local/etc/php/conf.d/zz-product-uploads.ini
 
 # Install Redis extension via PECL
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
@@ -70,6 +77,4 @@ RUN chown -R app:app /var/www/html \
 USER app
 
 CMD ["php-fpm"]
-
-
 

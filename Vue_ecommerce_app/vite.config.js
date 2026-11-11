@@ -8,12 +8,6 @@ export default defineConfig(({ mode }) => {
   const devFrontendHost = env.VITE_DEV_FRONTEND_HOST
   const prodFrontendHost = env.VITE_PROD_FRONTEND_HOST
 
-  console.log('ECOMMERCE VITE CONFIG:', {
-      mode,
-      devFrontendHost,
-      prodFrontendHost,
-  })
-
   return {
     plugins: [vue(), tailwindcss()],
     resolve: {

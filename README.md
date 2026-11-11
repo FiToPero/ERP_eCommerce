@@ -21,6 +21,116 @@ deben regularizarse antes de migrar; la migración no elimina datos. El índice
 permite usuarios sin rol, pero el formulario de creación exige uno. Ejecutar
 `php artisan migrate` después de desplegar; no es necesario hacer `migrate:fresh`.
 
+## Imágenes de productos
+
+Desarrollo y producción usan el mismo esquema, en VPS independientes. En cada
+servidor, antes de iniciar o recrear los contenedores:
+
+```bash
+sudo install -d -o 1000 -g 1000 -m 755 ./ERP_storage/public/products
+```
+
+Los archivos de Compose montan `./ERP_storage/public` (relativo al proyecto) en
+`Laravel_app/storage/app/public`: PHP escribe como UID/GID `1000:1000` y Nginx
+lo monta en solo lectura. Comprueba también que Nginx pueda atravesar y leer los
+directorios del VPS. El montaje requiere que el directorio exista: no lo crea
+automáticamente. Al activarlo, el contenido anterior de `storage/app/public`
+queda oculto; antes de recrear los contenedores, respalda y copia al directorio
+externo cualquier otro archivo público que deba conservarse.
+
+Después de configurar los montajes, selecciona el archivo Compose del entorno:
+
+```bash
+# Usar docker-compose.dev.yml en desarrollo o docker-compose.prod.yml en producción.
+docker compose -f docker-compose.dev.yml up -d
+# Crear el enlace solo si public/storage todavía no existe.
+docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan storage:link
+docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan migrate --force
+```
+
+Verifica que `public/storage` no exista ya como directorio y que el enlace
+apunte a `storage/app/public`. Configura `APP_URL` en Laravel con la URL HTTPS
+del administrador accesible por los navegadores y los canales externos. Si se
+usa configuración cacheada, actualízala después de modificar el `.env`.
+El archivo de configuración PHP de ambos entornos permite las cargas del panel:
+como máximo 10 imágenes JPEG, PNG o WebP de 5 MiB cada una.
+
+Las imágenes nuevas se convierten a WebP (calidad 85, máximo 12 megapíxeles) y
+se guardan en `products/{nombre-producto}-{ulid}/{nombre-producto}-{descripcion}.webp`.
+La descripción del nombre es opcional; si se omite se usa `imagen`. Si un nombre
+ya está reservado se añade `-2`, `-3`, etc., sin sobrescribir archivos. La carpeta
+es estable aunque cambie el nombre del producto; la descripción se usa solo al
+cargar o reemplazar una imagen. Las imágenes antiguas no se convierten ni mueven.
+Las reservas en `product_image_names` se conservan incluso si se elimina una
+imagen, para no reutilizar URLs. Al restaurar una copia de seguridad deben
+restaurarse tanto la base de datos como los archivos correspondientes.
+
+GD debe tener soporte WebP y EXIF en ambos entornos. Ambos archivos Compose usan
+la imagen `fitopero/erp_php84_26:latest`, construida desde el `Dockerfile` de la
+raíz. Para construir y publicar una actualización desde la raíz del proyecto:
+
+```bash
+docker build -t fitopero/erp_php84_26:latest .
+docker login
+docker push fitopero/erp_php84_26:latest
+```
+
+En cada VPS, después de actualizar el código y el Compose correspondiente,
+descarga la imagen y recrea PHP. El ejemplo usa desarrollo; sustituye el nombre
+del archivo por `docker-compose.prod.yml` en producción:
+
+```bash
+docker compose -f docker-compose.dev.yml pull php
+docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate php
+docker compose -f docker-compose.dev.yml exec php php -r 'var_export(gd_info()["WebP Support"]);'
+```
+
+La etiqueta `latest` es mutable: la imagen local no se actualiza hasta hacer
+`pull`. Para despliegues reproducibles conviene publicar también una etiqueta
+versionada. Los campos y la tabla de reservas se añadieron a migraciones
+existentes: en una base ya migrada no aparecen automáticamente. Si se usa
+`migrate:fresh`, se perderán todas las tablas y datos; respalda antes de hacerlo.
+
+El seeder de productos descarga fotografías aleatorias de ejemplo desde
+`picsum.photos` para cada producto sin imágenes, las convierte a WebP y las guarda
+en el disco de imágenes configurado. Uno de cada cuatro productos recibe tres
+imágenes; los demás, una. Los registros incluyen texto alternativo, título y
+descripción de ejemplo. Las fotografías no representan necesariamente el producto,
+por lo que estos textos no describen su contenido real y deben reemplazarse antes
+de publicarlas. La ejecución requiere acceso a Internet y soporte WebP; si falla
+la descarga o el guardado, el seeder informa el error. Al ejecutarlo de nuevo,
+conserva las imágenes y metadatos ya asociados.
+
+**La migración elimina permanentemente** `products.image_link`,
+`products.additional_image_links` y las entradas `Media / Main image` de
+`product_details`. No descarga las URLs antiguas. Haz una copia de seguridad
+antes de migrar; el rollback no recupera
+esos datos y también elimina los registros de la nueva galería.
+
+`product_images` guarda las rutas relativas y el orden: la primera imagen es la
+principal. La API sigue entregando `image_link` y `additional_image_links` como
+URLs calculadas para los clientes existentes. El formulario reordena las filas
+secuencialmente; la base de datos usa el identificador como desempate si otro
+proceso inserta posiciones iguales. La eliminación lógica conserva los archivos;
+la eliminación definitiva de productos o categorías y los cambios de imágenes
+limpian sus archivos después de confirmar la transacción. Las operaciones SQL
+directas no ejecutan estos eventos, y las cargas abandonadas o fallidas pueden
+dejar archivos huérfanos: supervisa y limpia estos casos con precaución.
+
+El panel permite editar el texto alternativo, título y descripción de cada
+imagen, los campos SEO de ambas webs y la descripción para MercadoLibre. Estos
+datos se guardan en la base de datos, pero aún no generan etiquetas SEO ni se
+envían automáticamente a los canales.
+
+Respalda regularmente `./ERP_storage/public` y la base de datos de cada VPS,
+y prueba la restauración de ambos de forma coordinada.
+
+Para un futuro uso de S3, instala el adaptador S3 compatible con la versión de
+Laravel, configura las variables `AWS_*`, acceso público de lectura y
+`PRODUCT_IMAGES_DISK=s3`, y verifica la vista previa y la publicación. Antes de
+cambiar de disco, copia y verifica todos los archivos: cambiar la variable no
+los migra. El proveedor debe permitir la visibilidad pública usada en las cargas.
+
 ## Verificación del correo de usuarios
 
 Al crear un usuario se envía un enlace de verificación. Si se cambia su correo

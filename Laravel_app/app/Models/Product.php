@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -15,6 +16,7 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'image_directory',
         'sku',
         'slug',
         'short_description',
@@ -25,8 +27,6 @@ class Product extends Model
         'identifier_exists',
         'condition',
         'availability_date',
-        'image_link',
-        'additional_image_links',
         'video_link',
         'web_requirements',
         'google_requirements',
@@ -37,27 +37,53 @@ class Product extends Model
     protected $casts = [
         'identifier_exists'  => 'boolean',
         'availability_date'  => 'datetime',
-        'additional_image_links' => 'array',
         'web_requirements'   => 'array',
         'google_requirements' => 'array',
         'ml_requirements'    => 'array',
         'meta_requirements'  => 'array',
     ];
 
-    public static function resolveImageUrl(?string $imageLink, string $disk = 'public'): ?string
+    protected $appends = ['image_link', 'additional_image_links'];
+
+    protected static function booted(): void
     {
-        if (blank($imageLink)) {
-            return null;
-        }
+        static::creating(function (Product $product): void {
+            if (blank($product->image_directory)) {
+                $product->image_directory = self::makeImageDirectory($product->name);
+            }
+        });
 
-        if (filter_var($imageLink, FILTER_VALIDATE_URL) !== false || str($imageLink)->startsWith('data:')) {
-            return $imageLink;
-        }
+        static::forceDeleting(function (Product $product): void {
+            $product->setRelation('imagesToDelete', $product->images()->get());
+        });
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
-        $storage = Storage::disk($disk);
+        static::forceDeleted(function (Product $product): void {
+            foreach ($product->getRelation('imagesToDelete') as $image) {
+                ProductImage::deleteFileAfterCommit($image->path, $product);
+            }
+        });
+    }
 
-        return $storage->url($imageLink);
+    public static function makeImageDirectory(string $name): string
+    {
+        $slug = trim(substr(Str::slug($name), 0, 50), '-') ?: 'producto';
+
+        return $slug.'-'.strtolower((string) Str::ulid());
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function getImageLinkAttribute(): ?string
+    {
+        return $this->images->first()?->url;
+    }
+
+    public function getAdditionalImageLinksAttribute(): array
+    {
+        return $this->images->skip(1)->map(fn (ProductImage $image): string => $image->url)->values()->all();
     }
 
     /**

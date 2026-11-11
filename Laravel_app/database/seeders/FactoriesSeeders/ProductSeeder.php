@@ -6,22 +6,30 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductDetail;
 use App\Models\ProductGoogle;
+use App\Models\ProductImage;
 use App\Models\ProductMercadolibre;
 use App\Models\ProductMeta;
 use App\Models\ProductWebEcommerce;
 use App\Models\ProductWebVenta;
+use App\Services\ProductImageStorage;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach ($this->productCatalog() as $entry) {
-            $this->createCatalogProduct($entry);
+        foreach ($this->productCatalog() as $index => $entry) {
+            $this->createCatalogProduct($entry, $index % 4 === 0 ? 3 : 1);
         }
     }
 
-    private function createCatalogProduct(array $entry): void
+    private function createCatalogProduct(array $entry, int $imageCount): void
     {
         $entry = $this->normalizeCatalogEntry($entry);
 
@@ -31,9 +39,8 @@ class ProductSeeder extends Seeder
             return;
         }
 
-        $product = Product::updateOrCreate(
-            ['sku' => $entry['sku']],
-            [
+        $product = Product::firstOrNew(['sku' => $entry['sku']]);
+        $product->fill([
                 'category_id' => $category->id,
                 'name' => $entry['name'],
                 'slug' => $entry['slug'],
@@ -45,13 +52,83 @@ class ProductSeeder extends Seeder
                 'identifier_exists' => $entry['identifier_exists'],
                 'condition' => $entry['condition'],
                 'availability_date' => $entry['availability_date'],
-                'image_link' => $entry['image_link'],
-                'additional_image_links' => $entry['additional_image_links'],
                 'video_link' => $entry['video_link'],
-            ]
-        );
+        ]);
+        if (! $product->exists) {
+            $product->image_directory = Product::makeImageDirectory($entry['name']);
+        }
+        $product->save();
 
         $this->createRelatedRecords($product);
+        $this->createExampleImages($product, $imageCount);
+    }
+
+    private function createExampleImages(Product $product, int $imageCount): void
+    {
+        if ($product->images()->exists()) {
+            return;
+        }
+
+        $disk = ProductImage::disk();
+        $images = [];
+        $productName = Str::limit($product->name, 190);
+
+        try {
+            for ($position = 1; $position <= $imageCount; $position++) {
+                $path = $this->downloadExampleImage($product, $disk, $position);
+                $images[] = [
+                    'path' => $path,
+                    'position' => $position,
+                    'alt_text' => "Imagen aleatoria de ejemplo {$position} para {$productName}",
+                    'title' => "Imagen de ejemplo {$position}: {$productName}",
+                    'description' => "Fotografía aleatoria de ejemplo {$position} asociada a {$productName}; no representa necesariamente el producto.",
+                ];
+            }
+
+            DB::transaction(function () use ($product, $images): void {
+                foreach ($images as $image) {
+                    $product->images()->create($image);
+                }
+            });
+        } catch (Throwable $exception) {
+            foreach ($images as $image) {
+                if (! Storage::disk($disk)->delete($image['path'])) {
+                    throw new RuntimeException("No se pudo eliminar la imagen de ejemplo {$image['path']}.", 0, $exception);
+                }
+            }
+
+            throw $exception;
+        }
+    }
+
+    private function downloadExampleImage(Product $product, string $disk, int $position): string
+    {
+        $response = Http::timeout(30)->retry(2, 500)->get('https://picsum.photos/800/800')->throw();
+        $body = $response->body();
+        if (strlen($body) > 5 * 1024 * 1024) {
+            throw new RuntimeException("La imagen de ejemplo de {$product->sku} supera los 5 MiB.");
+        }
+
+        $stream = tmpfile();
+        if ($stream === false) {
+            throw new RuntimeException('No se pudo preparar la descarga de la imagen de ejemplo.');
+        }
+
+        try {
+            if (fwrite($stream, $body) !== strlen($body) || ! rewind($stream)) {
+                throw new RuntimeException('No se pudo leer la imagen de ejemplo descargada.');
+            }
+
+            return app(ProductImageStorage::class)->store(
+                $stream,
+                $disk,
+                'products/'.$product->image_directory,
+                $product->name,
+                "ejemplo-{$position}",
+            );
+        } finally {
+            fclose($stream);
+        }
     }
 
     private function normalizeCatalogEntry(array $entry): array
@@ -77,23 +154,7 @@ class ProductSeeder extends Seeder
             'identifier_exists' => $entry['identifier_exists'] ?? true,
             'condition' => $entry['condition'] ?? 'new',
             'availability_date' => $entry['availability_date'] ?? null,
-            'image_link' => $entry['image_link'] ?? $this->defaultImageLink($slug),
-            'additional_image_links' => $entry['additional_image_links'] ?? $this->defaultAdditionalImageLinks($slug),
             'video_link' => $entry['video_link'] ?? $this->defaultVideoLink($slug),
-        ];
-    }
-
-    private function defaultImageLink(string $slug): string
-    {
-        return 'https://picsum.photos/seed/' . $slug . '/1200/1200';
-    }
-
-    private function defaultAdditionalImageLinks(string $slug): array
-    {
-        return [
-            'https://picsum.photos/seed/' . $slug . '-1/1200/1200',
-            'https://picsum.photos/seed/' . $slug . '-2/1200/1200',
-            'https://picsum.photos/seed/' . $slug . '-3/1200/1200',
         ];
     }
 
@@ -1037,7 +1098,6 @@ class ProductSeeder extends Seeder
                 ['section' => 'General', 'attribute_name' => 'Condition', 'attribute_value' => $product->condition],
                 ['section' => 'General', 'attribute_name' => 'Category', 'attribute_value' => $this->categoryBreadcrumb($product)],
                 ['section' => 'General', 'attribute_name' => 'Material', 'attribute_value' => $material ?? 'mixed'],
-                ['section' => 'Media', 'attribute_name' => 'Main image', 'attribute_value' => $product->image_link],
             ],
             'product_highlights' => array_values(array_filter([
                 $product->short_description,
