@@ -16,12 +16,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('images'))
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombre')
@@ -69,7 +71,7 @@ class ProductsTable
                     }),
                 ImageColumn::make('image_link')
                     ->label('Imagen')
-                    ->getStateUsing(fn (Product $record): ?string => Product::resolveImageUrl($record->image_link))
+                    ->getStateUsing(fn (Product $record): ?string => $record->image_link)
                     ->square(),
 
                 IconColumn::make('identifier_exists')

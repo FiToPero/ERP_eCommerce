@@ -21,6 +21,65 @@ deben regularizarse antes de migrar; la migración no elimina datos. El índice
 permite usuarios sin rol, pero el formulario de creación exige uno. Ejecutar
 `php artisan migrate` después de desplegar; no es necesario hacer `migrate:fresh`.
 
+## Imágenes de productos
+
+Desarrollo y producción usan el mismo esquema, en VPS independientes. En cada
+servidor, antes de iniciar o recrear los contenedores:
+
+```bash
+sudo install -d -o 1000 -g 1000 -m 755 /opt/ERP_storage/public/products
+```
+
+Los archivos de Compose montan `/opt/ERP_storage/public` en
+`Laravel_app/storage/app/public`: PHP escribe como UID/GID `1000:1000` y Nginx
+lo monta en solo lectura. Comprueba también que Nginx pueda atravesar y leer los
+directorios del VPS. El montaje requiere que el directorio exista: no lo crea
+automáticamente. Al activarlo, el contenido anterior de `storage/app/public`
+queda oculto; antes de recrear los contenedores, respalda y copia al directorio
+externo cualquier otro archivo público que deba conservarse.
+
+Después de configurar los montajes, selecciona el archivo Compose del entorno:
+
+```bash
+# Usar docker-compose.dev.yml en desarrollo o docker-compose.prod.yml en producción.
+docker compose -f docker-compose.dev.yml up -d
+# Crear el enlace solo si public/storage todavía no existe.
+docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan storage:link
+docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan migrate --force
+```
+
+Verifica que `public/storage` no exista ya como directorio y que el enlace
+apunte a `storage/app/public`. Configura `APP_URL` en Laravel con la URL HTTPS
+del administrador accesible por los navegadores y los canales externos. Si se
+usa configuración cacheada, actualízala después de modificar el `.env`.
+El archivo de configuración PHP de ambos entornos permite las cargas del panel:
+como máximo 10 imágenes JPEG, PNG o WebP de 5 MiB cada una.
+
+**La migración elimina permanentemente** `products.image_link`,
+`products.additional_image_links` y las entradas `Media / Main image` de
+`product_details`. No descarga las URLs antiguas ni genera imágenes nuevas con
+los seeders. Haz una copia de seguridad antes de migrar; el rollback no recupera
+esos datos y también elimina los registros de la nueva galería.
+
+`product_images` guarda las rutas relativas y el orden: la primera imagen es la
+principal. La API sigue entregando `image_link` y `additional_image_links` como
+URLs calculadas para los clientes existentes. El formulario reordena las filas
+secuencialmente; la base de datos usa el identificador como desempate si otro
+proceso inserta posiciones iguales. La eliminación lógica conserva los archivos;
+la eliminación definitiva de productos o categorías y los cambios de imágenes
+limpian sus archivos después de confirmar la transacción. Las operaciones SQL
+directas no ejecutan estos eventos, y las cargas abandonadas o fallidas pueden
+dejar archivos huérfanos: supervisa y limpia estos casos con precaución.
+
+Respalda regularmente `/opt/ERP_storage/public` y la base de datos de cada VPS,
+y prueba la restauración de ambos de forma coordinada.
+
+Para un futuro uso de S3, instala el adaptador S3 compatible con la versión de
+Laravel, configura las variables `AWS_*`, acceso público de lectura y
+`PRODUCT_IMAGES_DISK=s3`, y verifica la vista previa y la publicación. Antes de
+cambiar de disco, copia y verifica todos los archivos: cambiar la variable no
+los migra. El proveedor debe permitir la visibilidad pública usada en las cargas.
+
 ## Verificación del correo de usuarios
 
 Al crear un usuario se envía un enlace de verificación. Si se cambia su correo

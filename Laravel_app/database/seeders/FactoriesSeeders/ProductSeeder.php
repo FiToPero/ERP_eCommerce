@@ -45,8 +45,6 @@ class ProductSeeder extends Seeder
                 'identifier_exists' => $entry['identifier_exists'],
                 'condition' => $entry['condition'],
                 'availability_date' => $entry['availability_date'],
-                'image_link' => $entry['image_link'],
-                'additional_image_links' => $entry['additional_image_links'],
                 'video_link' => $entry['video_link'],
             ]
         );
@@ -77,23 +75,7 @@ class ProductSeeder extends Seeder
             'identifier_exists' => $entry['identifier_exists'] ?? true,
             'condition' => $entry['condition'] ?? 'new',
             'availability_date' => $entry['availability_date'] ?? null,
-            'image_link' => $entry['image_link'] ?? $this->defaultImageLink($slug),
-            'additional_image_links' => $entry['additional_image_links'] ?? $this->defaultAdditionalImageLinks($slug),
             'video_link' => $entry['video_link'] ?? $this->defaultVideoLink($slug),
-        ];
-    }
-
-    private function defaultImageLink(string $slug): string
-    {
-        return 'https://picsum.photos/seed/' . $slug . '/1200/1200';
-    }
-
-    private function defaultAdditionalImageLinks(string $slug): array
-    {
-        return [
-            'https://picsum.photos/seed/' . $slug . '-1/1200/1200',
-            'https://picsum.photos/seed/' . $slug . '-2/1200/1200',
-            'https://picsum.photos/seed/' . $slug . '-3/1200/1200',
         ];
     }
 
@@ -1037,7 +1019,6 @@ class ProductSeeder extends Seeder
                 ['section' => 'General', 'attribute_name' => 'Condition', 'attribute_value' => $product->condition],
                 ['section' => 'General', 'attribute_name' => 'Category', 'attribute_value' => $this->categoryBreadcrumb($product)],
                 ['section' => 'General', 'attribute_name' => 'Material', 'attribute_value' => $material ?? 'mixed'],
-                ['section' => 'Media', 'attribute_name' => 'Main image', 'attribute_value' => $product->image_link],
             ],
             'product_highlights' => array_values(array_filter([
                 $product->short_description,

@@ -10,6 +10,12 @@ services:
     image: fitopero/erp_php84_26:latest
     volumes:
       - .:/var/www/html
+      - type: bind
+        source: ./ERP_storage/public
+        target: /var/www/html/Laravel_app/storage/app/public
+        bind:
+          create_host_path: true
+      - ./docker/php/product-uploads.ini:/usr/local/etc/php/conf.d/zz-product-uploads.ini:ro
     depends_on:
       - db
       - redis
@@ -76,6 +82,12 @@ services:
       - .:/var/www/html
       - ./docker/nginx/default.dev.conf:/etc/nginx/conf.d/default.conf
       - ./docker/nginx/ssl/dev:/etc/nginx/ssl:ro  # Certificado autofirmado para HTTPS local
+      - type: bind
+        source: ./ERP_storage/public
+        target: /var/www/html/Laravel_app/storage/app/public
+        read_only: true
+        bind:
+          create_host_path: true
     depends_on:
       - php
       - node

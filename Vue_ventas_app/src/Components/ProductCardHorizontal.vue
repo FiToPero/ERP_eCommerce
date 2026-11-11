@@ -43,12 +43,14 @@ function handleOnChange(event) {
     <div class="relative w-25 overflow-hidden rounded-xl bg-neutral-100 dark:bg-gray-900 sm:w-44">
       <a href="#" class="block">
         <img
+          v-if="product.image_link"
           class="h-auto w-full rounded-xl border border-neutral-200 object-cover transition-transform duration-300 group-hover:scale-[1.08] dark:border-gray-700"
           :src="product.image_link"
-          alt="Smartwatch Fitness Tracker"
+          :alt="product.images?.[0]?.alt_text || product.name"
           width="176"
           height="176"
         />
+        <div v-else class="flex aspect-square items-center justify-center text-neutral-500">Sin imagen</div>
       </a>
       <div
         class="absolute left-2 top-2 inline-flex items-center rounded-full bg-rose-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm"
@@ -178,6 +180,5 @@ function handleOnChange(event) {
     </div>
   </article>
 </template>
-
 
 

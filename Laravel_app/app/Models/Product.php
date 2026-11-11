@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -25,8 +25,6 @@ class Product extends Model
         'identifier_exists',
         'condition',
         'availability_date',
-        'image_link',
-        'additional_image_links',
         'video_link',
         'web_requirements',
         'google_requirements',
@@ -37,27 +35,40 @@ class Product extends Model
     protected $casts = [
         'identifier_exists'  => 'boolean',
         'availability_date'  => 'datetime',
-        'additional_image_links' => 'array',
         'web_requirements'   => 'array',
         'google_requirements' => 'array',
         'ml_requirements'    => 'array',
         'meta_requirements'  => 'array',
     ];
 
-    public static function resolveImageUrl(?string $imageLink, string $disk = 'public'): ?string
+    protected $appends = ['image_link', 'additional_image_links'];
+
+    protected static function booted(): void
     {
-        if (blank($imageLink)) {
-            return null;
-        }
+        static::forceDeleting(function (Product $product): void {
+            $product->setRelation('imagesToDelete', $product->images()->get());
+        });
 
-        if (filter_var($imageLink, FILTER_VALIDATE_URL) !== false || str($imageLink)->startsWith('data:')) {
-            return $imageLink;
-        }
+        static::forceDeleted(function (Product $product): void {
+            foreach ($product->getRelation('imagesToDelete') as $image) {
+                ProductImage::deleteFileAfterCommit($image->path, $product);
+            }
+        });
+    }
 
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
-        $storage = Storage::disk($disk);
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('position')->orderBy('id');
+    }
 
-        return $storage->url($imageLink);
+    public function getImageLinkAttribute(): ?string
+    {
+        return $this->images->first()?->url;
+    }
+
+    public function getAdditionalImageLinksAttribute(): array
+    {
+        return $this->images->skip(1)->map(fn (ProductImage $image): string => $image->url)->values()->all();
     }
 
     /**

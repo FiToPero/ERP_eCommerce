@@ -18,6 +18,31 @@ class Category extends Model
         'description',
     ];
 
+    protected static function booted(): void
+    {
+        static::forceDeleting(function (Category $category): void {
+            $ids = [$category->getKey()];
+            $level = $ids;
+
+            while ($level !== []) {
+                $level = Category::withTrashed()->whereIn('parent_id', $level)->whereNotIn('id', $ids)->pluck('id')->all();
+                $ids = array_merge($ids, $level);
+            }
+
+            $images = ProductImage::query()
+                ->whereIn('product_id', Product::withTrashed()->whereIn('category_id', $ids)->select('id'))
+                ->get();
+
+            $category->setRelation('imagesToDelete', $images);
+        });
+
+        static::forceDeleted(function (Category $category): void {
+            foreach ($category->getRelation('imagesToDelete') as $image) {
+                ProductImage::deleteFileAfterCommit($image->path, $category);
+            }
+        });
+    }
+
     /**
      * Get the parent category.
      */

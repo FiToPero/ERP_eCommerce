@@ -1,8 +1,64 @@
+<script setup>
+import { ref, computed, watch, useId } from 'vue';
+
+const props = defineProps({
+  product: {
+    type: Object,
+    required: true,
+  },
+});
+const emit = defineEmits(['close']);
+
+const inputId = useId();
+const min = ref(1);
+const max = ref(999);
+const count = ref(1);
+const rating = 3;
+const galleryImages = computed(() =>
+  [props.product.image_link, ...(props.product.additional_image_links ?? [])]
+    .filter(Boolean)
+    .map((src, index) => ({
+      src,
+      alt: props.product.images?.[index]?.alt_text || props.product.name,
+    })),
+);
+const selectedImage = ref(galleryImages.value[0]);
+watch(galleryImages, (images) => {
+  selectedImage.value = images[0];
+});
+
+function clamp(value, lower, upper) {
+  return Math.min(Math.max(value, lower), upper);
+}
+
+function set(nextValue) {
+  count.value = clamp(nextValue, min.value, max.value);
+}
+
+function inc() {
+  set(count.value + 1);
+}
+
+function dec() {
+  set(count.value - 1);
+}
+
+function handleOnChange(event) {
+  const currentValue = event.target instanceof HTMLInputElement ? event.target.value : undefined;
+  const nextValue = parseFloat(currentValue);
+  set(Number.isNaN(nextValue) ? min.value : nextValue);
+}
+</script>
+
 <template>
-  <section class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 p-4 sm:p-6 dark:bg-gray-950/80">
+  <section
+    class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/60 p-4 sm:p-6 dark:bg-gray-950/80"
+    @click.self="emit('close')"
+  >
     <div
-      class="group relative z-0 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-4xl bg-white p-6 shadow-2xl ring-1 ring-black/5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:bg-gray-800 dark:ring-white/5 dark:shadow-black/40 dark:hover:shadow-black/60 sm:p-8"
+      class="group relative z-0 max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-4xl bg-white p-6 shadow-2xl ring-1 ring-black/5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:bg-gray-800 dark:ring-white/5 dark:shadow-black/40 dark:hover:shadow-black/60 sm:p-8"
     >
+      <div class="text-white">   {{ product }} </div>
       <div
         class="mb-4 inline-flex items-center justify-center rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white"
       >
@@ -20,13 +76,20 @@
       </svg>
       Sale
       </div>
+      <button
+        type="button"
+        class="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+        aria-label="Close"
+        @click="emit('close')"
+      >
+        ✕
+      </button>
       <p class="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500 dark:text-gray-400">Aerial tech</p>
       <h1 class="mb-2 mt-2 text-3xl font-bold leading-tight text-neutral-900 dark:text-gray-100 sm:text-4xl">
-        Mini Foldable Drone with HD Camera FPV Wifi RC Quadcopter
+        {{ product.name }}
       </h1>
       <div class="flex items-end gap-3">
-        <strong class="block text-3xl font-bold text-neutral-900 dark:text-gray-100 sm:text-4xl">$2,345.99</strong>
-        <span class="pb-1 text-sm text-neutral-500 line-through dark:text-gray-500">$2,599.99</span>
+        <strong class="block text-3xl font-bold text-neutral-900 dark:text-gray-100 sm:text-4xl">{{ product.product_web_ecommerce?.sale_price }}</strong>
       </div>
       <div class="mb-3 mt-4 inline-flex flex-wrap items-center gap-2 text-sm text-neutral-600 dark:text-gray-400">
         <div class="flex items-center gap-0.5 text-amber-400" aria-label="3 out of 5 stars">
@@ -47,10 +110,12 @@
       <div class="mb-6">
         <div class="mx-auto overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-100 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <img
+            v-if="selectedImage"
             :src="selectedImage.src"
             :alt="selectedImage.alt"
             class="h-72 w-full object-cover transition-transform duration-300 hover:scale-[1.02] sm:h-96"
           />
+          <div v-else class="flex h-72 items-center justify-center text-neutral-500 sm:h-96">Sin imagen</div>
         </div>
         <div class="mt-4 flex flex-wrap justify-center gap-3">
           <button
@@ -58,7 +123,7 @@
             :key="image.src"
             type="button"
             class="overflow-hidden rounded-2xl border-2 transition-all duration-200"
-            :class="image.src === selectedImage.src
+            :class="image.src === selectedImage?.src
               ? 'border-neutral-900 shadow-lg dark:border-gray-100'
               : 'border-transparent opacity-80 hover:border-neutral-300 hover:opacity-100 dark:hover:border-gray-600'"
             @click="selectedImage = image"
@@ -71,13 +136,7 @@
           </button>
         </div>
       </div>
-      <ul class="mb-5 space-y-1 text-sm font-normal text-neutral-700 dark:text-gray-300">
-        <li>HD Pictures & Videos and FPV Function</li>
-        <li>Intelligent Voice Control</li>
-        <li>Multiple Fun Flights</li>
-        <li>Easy to Use</li>
-        <li>Foldable Design & Double Flight Time</li>
-      </ul>
+      <p class="mb-5 text-sm font-normal text-neutral-700 dark:text-gray-300">{{ product.description }}</p>
       <div class="mb-5 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
         <div
           class="mb-4 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-100 py-2 text-sm font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
@@ -292,54 +351,4 @@
   </section>
 </template>
 
-<script setup>
-import { ref, useId } from 'vue';
-
-const inputId = useId();
-const min = ref(1);
-const max = ref(999);
-const count = ref(1);
-const rating = 3;
-const galleryImages = [
-  {
-    src: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-    alt: 'Abstract technology image 1',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
-    alt: 'Abstract technology image 2',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-    alt: 'Abstract technology image 3',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-    alt: 'Abstract technology image 4',
-  },
-];
-const selectedImage = ref(galleryImages[0]);
-
-function clamp(value, lower, upper) {
-  return Math.min(Math.max(value, lower), upper);
-}
-
-function set(nextValue) {
-  count.value = clamp(nextValue, min.value, max.value);
-}
-
-function inc() {
-  set(count.value + 1);
-}
-
-function dec() {
-  set(count.value - 1);
-}
-
-function handleOnChange(event) {
-  const currentValue = event.target instanceof HTMLInputElement ? event.target.value : undefined;
-  const nextValue = parseFloat(currentValue);
-  set(Number.isNaN(nextValue) ? min.value : nextValue);
-}
-</script>
 

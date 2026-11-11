@@ -72,21 +72,15 @@ class ProductInfolist
 
                 ImageEntry::make('image_link')
                     ->label('Imagen principal')
-                    ->getStateUsing(fn (Product $record): ?string => Product::resolveImageUrl($record->image_link))
+                    ->getStateUsing(fn (Product $record): ?string => $record->image_link)
                     ->imageHeight(220)
                     ->square()
                     ->columnSpanFull(),
 
-                TextEntry::make('image_link')
-                    ->label('URL imagen principal')
-                    ->url(fn (?string $state) => Product::resolveImageUrl($state))
-                    ->openUrlInNewTab()
-                    ->placeholder('-')
-                    ->columnSpanFull(),
-
-                TextEntry::make('additional_image_links')
+                ImageEntry::make('additional_image_links')
                     ->label('Imágenes adicionales')
-                    ->formatStateUsing(fn ($state) => blank($state) ? '-' : json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
+                    ->getStateUsing(fn (Product $record): array => $record->additional_image_links)
+                    ->imageHeight(120)
                     ->columnSpanFull(),
 
                 TextEntry::make('video_link')
@@ -96,18 +90,18 @@ class ProductInfolist
                     ->placeholder('-')
                     ->columnSpanFull(),
 
-                Section::make('ProductWeb')
+                Section::make('ProductWebEcommerce')
                     ->description('Datos sincronizados del producto para la web.')
                     ->columns(2)
                     ->collapsible()
                     ->collapsed()
                     ->columnSpanFull()
                     ->components([
-                        IconEntry::make('productWeb.is_active')
+                        IconEntry::make('productWebEcommerce.is_active')
                             ->label('Habilitado para Web')
                             ->boolean(),
 
-                        TextEntry::make('productWeb.status')
+                        TextEntry::make('productWebEcommerce.status')
                             ->label('Estado')
                             ->badge()
                             ->color(fn (?string $state): string => match ($state) {
@@ -119,35 +113,89 @@ class ProductInfolist
                             })
                             ->placeholder('-'),
 
-                        TextEntry::make('productWeb.link')
+                        TextEntry::make('productWebEcommerce.link')
                             ->label('Product link')
                             ->url(fn (?string $state) => $state)
                             ->openUrlInNewTab()
                             ->placeholder('-')
                             ->columnSpanFull(),
 
-                        TextEntry::make('productWeb.product_type')
+                        TextEntry::make('productWebEcommerce.product_type')
                             ->label('Product type')
                             ->placeholder('-'),
 
-                        TextEntry::make('productWeb.sale_price')
+                        TextEntry::make('productWebEcommerce.sale_price')
                             ->label('Precio oferta')
                             ->placeholder('-'),
 
-                        TextEntry::make('productWeb.item_group_id')
+                        TextEntry::make('productWebEcommerce.item_group_id')
                             ->label('Item group ID')
                             ->placeholder('-'),
 
-                        TextEntry::make('productWeb.sale_price_start')
+                        TextEntry::make('productWebEcommerce.sale_price_start')
                             ->label('Inicio oferta')
                             ->dateTime()
                             ->placeholder('-'),
 
-                        TextEntry::make('productWeb.sale_price_end')
+                        TextEntry::make('productWebEcommerce.sale_price_end')
                             ->label('Fin oferta')
                             ->dateTime()
                             ->placeholder('-'),
                     ]),
+
+                Section::make('ProductWebVenta')
+                    ->description('Datos sincronizados del producto para la web.')
+                    ->columns(2)
+                    ->collapsible()
+                    ->collapsed()
+                    ->columnSpanFull()
+                    ->components([
+                        IconEntry::make('productWebVenta.is_active')
+                            ->label('Habilitado para Web')
+                            ->boolean(),
+
+                        TextEntry::make('productWebVenta.status')
+                            ->label('Estado')
+                            ->badge()
+                            ->color(fn (?string $state): string => match ($state) {
+                                'active' => 'success',
+                                'pending' => 'warning',
+                                'disapproved' => 'danger',
+                                'draft' => 'gray',
+                                default => 'gray',
+                            })
+                            ->placeholder('-'),
+
+                        TextEntry::make('productWebVenta.link')
+                            ->label('Product link')
+                            ->url(fn (?string $state) => $state)
+                            ->openUrlInNewTab()
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('productWebVenta.product_type')
+                            ->label('Product type')
+                            ->placeholder('-'),
+
+                        TextEntry::make('productWebVenta.sale_price')
+                            ->label('Precio oferta')
+                            ->placeholder('-'),
+
+                        TextEntry::make('productWebVenta.item_group_id')
+                            ->label('Item group ID')
+                            ->placeholder('-'),
+
+                        TextEntry::make('productWebVenta.sale_price_start')
+                            ->label('Inicio oferta')
+                            ->dateTime()
+                            ->placeholder('-'),
+
+                        TextEntry::make('productWebVenta.sale_price_end')
+                            ->label('Fin oferta')
+                            ->dateTime()
+                            ->placeholder('-'),
+                    ]),
+
 
                 Section::make('Google Merchant Center')
                     ->description('Datos sincronizados del producto para Google Shopping.')

@@ -2,18 +2,18 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
-use App\Models\Product;
+use App\Filament\Forms\Components\ProductImageUpload;
+use App\Models\ProductImage;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductForm
 {
@@ -91,44 +91,30 @@ class ProductForm
                     ->label('Fecha de disponibilidad')
                     ->helperText('Requerido si el producto es pre-order.'),
 
-                TextInput::make('image_link')
-                    ->label('Imagen principal')
-                    ->live(onBlur: true)
-                    ->url()
-                    ->helperText('Acepta una URL publica o una ruta de archivo en el disco publico.')
-                    ->maxLength(2000)
-                    ->columnSpanFull(),
-
-                Section::make('Vista previa de imagen')
-                    ->visible(fn (Get $get): bool => filled($get('image_link')))
-                    ->columnSpanFull()
-                    ->components([
-                        Html::make(function (Get $get): HtmlString {
-                            $imageUrl = Product::resolveImageUrl($get('image_link'));
-                            $imageAlt = e($get('name') ?: 'Imagen principal');
-
-                            if (blank($imageUrl)) {
-                                return new HtmlString('');
-                            }
-
-                            $escapedUrl = e($imageUrl);
-
-                            return new HtmlString(<<<HTML
-                                <div class="flex flex-col gap-3">
-                                    <img src="{$escapedUrl}" alt="{$imageAlt}" class="max-h-80 w-auto rounded-xl border border-gray-200 object-contain" loading="lazy">
-                                    <a href="{$escapedUrl}" target="_blank" rel="noopener noreferrer" class="text-sm font-medium text-primary-600 hover:underline">Abrir imagen en una nueva pestaña</a>
-                                </div>
-                                HTML);
-                        }),
-                    ]),
-
-                Textarea::make('additional_image_links')
-                    ->label('Imágenes adicionales')
-                    ->helperText('JSON array de URLs adicionales del producto.')
-                    ->rows(4)
-                    ->formatStateUsing(fn ($state) => blank($state) ? null : json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES))
-                    ->dehydrateStateUsing(fn ($state) => blank($state) ? null : json_decode($state, true))
-                    ->rule('json')
+                Repeater::make('images')
+                    ->label('Imágenes del producto')
+                    ->helperText('La primera imagen es la principal. Arrastra para cambiar el orden.')
+                    ->relationship()
+                    ->orderColumn('position')
+                    ->defaultItems(0)
+                    ->maxItems(10)
+                    ->addActionLabel('Agregar imagen')
+                    ->schema([
+                        ProductImageUpload::make('path')
+                            ->label('Imagen')
+                            ->disk(ProductImage::disk())
+                            ->directory('products')
+                            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => Str::ulid().'.'.$file->extension())
+                            ->visibility('public')
+                            ->image()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->maxFiles(1)
+                            ->maxSize(5120)
+                            ->required(),
+                        TextInput::make('alt_text')
+                            ->label('Texto alternativo')
+                            ->maxLength(255),
+                    ])
                     ->columnSpanFull(),
 
                 TextInput::make('video_link')
@@ -137,8 +123,8 @@ class ProductForm
                     ->maxLength(2000)
                     ->columnSpanFull(),
 
-                Section::make('ProductWeb')
-                    ->relationship('productWeb')
+                Section::make('Product Web Ecommerce')
+                    ->relationship('productWebEcommerce')
                     ->description('Configuracion y datos sincronizados del producto para la web.')
                     ->columns(2)
                     ->collapsible()
@@ -146,7 +132,57 @@ class ProductForm
                     ->columnSpanFull()
                     ->components([
                         Toggle::make('is_active')
-                            ->label('Habilitado para Web')
+                            ->label('Habilitado para Web Ecommerce')
+                            ->default(false)
+                            ->columnSpanFull(),
+
+                        Select::make('status')
+                            ->label('Estado')
+                            ->options([
+                                'draft' => 'Draft',
+                                'pending' => 'Pending',
+                                'active' => 'Active',
+                                'disapproved' => 'Disapproved',
+                            ])
+                            ->default('draft')
+                            ->required(),
+
+                        TextInput::make('link')
+                            ->label('Product link')
+                            ->url()
+                            ->maxLength(2000)
+                            ->columnSpanFull(),
+
+                        TextInput::make('product_type')
+                            ->label('Product type')
+                            ->maxLength(750),
+
+                        TextInput::make('sale_price')
+                            ->label('Precio oferta')
+                            ->numeric()
+                            ->prefix('$'),
+
+                        TextInput::make('item_group_id')
+                            ->label('Item group ID')
+                            ->maxLength(255),
+
+                        DateTimePicker::make('sale_price_start')
+                            ->label('Inicio oferta'),
+
+                        DateTimePicker::make('sale_price_end')
+                            ->label('Fin oferta'),
+                    ]),
+                
+                Section::make('Product Web Venta')
+                    ->relationship('productWebVenta')
+                    ->description('Configuracion y datos sincronizados del producto para la web.')
+                    ->columns(2)
+                    ->collapsible()
+                    ->collapsed()
+                    ->columnSpanFull()
+                    ->components([
+                        Toggle::make('is_active')
+                            ->label('Habilitado para Web Ventas')
                             ->default(false)
                             ->columnSpanFull(),
 
