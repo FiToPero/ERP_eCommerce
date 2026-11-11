@@ -69,6 +69,9 @@ seed: ## Ejecutar seeders
 fresh: ## Reset, migrar y seed
 	$(PHP_EXEC) php artisan migrate:fresh --seed
 
+delete-images: ## Eliminar imágenes de ejemplo
+	sudo rm -rf ERP_storage/public/products/*
+
 test: ## Ejecutar tests
 	$(PHP_EXEC) php artisan test
 

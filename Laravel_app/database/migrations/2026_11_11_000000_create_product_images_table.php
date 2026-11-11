@@ -15,8 +15,14 @@ return new class extends Migration
             $table->string('path')->unique();
             $table->unsignedInteger('position');
             $table->string('alt_text')->nullable();
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
             $table->index(['product_id', 'position']);
+        });
+
+        Schema::create('product_image_names', function (Blueprint $table) {
+            $table->string('path')->primary();
         });
 
         DB::table('product_details')->whereNotNull('product_details')->orderBy('id')
@@ -53,6 +59,7 @@ return new class extends Migration
             $table->json('additional_image_links')->nullable();
         });
 
+        Schema::dropIfExists('product_image_names');
         Schema::dropIfExists('product_images');
     }
 };

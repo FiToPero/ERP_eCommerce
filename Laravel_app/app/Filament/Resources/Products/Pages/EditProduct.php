@@ -13,6 +13,11 @@ class EditProduct extends EditRecord
 {
     protected static string $resource = ProductResource::class;
 
+    protected function beforeValidate(): void
+    {
+        $this->data['image_directory'] = $this->getRecord()->image_directory;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

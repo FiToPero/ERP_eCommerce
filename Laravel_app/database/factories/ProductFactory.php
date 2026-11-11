@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -11,6 +12,15 @@ use Illuminate\Support\Str;
  */
 class ProductFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Product $product): void {
+            if (blank($product->image_directory)) {
+                $product->image_directory = Product::makeImageDirectory($product->name);
+            }
+        });
+    }
+
     /**
      * Define the model's default state.
      *

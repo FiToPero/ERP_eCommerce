@@ -4,10 +4,7 @@
 
 services:
   php:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    #image: ${PHP_IMAGE:-fitopero/php_apache_without_node_for_nginx:v1}
+    image: fitopero/erp_php84_26:latest
     volumes:
       - .:/var/www/html
       - type: bind
@@ -15,7 +12,6 @@ services:
         target: /var/www/html/Laravel_app/storage/app/public
         bind:
           create_host_path: false
-      - ./docker/php/product-uploads.ini:/usr/local/etc/php/conf.d/zz-product-uploads.ini:ro
     depends_on:
       - db
       - redis

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->string('name');
+            $table->string('image_directory')->unique();
             $table->string('sku')->unique()->comment('Stock Keeping Unit, identificador único del producto. INTERNO');
             $table->string('slug')->unique();
             $table->string('short_description');

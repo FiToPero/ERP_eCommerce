@@ -5,15 +5,16 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Filament\Forms\Components\ProductImageUpload;
 use App\Models\ProductImage;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductForm
 {
@@ -37,6 +38,9 @@ class ProductForm
                     ->afterStateUpdated(fn (string $operation, $state, callable $set) =>
                         $operation === 'create' ? $set('slug', Str::slug($state)) : null
                     ),
+
+                Hidden::make('image_directory')
+                    ->dehydrated(fn (string $operation): bool => $operation === 'create'),
 
                 TextInput::make('slug')
                     ->required()
@@ -100,11 +104,17 @@ class ProductForm
                     ->maxItems(10)
                     ->addActionLabel('Agregar imagen')
                     ->schema([
+                        TextInput::make('filename_description')
+                            ->label('Descripción para el nombre del archivo')
+                            ->helperText('Opcional, por ejemplo: frontal, dorso o detalle. Se usa al cargar una imagen.')
+                            ->maxLength(100)
+                            ->dehydrated(false),
                         ProductImageUpload::make('path')
                             ->label('Imagen')
                             ->disk(ProductImage::disk())
-                            ->directory('products')
-                            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => Str::ulid().'.'.$file->extension())
+                            ->directory(fn (Get $get): string => 'products/'.$get('../../image_directory'))
+                            ->productName(fn (Get $get): string => (string) $get('../../name'))
+                            ->filenameDescription(fn (Get $get): ?string => $get('filename_description'))
                             ->visibility('public')
                             ->image()
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
@@ -114,6 +124,12 @@ class ProductForm
                         TextInput::make('alt_text')
                             ->label('Texto alternativo')
                             ->maxLength(255),
+                        TextInput::make('title')
+                            ->label('Título de la imagen')
+                            ->maxLength(255),
+                        Textarea::make('description')
+                            ->label('Descripción de la imagen')
+                            ->rows(3),
                     ])
                     ->columnSpanFull(),
 
@@ -151,6 +167,16 @@ class ProductForm
                             ->label('Product link')
                             ->url()
                             ->maxLength(2000)
+                            ->columnSpanFull(),
+
+                        TextInput::make('seo_title')
+                            ->label('Título SEO')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+
+                        Textarea::make('seo_description')
+                            ->label('Meta descripción')
+                            ->rows(3)
                             ->columnSpanFull(),
 
                         TextInput::make('product_type')
@@ -201,6 +227,16 @@ class ProductForm
                             ->label('Product link')
                             ->url()
                             ->maxLength(2000)
+                            ->columnSpanFull(),
+
+                        TextInput::make('seo_title')
+                            ->label('Título SEO')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+
+                        Textarea::make('seo_description')
+                            ->label('Meta descripción')
+                            ->rows(3)
                             ->columnSpanFull(),
 
                         TextInput::make('product_type')
@@ -371,6 +407,11 @@ class ProductForm
                         TextInput::make('title')
                             ->label('Titulo ML')
                             ->maxLength(255)
+                            ->columnSpanFull(),
+
+                        Textarea::make('description')
+                            ->label('Descripción de MercadoLibre')
+                            ->rows(4)
                             ->columnSpanFull(),
 
                         TextInput::make('category_id')

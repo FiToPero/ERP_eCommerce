@@ -9,7 +9,7 @@ use RuntimeException;
 
 class ProductImage extends Model
 {
-    protected $fillable = ['path', 'position', 'alt_text'];
+    protected $fillable = ['path', 'position', 'alt_text', 'title', 'description'];
 
     protected static function booted(): void
     {

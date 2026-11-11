@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Models\Product;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -83,6 +84,25 @@ class ProductInfolist
                     ->imageHeight(120)
                     ->columnSpanFull(),
 
+                RepeatableEntry::make('images')
+                    ->label('Datos de las imágenes')
+                    ->getStateUsing(fn (Product $record) => $record->images)
+                    ->schema([
+                        ImageEntry::make('url')
+                            ->label('Imagen')
+                            ->imageHeight(120),
+                        TextEntry::make('alt_text')
+                            ->label('Texto alternativo')
+                            ->placeholder('-'),
+                        TextEntry::make('title')
+                            ->label('Título de la imagen')
+                            ->placeholder('-'),
+                        TextEntry::make('description')
+                            ->label('Descripción de la imagen')
+                            ->placeholder('-'),
+                    ])
+                    ->columnSpanFull(),
+
                 TextEntry::make('video_link')
                     ->label('Video del producto')
                     ->url(fn (?string $state) => $state)
@@ -117,6 +137,16 @@ class ProductInfolist
                             ->label('Product link')
                             ->url(fn (?string $state) => $state)
                             ->openUrlInNewTab()
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('productWebEcommerce.seo_title')
+                            ->label('Título SEO')
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('productWebEcommerce.seo_description')
+                            ->label('Meta descripción')
                             ->placeholder('-')
                             ->columnSpanFull(),
 
@@ -170,6 +200,16 @@ class ProductInfolist
                             ->label('Product link')
                             ->url(fn (?string $state) => $state)
                             ->openUrlInNewTab()
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('productWebVenta.seo_title')
+                            ->label('Título SEO')
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('productWebVenta.seo_description')
+                            ->label('Meta descripción')
                             ->placeholder('-')
                             ->columnSpanFull(),
 
@@ -342,6 +382,11 @@ class ProductInfolist
 
                         TextEntry::make('productMercadolibre.title')
                             ->label('Titulo ML')
+                            ->placeholder('-')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('productMercadolibre.description')
+                            ->label('Descripción de MercadoLibre')
                             ->placeholder('-')
                             ->columnSpanFull(),
 

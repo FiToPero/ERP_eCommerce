@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -15,6 +16,7 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'image_directory',
         'sku',
         'slug',
         'short_description',
@@ -45,6 +47,12 @@ class Product extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Product $product): void {
+            if (blank($product->image_directory)) {
+                $product->image_directory = self::makeImageDirectory($product->name);
+            }
+        });
+
         static::forceDeleting(function (Product $product): void {
             $product->setRelation('imagesToDelete', $product->images()->get());
         });
@@ -54,6 +62,13 @@ class Product extends Model
                 ProductImage::deleteFileAfterCommit($image->path, $product);
             }
         });
+    }
+
+    public static function makeImageDirectory(string $name): string
+    {
+        $slug = trim(substr(Str::slug($name), 0, 50), '-') ?: 'producto';
+
+        return $slug.'-'.strtolower((string) Str::ulid());
     }
 
     public function images(): HasMany
