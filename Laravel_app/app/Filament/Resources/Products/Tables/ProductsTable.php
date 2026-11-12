@@ -23,7 +23,7 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('images'))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['images', 'videos']))
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombre')

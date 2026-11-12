@@ -50,7 +50,6 @@ class ProductFactory extends Factory
             'availability_date'  => $condition === 'new'
                 ? null
                 : $this->faker->optional(0.3)->dateTimeBetween('now', '+6 months'),
-            'video_link'         => $this->faker->optional(0.35)->url(),
             'web_requirements'    => null,
             'google_requirements' => null,
             'ml_requirements'     => null,

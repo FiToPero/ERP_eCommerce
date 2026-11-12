@@ -3,7 +3,11 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Filament\Forms\Components\ProductImageUpload;
+use App\Filament\Forms\Components\ProductVideoUpload;
 use App\Models\ProductImage;
+use App\Models\ProductVideo;
+use App\Services\ProductImageStorage;
+use Closure;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -14,7 +18,9 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductForm
 {
@@ -104,11 +110,7 @@ class ProductForm
                     ->maxItems(10)
                     ->addActionLabel('Agregar imagen')
                     ->schema([
-                        TextInput::make('filename_description')
-                            ->label('Descripción para el nombre del archivo')
-                            ->helperText('Opcional, por ejemplo: frontal, dorso o detalle. Se usa al cargar una imagen.')
-                            ->maxLength(100)
-                            ->dehydrated(false),
+                        self::filenameDescription('images', 'imagen'),
                         ProductImageUpload::make('path')
                             ->label('Imagen')
                             ->disk(ProductImage::disk())
@@ -133,10 +135,35 @@ class ProductForm
                     ])
                     ->columnSpanFull(),
 
-                TextInput::make('video_link')
-                    ->label('Video del producto')
-                    ->url()
-                    ->maxLength(2000)
+                Repeater::make('videos')
+                    ->label('Videos del producto')
+                    ->helperText('El primer video es el principal. Arrastra para cambiar el orden.')
+                    ->relationship()
+                    ->orderColumn('position')
+                    ->defaultItems(0)
+                    ->maxItems(10)
+                    ->addActionLabel('Agregar video')
+                    ->schema([
+                        self::filenameDescription('videos', 'video'),
+                        ProductVideoUpload::make('path')
+                            ->label('Video')
+                            ->helperText('MP4, MOV, WebM, MKV o AVI; máximo 100 MB. La conversión puede tardar varios minutos.')
+                            ->disk(ProductVideo::disk())
+                            ->directory(fn (Get $get): string => 'products/'.$get('../../image_directory'))
+                            ->productName(fn (Get $get): string => (string) $get('../../name'))
+                            ->filenameDescription(fn (Get $get): ?string => $get('filename_description'))
+                            ->visibility('public')
+                            ->acceptedFileTypes(['video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska', 'video/x-msvideo'])
+                            ->maxFiles(1)
+                            ->maxSize(102400)
+                            ->required(),
+                        TextInput::make('title')
+                            ->label('Título del video')
+                            ->maxLength(255),
+                        Textarea::make('description')
+                            ->label('Descripción del video')
+                            ->rows(3),
+                    ])
                     ->columnSpanFull(),
 
                 Section::make('Product Web Ecommerce')
@@ -608,6 +635,70 @@ class ProductForm
                             ->rule('json')
                             ->columnSpanFull(),
                     ]),
+            ]);
+    }
+
+    private static function filenameDescription(string $relationship, string $kind): TextInput
+    {
+        return TextInput::make('filename_description')
+            ->label('Descripción para el nombre del archivo')
+            ->helperText("Obligatoria y distinta para cada {$kind}. Se usa al cargar o reemplazar el archivo.")
+            ->maxLength(100)
+            ->required()
+            ->rules([
+                fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $relationship, $kind): void {
+                    if (! is_string($value) || blank($value)) {
+                        return;
+                    }
+
+                    $slug = ProductImageStorage::descriptionSlug($value);
+                    if ($slug === '') {
+                        $fail('La descripción debe contener letras o números.');
+
+                        return;
+                    }
+
+                    $descriptions = collect($get("../../{$relationship}") ?? [])
+                        ->pluck('filename_description')
+                        ->filter(fn ($description): bool => is_string($description) && filled($description))
+                        ->map(fn (string $description): string => ProductImageStorage::descriptionSlug($description));
+
+                    if ($descriptions->filter(fn (string $description): bool => $description === $slug)->count() > 1) {
+                        $fail("La descripción para el nombre del archivo debe ser distinta para cada {$kind}.");
+
+                        return;
+                    }
+
+                    if ($relationship !== 'videos' || ! collect(Arr::wrap($get('path')))->contains(fn ($file): bool => $file instanceof TemporaryUploadedFile)) {
+                        return;
+                    }
+
+                    $paths = ProductVideo::filePaths("{$slug}.mp4");
+                    foreach ($get('../../videos') ?? [] as $video) {
+                        $other = $video['filename_description'] ?? null;
+                        if (! is_string($other) || ! collect(Arr::wrap($video['path'] ?? null))->contains(fn ($file): bool => $file instanceof TemporaryUploadedFile)) {
+                            continue;
+                        }
+
+                        $otherSlug = ProductImageStorage::descriptionSlug($other);
+                        if ($otherSlug !== $slug && array_intersect($paths, ProductVideo::filePaths("{$otherSlug}.mp4")) !== []) {
+                            $fail('Los nombres de las versiones generadas coinciden con otro video.');
+
+                            return;
+                        }
+                    }
+
+                    foreach ($get('../../images') ?? [] as $image) {
+                        $other = $image['filename_description'] ?? null;
+                        if (is_string($other)
+                            && collect(Arr::wrap($image['path'] ?? null))->contains(fn ($file): bool => $file instanceof TemporaryUploadedFile)
+                            && ProductImageStorage::descriptionSlug($other).'.webp' === $paths['thumbnail.webp']) {
+                            $fail('La portada del video coincide con el nombre de una imagen.');
+
+                            return;
+                        }
+                    }
+                },
             ]);
     }
 }

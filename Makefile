@@ -69,6 +69,15 @@ seed: ## Ejecutar seeders
 fresh: ## Reset, migrar y seed
 	$(PHP_EXEC) php artisan migrate:fresh --seed
 
+## si fresh falla por descarga de imagen desde la web. 
+## reinicia todo con este comando.
+## solo los seed
+
+# docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php \
+#   php artisan db:seed --class='Database\Seeders\FactoriesSeeders\ProductSeeder' \
+#   && docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php \
+#   php artisan db:seed --class='Database\Seeders\FactoriesSeeders\StorageSeeder'
+
 delete-images: ## Eliminar imágenes de ejemplo
 	sudo rm -rf ERP_storage/public/products/*
 

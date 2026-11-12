@@ -32,9 +32,12 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     bcmath \
     gd
 
+RUN apk add --no-cache ffmpeg
+
 RUN printf '%s\n' \
-    'upload_max_filesize = 6M' \
-    'post_max_size = 8M' \
+    'upload_max_filesize = 100M' \
+    'post_max_size = 110M' \
+    'max_execution_time = 1800' \
     'memory_limit = 256M' \
     > /usr/local/etc/php/conf.d/zz-product-uploads.ini
 
@@ -77,4 +80,3 @@ RUN chown -R app:app /var/www/html \
 USER app
 
 CMD ["php-fpm"]
-

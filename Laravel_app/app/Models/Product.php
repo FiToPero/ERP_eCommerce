@@ -27,7 +27,6 @@ class Product extends Model
         'identifier_exists',
         'condition',
         'availability_date',
-        'video_link',
         'web_requirements',
         'google_requirements',
         'ml_requirements',
@@ -43,7 +42,7 @@ class Product extends Model
         'meta_requirements'  => 'array',
     ];
 
-    protected $appends = ['image_link', 'additional_image_links'];
+    protected $appends = ['image_link', 'additional_image_links', 'video_link'];
 
     protected static function booted(): void
     {
@@ -55,11 +54,15 @@ class Product extends Model
 
         static::forceDeleting(function (Product $product): void {
             $product->setRelation('imagesToDelete', $product->images()->get());
+            $product->setRelation('videosToDelete', $product->videos()->get());
         });
 
         static::forceDeleted(function (Product $product): void {
             foreach ($product->getRelation('imagesToDelete') as $image) {
                 ProductImage::deleteFileAfterCommit($image->path, $product);
+            }
+            foreach ($product->getRelation('videosToDelete') as $video) {
+                ProductVideo::deleteFilesAfterCommit($video->path, $product);
             }
         });
     }
@@ -74,6 +77,16 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function videos(): HasMany
+    {
+        return $this->hasMany(ProductVideo::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function getVideoLinkAttribute(): ?string
+    {
+        return $this->videos->first()?->ecommerce_url;
     }
 
     public function getImageLinkAttribute(): ?string

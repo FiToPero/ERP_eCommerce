@@ -52,7 +52,6 @@ class ProductSeeder extends Seeder
                 'identifier_exists' => $entry['identifier_exists'],
                 'condition' => $entry['condition'],
                 'availability_date' => $entry['availability_date'],
-                'video_link' => $entry['video_link'],
         ]);
         if (! $product->exists) {
             $product->image_directory = Product::makeImageDirectory($entry['name']);
@@ -79,6 +78,7 @@ class ProductSeeder extends Seeder
                 $images[] = [
                     'path' => $path,
                     'position' => $position,
+                    'filename_description' => "ejemplo-{$position}",
                     'alt_text' => "Imagen aleatoria de ejemplo {$position} para {$productName}",
                     'title' => "Imagen de ejemplo {$position}: {$productName}",
                     'description' => "Fotografía aleatoria de ejemplo {$position} asociada a {$productName}; no representa necesariamente el producto.",
@@ -154,13 +154,7 @@ class ProductSeeder extends Seeder
             'identifier_exists' => $entry['identifier_exists'] ?? true,
             'condition' => $entry['condition'] ?? 'new',
             'availability_date' => $entry['availability_date'] ?? null,
-            'video_link' => $entry['video_link'] ?? $this->defaultVideoLink($slug),
         ];
-    }
-
-    private function defaultVideoLink(string $slug): string
-    {
-        return 'https://example.com/videos/' . $slug;
     }
 
     private function generateBarcode(string $sku): string

@@ -20,6 +20,29 @@ class Category extends Model
 
     protected static function booted(): void
     {
+        /*
+         * Registra los eventos del modelo que preparan y ejecutan la limpieza
+         * de archivos cuando una categoría se elimina permanentemente.
+         *
+         * forceDeleting ocurre antes de borrar la fila de la categoría, por lo
+         * que todavía podemos consultar sus subcategorías y productos. Se
+         * recorren las subcategorías por niveles, empezando por la categoría
+         * actual; withTrashed() incluye también las categorías ya eliminadas
+         * lógicamente. $ids conserva todos los identificadores encontrados y
+         * whereNotIn evita volver a agregarlos al recorrido.
+         *
+         * Con esos identificadores se buscan los productos relacionados,
+         * incluidos los que tienen borrado lógico, y se cargan sus imágenes y
+         * videos. Se guardan temporalmente como relaciones en la instancia para
+         * que sigan disponibles después de que se eliminen las filas asociadas.
+         *
+         * forceDeleted ocurre después del borrado permanente. En ese momento se
+         * programa la eliminación de los archivos asociados a cada imagen y
+         * video. Los métodos invocados la ejecutan después de confirmar la
+         * transacción y verifican que el archivo ya no esté referenciado antes
+         * de borrarlo, evitando perder archivos si la transacción se revierte o
+         * si todavía los usa otro registro.
+         */
         static::forceDeleting(function (Category $category): void {
             $ids = [$category->getKey()];
             $level = $ids;
@@ -34,11 +57,20 @@ class Category extends Model
                 ->get();
 
             $category->setRelation('imagesToDelete', $images);
+
+            $videos = ProductVideo::query()
+                ->whereIn('product_id', Product::withTrashed()->whereIn('category_id', $ids)->select('id'))
+                ->get();
+
+            $category->setRelation('videosToDelete', $videos);
         });
 
         static::forceDeleted(function (Category $category): void {
             foreach ($category->getRelation('imagesToDelete') as $image) {
                 ProductImage::deleteFileAfterCommit($image->path, $category);
+            }
+            foreach ($category->getRelation('videosToDelete') as $video) {
+                ProductVideo::deleteFilesAfterCommit($video->path, $category);
             }
         });
     }

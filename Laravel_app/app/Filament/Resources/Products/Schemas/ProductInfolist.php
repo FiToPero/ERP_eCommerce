@@ -91,6 +91,8 @@ class ProductInfolist
                         ImageEntry::make('url')
                             ->label('Imagen')
                             ->imageHeight(120),
+                        TextEntry::make('filename_description')
+                            ->label('Descripción para el nombre del archivo'),
                         TextEntry::make('alt_text')
                             ->label('Texto alternativo')
                             ->placeholder('-'),
@@ -103,11 +105,38 @@ class ProductInfolist
                     ])
                     ->columnSpanFull(),
 
-                TextEntry::make('video_link')
-                    ->label('Video del producto')
-                    ->url(fn (?string $state) => $state)
-                    ->openUrlInNewTab()
-                    ->placeholder('-')
+                RepeatableEntry::make('videos')
+                    ->label('Videos del producto')
+                    ->getStateUsing(fn (Product $record) => $record->videos)
+                    ->schema([
+                        ImageEntry::make('thumbnail_url')
+                            ->label('Portada')
+                            ->imageHeight(120),
+                        TextEntry::make('filename_description')
+                            ->label('Descripción para el nombre del archivo'),
+                        TextEntry::make('title')
+                            ->label('Título del video')
+                            ->placeholder('-'),
+                        TextEntry::make('description')
+                            ->label('Descripción del video')
+                            ->placeholder('-'),
+                        TextEntry::make('ecommerce_url')
+                            ->label('Video horizontal')
+                            ->url(fn (?string $state) => $state)
+                            ->openUrlInNewTab(),
+                        TextEntry::make('vertical_url')
+                            ->label('Video vertical')
+                            ->url(fn (?string $state) => $state)
+                            ->openUrlInNewTab(),
+                        TextEntry::make('square_url')
+                            ->label('Video cuadrado')
+                            ->url(fn (?string $state) => $state)
+                            ->openUrlInNewTab(),
+                        TextEntry::make('original_url')
+                            ->label('Video original')
+                            ->url(fn (?string $state) => $state)
+                            ->openUrlInNewTab(),
+                    ])
                     ->columnSpanFull(),
 
                 Section::make('ProductWebEcommerce')

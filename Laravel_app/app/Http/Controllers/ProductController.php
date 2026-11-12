@@ -11,6 +11,7 @@ class ProductController extends Controller
         $products = Product::with([
             'category',
             'images',
+            'videos',
             'productDetail',
             'productGoogle',
             'productWebEcommerce',

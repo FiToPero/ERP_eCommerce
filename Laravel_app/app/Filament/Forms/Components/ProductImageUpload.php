@@ -36,16 +36,17 @@ class ProductImageUpload extends FileUpload
 
         // Define cómo guardar cada archivo temporal que se suba desde este campo.
         // La función recibe el archivo temporal de Livewire y debe devolver su ruta.
-        $this->saveUploadedFileUsing(function (TemporaryUploadedFile $file): string {
+        $this->saveUploadedFileUsing(function (ProductImageUpload $component, TemporaryUploadedFile $file): string {
             $input = $file->readStream();
 
             try {
                 $path = app(ProductImageStorage::class)->store(
                     $input,
-                    $this->getDiskName(),
-                    $this->getDirectory(),
-                    (string) $this->evaluate($this->productName),
-                    $this->evaluate($this->filenameDescription),
+                    $component->getDiskName(),
+                    $component->getDirectory(),
+                    (string) $component->evaluate($component->productName),
+                    (string) $component->evaluate($component->filenameDescription),
+                    $component->getRecord() instanceof ProductImage ? $component->getRecord()->path : null,
                 );
             } finally {
                 if (is_resource($input)) {
@@ -74,6 +75,21 @@ class ProductImageUpload extends FileUpload
                 $record = $this->getRecord();
                 foreach ($value as $file) {
                     if ($file instanceof TemporaryUploadedFile) {
+                        $description = $this->evaluate($this->filenameDescription);
+                        if (! is_string($description) || ProductImageStorage::descriptionSlug($description) === '') {
+                            continue;
+                        }
+
+                        $storage = app(ProductImageStorage::class);
+                        $path = $storage->path(
+                            $this->getDirectory(),
+                            (string) $this->evaluate($this->productName),
+                            $description,
+                        );
+                        if ($storage->hasConflict($this->getDiskName(), $path, $record instanceof ProductImage ? $record->path : null)) {
+                            $fail('Ya existe una imagen o un archivo con ese nombre.');
+                        }
+
                         continue;
                     }
 

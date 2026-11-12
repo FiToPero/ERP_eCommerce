@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\ProductImage;
+use App\Models\ProductVideo;
 use GdImage;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -13,7 +15,7 @@ class ProductImageStorage
     /**
      * @param  resource  $input
      */
-    public function store($input, string $disk, string $directory, string $productName, ?string $description = null): string
+    public function store($input, string $disk, string $directory, string $productName, string $description, ?string $existingPath = null): string
     {
         if (! function_exists('imagewebp') || ! (gd_info()['WebP Support'] ?? false)) {
             throw new RuntimeException('El servidor no dispone de soporte WebP en GD.');
@@ -75,11 +77,17 @@ class ProductImageStorage
                 imagedestroy($image);
             }
 
-            $path = $this->reservePath($disk, $directory, $productName, $description);
-            rewind($output);
-            if (! Storage::disk($disk)->put($path, $output, 'public')) {
-                throw new RuntimeException('No se pudo guardar la imagen del producto.');
-            }
+            $path = $this->path($directory, $productName, $description);
+            Cache::lock('product-media:'.hash('sha256', $disk.':'.$directory), 120)->block(10, function () use ($disk, $path, $existingPath, $output): void {
+                if ($this->hasConflict($disk, $path, $existingPath)) {
+                    throw new RuntimeException("Ya existe un archivo de imagen con el nombre {$path}.");
+                }
+
+                rewind($output);
+                if (! Storage::disk($disk)->put($path, $output, 'public')) {
+                    throw new RuntimeException('No se pudo guardar la imagen del producto.');
+                }
+            });
 
             return $path;
         } finally {
@@ -121,28 +129,34 @@ class ProductImageStorage
         return $rotated;
     }
 
-    private function reservePath(string $disk, string $directory, string $productName, ?string $description): string
+    public static function descriptionSlug(string $description): string
+    {
+        return trim(substr(Str::slug($description), 0, 50), '-');
+    }
+
+    public function hasConflict(string $disk, string $path, ?string $existingPath = null): bool
+    {
+        if ($path !== $existingPath && (Storage::disk($disk)->exists($path) || ProductImage::query()->where('path', $path)->exists())) {
+            return true;
+        }
+
+        return ProductVideo::query()->where('path', 'like', dirname($path).'/%')
+            ->pluck('path')
+            ->contains(fn (string $video): bool => in_array($path, ProductVideo::filePaths($video), true));
+    }
+
+    public function path(string $directory, string $productName, string $description): string
     {
         if (! preg_match('/^products\/[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-hjkmnp-tv-z]{26}$/', $directory)) {
             throw new RuntimeException('El directorio de imágenes del producto no es válido.');
         }
 
         $name = trim(substr(Str::slug($productName), 0, 65), '-') ?: 'producto';
-        $description = trim(substr(Str::slug($description ?? ''), 0, 50), '-') ?: 'imagen';
-        $base = "{$directory}/{$name}-{$description}";
-
-        for ($number = 1; $number <= 10000; $number++) {
-            $path = $base.($number === 1 ? '' : "-{$number}").'.webp';
-
-            if (! DB::table('product_image_names')->insertOrIgnore(['path' => $path])) {
-                continue;
-            }
-
-            if (! Storage::disk($disk)->exists($path)) {
-                return $path;
-            }
+        $description = self::descriptionSlug($description);
+        if ($description === '') {
+            throw new RuntimeException('La descripción para el nombre del archivo no es válida.');
         }
 
-        throw new RuntimeException('No se pudo reservar un nombre para la imagen.');
+        return "{$directory}/{$name}-{$description}.webp";
     }
 }

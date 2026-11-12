@@ -57,13 +57,15 @@ como máximo 10 imágenes JPEG, PNG o WebP de 5 MiB cada una.
 
 Las imágenes nuevas se convierten a WebP (calidad 85, máximo 12 megapíxeles) y
 se guardan en `products/{nombre-producto}-{ulid}/{nombre-producto}-{descripcion}.webp`.
-La descripción del nombre es opcional; si se omite se usa `imagen`. Si un nombre
-ya está reservado se añade `-2`, `-3`, etc., sin sobrescribir archivos. La carpeta
-es estable aunque cambie el nombre del producto; la descripción se usa solo al
-cargar o reemplazar una imagen. Las imágenes antiguas no se convierten ni mueven.
-Las reservas en `product_image_names` se conservan incluso si se elimina una
-imagen, para no reutilizar URLs. Al restaurar una copia de seguridad deben
-restaurarse tanto la base de datos como los archivos correspondientes.
+La descripción para el nombre es obligatoria y distinta entre las imágenes de un
+producto; se comparan las versiones normalizadas y truncadas usadas en el archivo.
+No se añade la posición. La carpeta es estable aunque cambie el nombre del producto.
+El nombre del archivo se determina al cargar o reemplazar la imagen: editar el
+producto, la descripción o el orden no renombra archivos existentes. Se permite
+reemplazar el archivo de la misma imagen, pero cualquier otra colisión se informa
+sin sobrescribir. Las cargas concurrentes requieren un almacén de caché compartido
+que admita bloqueos. Al restaurar una copia de seguridad deben restaurarse tanto
+la base de datos como los archivos correspondientes.
 
 GD debe tener soporte WebP y EXIF en ambos entornos. Ambos archivos Compose usan
 la imagen `fitopero/erp_php84_26:latest`, construida desde el `Dockerfile` de la
@@ -87,8 +89,8 @@ docker compose -f docker-compose.dev.yml exec php php -r 'var_export(gd_info()["
 
 La etiqueta `latest` es mutable: la imagen local no se actualiza hasta hacer
 `pull`. Para despliegues reproducibles conviene publicar también una etiqueta
-versionada. Los campos y la tabla de reservas se añadieron a migraciones
-existentes: en una base ya migrada no aparecen automáticamente. Si se usa
+versionada. Las migraciones de creación se actualizaron para el esquema actual:
+en una base ya migrada los cambios no aparecen automáticamente. Si se usa
 `migrate:fresh`, se perderán todas las tablas y datos; respalda antes de hacerlo.
 
 El seeder de productos descarga fotografías aleatorias de ejemplo desde
@@ -101,11 +103,8 @@ de publicarlas. La ejecución requiere acceso a Internet y soporte WebP; si fall
 la descarga o el guardado, el seeder informa el error. Al ejecutarlo de nuevo,
 conserva las imágenes y metadatos ya asociados.
 
-**La migración elimina permanentemente** `products.image_link`,
-`products.additional_image_links` y las entradas `Media / Main image` de
-`product_details`. No descarga las URLs antiguas. Haz una copia de seguridad
-antes de migrar; el rollback no recupera
-esos datos y también elimina los registros de la nueva galería.
+Las migraciones actuales crean el esquema de la galería desde cero. No convierten
+ni importan las URLs antiguas; recrear una base existente elimina sus datos.
 
 `product_images` guarda las rutas relativas y el orden: la primera imagen es la
 principal. La API sigue entregando `image_link` y `additional_image_links` como
@@ -121,6 +120,49 @@ El panel permite editar el texto alternativo, título y descripción de cada
 imagen, los campos SEO de ambas webs y la descripción para MercadoLibre. Estos
 datos se guardan en la base de datos, pero aún no generan etiquetas SEO ni se
 envían automáticamente a los canales.
+
+### Videos de productos
+
+Las migraciones crean la galería desde cero y no importan enlaces externos
+antiguos. Recrear una base existente elimina sus datos.
+
+El panel permite cargar hasta diez videos por producto, ordenarlos y editar su
+título y descripción. La descripción para el nombre del archivo es obligatoria
+y distinta entre los videos del producto, con la misma normalización que las
+imágenes. Editarla o reordenar no renombra archivos ya guardados. Acepta MP4,
+MOV, WebM, MKV y AVI de hasta 100 MiB. Los archivos convertidos se guardan junto
+con las imágenes en `products/{nombre-producto}-{ulid}/`, usando el prefijo
+`{nombre-producto}-{descripcion}`:
+
+- `{prefijo}.mp4`: H.264 con CRF 0 a la resolución original (ajustada cuando sea
+  necesario a dimensiones pares). La conversión de color y audio puede perder
+  información, por lo que no es una copia idéntica al archivo cargado.
+- `{prefijo}-ecommerce-16x9.mp4`: 1920 × 1080 para la ficha del producto.
+- `{prefijo}-vertical-9x16.mp4`: 1080 × 1920 para formatos verticales.
+- `{prefijo}-square-1x1.mp4`: 1080 × 1080 para formatos cuadrados.
+- `{prefijo}-thumbnail.webp`: portada generada a partir del primer fotograma.
+
+Los nombres no incluyen la posición. Se permite reemplazar el mismo video;
+una colisión con otra imagen, video o archivo se informa sin sobrescribirlo.
+
+Las tres variantes recortan el centro para llenar el formato y pueden ampliar
+videos de menor resolución. Los MP4 usan audio AAC si el archivo lo contiene.
+La conversión es sincrónica y puede tardar varios minutos; el tiempo total de
+las conversiones en una solicitud está limitado a 25 minutos. Requiere espacio
+temporal para el archivo cargado y todas las
+versiones, además de FFmpeg con los codificadores `libx264` y `libwebp`.
+Reconstruye y despliega la imagen PHP como se indica arriba, y actualiza la
+configuración de nginx en ambos entornos. Ajusta también los límites y tiempos
+de cualquier proxy adicional. No se debe cambiar la imagen de un servidor en
+uso sin coordinar su despliegue.
+
+La API devuelve los videos ordenados con las URLs de las cinco versiones;
+`video_link` sigue disponible como URL horizontal del primer video. Las bajas
+lógicas conservan los archivos y las definitivas los eliminan tras confirmar la
+transacción, igual que con las imágenes. Las operaciones SQL directas y las
+cargas abandonadas pueden dejar archivos huérfanos. El disco compartido con las
+imágenes se configura con `PRODUCT_IMAGES_DISK` y debe respaldarse junto
+con la base de datos. Cambiar de disco no migra los archivos.
 
 Respalda regularmente `./ERP_storage/public` y la base de datos de cada VPS,
 y prueba la restauración de ambos de forma coordinada.
