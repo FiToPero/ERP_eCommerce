@@ -18,9 +18,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProductForm
 {
@@ -147,7 +145,7 @@ class ProductForm
                         self::filenameDescription('videos', 'video'),
                         ProductVideoUpload::make('path')
                             ->label('Video')
-                            ->helperText('MP4, MOV, WebM, MKV o AVI; máximo 100 MB. La conversión puede tardar varios minutos.')
+                            ->helperText('MP4, MOV, WebM, MKV o AVI; máximo 100 MB. Se guarda el archivo original sin convertirlo.')
                             ->disk(ProductVideo::disk())
                             ->directory(fn (Get $get): string => 'products/'.$get('../../image_directory'))
                             ->productName(fn (Get $get): string => (string) $get('../../name'))
@@ -667,36 +665,6 @@ class ProductForm
                         $fail("La descripción para el nombre del archivo debe ser distinta para cada {$kind}.");
 
                         return;
-                    }
-
-                    if ($relationship !== 'videos' || ! collect(Arr::wrap($get('path')))->contains(fn ($file): bool => $file instanceof TemporaryUploadedFile)) {
-                        return;
-                    }
-
-                    $paths = ProductVideo::filePaths("{$slug}.mp4");
-                    foreach ($get('../../videos') ?? [] as $video) {
-                        $other = $video['filename_description'] ?? null;
-                        if (! is_string($other) || ! collect(Arr::wrap($video['path'] ?? null))->contains(fn ($file): bool => $file instanceof TemporaryUploadedFile)) {
-                            continue;
-                        }
-
-                        $otherSlug = ProductImageStorage::descriptionSlug($other);
-                        if ($otherSlug !== $slug && array_intersect($paths, ProductVideo::filePaths("{$otherSlug}.mp4")) !== []) {
-                            $fail('Los nombres de las versiones generadas coinciden con otro video.');
-
-                            return;
-                        }
-                    }
-
-                    foreach ($get('../../images') ?? [] as $image) {
-                        $other = $image['filename_description'] ?? null;
-                        if (is_string($other)
-                            && collect(Arr::wrap($image['path'] ?? null))->contains(fn ($file): bool => $file instanceof TemporaryUploadedFile)
-                            && ProductImageStorage::descriptionSlug($other).'.webp' === $paths['thumbnail.webp']) {
-                            $fail('La portada del video coincide con el nombre de una imagen.');
-
-                            return;
-                        }
                     }
                 },
             ]);

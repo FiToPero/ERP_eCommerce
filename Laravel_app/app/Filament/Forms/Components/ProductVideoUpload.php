@@ -44,6 +44,7 @@ class ProductVideoUpload extends FileUpload
                     $component->getDirectory(),
                     (string) $component->evaluate($component->productName),
                     (string) $component->evaluate($component->filenameDescription),
+                    app(ProductVideoStorage::class)->extension($file),
                     $component->getRecord() instanceof ProductVideo ? $component->getRecord()->path : null,
                 );
             } finally {

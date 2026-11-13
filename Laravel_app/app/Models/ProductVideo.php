@@ -9,17 +9,11 @@ use RuntimeException;
 
 class ProductVideo extends Model
 {
-    public const FILES = [
-        'original.mp4' => '.mp4',
-        'ecommerce-16x9.mp4' => '-ecommerce-16x9.mp4',
-        'vertical-9x16.mp4' => '-vertical-9x16.mp4',
-        'square-1x1.mp4' => '-square-1x1.mp4',
-        'thumbnail.webp' => '-thumbnail.webp',
-    ];
+    public const EXTENSIONS = ['mp4', 'mov', 'webm', 'mkv', 'avi'];
 
     protected $fillable = ['path', 'position', 'filename_description', 'title', 'description'];
 
-    protected $appends = ['original_url', 'ecommerce_url', 'vertical_url', 'square_url', 'thumbnail_url'];
+    protected $appends = ['url'];
 
     protected static function booted(): void
     {
@@ -44,45 +38,18 @@ class ProductVideo extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function getOriginalUrlAttribute(): string
+    public function getUrlAttribute(): string
     {
-        return $this->fileUrl('original.mp4');
-    }
-
-    public function getEcommerceUrlAttribute(): string
-    {
-        return $this->fileUrl('ecommerce-16x9.mp4');
-    }
-
-    public function getVerticalUrlAttribute(): string
-    {
-        return $this->fileUrl('vertical-9x16.mp4');
-    }
-
-    public function getSquareUrlAttribute(): string
-    {
-        return $this->fileUrl('square-1x1.mp4');
-    }
-
-    public function getThumbnailUrlAttribute(): string
-    {
-        return $this->fileUrl('thumbnail.webp');
-    }
-
-    private function fileUrl(string $filename): string
-    {
-        return Storage::disk(self::disk())->url(self::filePaths($this->path)[$filename]);
+        return Storage::disk(self::disk())->url($this->path);
     }
 
     public static function filePaths(string $path): array
     {
-        if (! str_ends_with($path, '.mp4')) {
+        if (! in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), self::EXTENSIONS, true)) {
             throw new RuntimeException("La ruta del video no es válida: {$path}");
         }
 
-        $base = substr($path, 0, -4);
-
-        return array_map(fn (string $suffix): string => $base.$suffix, self::FILES);
+        return [$path];
     }
 
     public static function deleteFilesAfterCommit(string $path, Model $model): void

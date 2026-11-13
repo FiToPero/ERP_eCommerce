@@ -109,9 +109,6 @@ class ProductInfolist
                     ->label('Videos del producto')
                     ->getStateUsing(fn (Product $record) => $record->videos)
                     ->schema([
-                        ImageEntry::make('thumbnail_url')
-                            ->label('Portada')
-                            ->imageHeight(120),
                         TextEntry::make('filename_description')
                             ->label('Descripción para el nombre del archivo'),
                         TextEntry::make('title')
@@ -120,20 +117,8 @@ class ProductInfolist
                         TextEntry::make('description')
                             ->label('Descripción del video')
                             ->placeholder('-'),
-                        TextEntry::make('ecommerce_url')
-                            ->label('Video horizontal')
-                            ->url(fn (?string $state) => $state)
-                            ->openUrlInNewTab(),
-                        TextEntry::make('vertical_url')
-                            ->label('Video vertical')
-                            ->url(fn (?string $state) => $state)
-                            ->openUrlInNewTab(),
-                        TextEntry::make('square_url')
-                            ->label('Video cuadrado')
-                            ->url(fn (?string $state) => $state)
-                            ->openUrlInNewTab(),
-                        TextEntry::make('original_url')
-                            ->label('Video original')
+                        TextEntry::make('url')
+                            ->label('Video')
                             ->url(fn (?string $state) => $state)
                             ->openUrlInNewTab(),
                     ])

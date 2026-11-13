@@ -86,7 +86,7 @@ class Product extends Model
 
     public function getVideoLinkAttribute(): ?string
     {
-        return $this->videos->first()?->ecommerce_url;
+        return $this->videos->first()?->url;
     }
 
     public function getImageLinkAttribute(): ?string

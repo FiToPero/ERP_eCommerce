@@ -6,7 +6,6 @@ use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductVideo;
 use App\Models\User;
 use App\Services\ProductVideoStorage;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -31,50 +30,51 @@ class ProductVideosTest extends TestCase
         $this->actingAs(User::factory()->create());
     }
 
-    public function test_video_conversion_uses_product_directory_and_named_variants(): void
+    public function test_mp4_video_is_stored_unchanged(): void
     {
         $product = Product::factory()->create(['name' => 'Producto']);
         $directory = 'products/'.$product->image_directory;
-        $inputPath = tempnam(sys_get_temp_dir(), 'video-test-');
-        $this->assertNotFalse($inputPath);
+        $input = fopen('php://temp', 'w+b');
+        fwrite($input, 'contenido-original');
+        rewind($input);
+
+        $path = app(ProductVideoStorage::class)->store($input, 'public', $directory, $product->name, 'Vista general', 'mp4');
+        fclose($input);
+
+        $this->assertSame("{$directory}/producto-vista-general.mp4", $path);
+        $this->assertSame('contenido-original', Storage::disk('public')->get($path));
+        $this->assertSame([$path], Storage::disk('public')->allFiles($directory));
+
+        $video = $product->videos()->create(['path' => $path, 'position' => 1, 'filename_description' => 'Vista general']);
+        $this->assertSame(Storage::disk('public')->url($path), $video->url);
+        $products = collect($this->getJson('/api/products/index')->assertOk()->json())->keyBy('id');
+        $this->assertSame($video->url, $products[$product->id]['video_link']);
+
+        $video->delete();
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_other_formats_are_converted_to_a_single_mp4(): void
+    {
+        $product = Product::factory()->create(['name' => 'Producto']);
+        $directory = 'products/'.$product->image_directory;
+        $inputPath = tempnam(sys_get_temp_dir(), 'video-mov-');
+        (new Process([
+            'ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=s=320x240:r=8:d=1',
+            '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-f', 'mov', '-y', $inputPath,
+        ]))->mustRun();
 
         try {
-            $process = new Process([
-                'ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=red:s=64x64:r=1:d=1',
-                '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-f', 'mp4', '-y', $inputPath,
-            ]);
-            $process->mustRun();
             $input = fopen($inputPath, 'rb');
-            $this->assertIsResource($input);
-            try {
-                $path = app(ProductVideoStorage::class)->store($input, 'public', $directory, $product->name, 'Vista general');
-            } finally {
-                fclose($input);
-            }
-
-            $this->assertSame("{$directory}/producto-vista-general.mp4", $path);
-            $video = $product->videos()->create(['path' => $path, 'position' => 1, 'filename_description' => 'Vista general']);
-            foreach (ProductVideo::filePaths($path) as $filePath) {
-                Storage::disk('public')->assertExists($filePath);
-            }
-            $this->assertSame(Storage::disk('public')->url("{$directory}/producto-vista-general-ecommerce-16x9.mp4"), $video->ecommerce_url);
-            $this->assertSame(Storage::disk('public')->url("{$directory}/producto-vista-general-thumbnail.webp"), $video->thumbnail_url);
-            $products = collect($this->getJson('/api/products/index')->assertOk()->json())->keyBy('id');
-            $this->assertSame($video->ecommerce_url, $products[$product->id]['video_link']);
-            $this->assertSame($video->thumbnail_url, $products[$product->id]['videos'][0]['thumbnail_url']);
-
-            $imagePath = "{$directory}/other.webp";
-            Storage::disk('public')->put($imagePath, 'image');
-            $video->delete();
-            foreach (ProductVideo::filePaths($path) as $filePath) {
-                Storage::disk('public')->assertMissing($filePath);
-            }
-            Storage::disk('public')->assertExists($imagePath);
+            $path = app(ProductVideoStorage::class)->store($input, 'public', $directory, $product->name, 'Vista general', 'mov');
+            fclose($input);
         } finally {
-            if (is_file($inputPath)) {
-                unlink($inputPath);
-            }
+            unlink($inputPath);
         }
+
+        $this->assertSame("{$directory}/producto-vista-general.mp4", $path);
+        $this->assertSame([$path], Storage::disk('public')->allFiles($directory));
+        $this->assertSame([], glob(sys_get_temp_dir().'/product-video-*.mp4') ?: []);
     }
 
     public function test_form_requires_distinct_video_descriptions_on_create_and_update(): void
@@ -128,94 +128,40 @@ class ProductVideosTest extends TestCase
         $this->assertSame('dorso', $second->fresh()->filename_description);
     }
 
-    public function test_form_rejects_collisions_between_new_media_files(): void
-    {
-        $category = Category::factory()->create();
-        $data = [
-            'category_id' => $category->id,
-            'name' => 'Producto',
-            'slug' => 'producto',
-            'sku' => 'PROD-1',
-            'short_description' => 'Descripción',
-            'condition' => 'new',
-        ];
-        $video = fn () => UploadedFile::fake()->create('video.mp4', 10, 'video/mp4');
-
-        Livewire::test(CreateProduct::class)
-            ->fillForm($data + [
-                'images' => [['filename_description' => 'frente-thumbnail', 'path' => [UploadedFile::fake()->image('photo.jpg')]]],
-                'videos' => [['filename_description' => 'frente', 'path' => [$video()]]],
-            ])
-            ->call('create')
-            ->assertHasFormErrors(['videos.0.filename_description']);
-
-        Livewire::test(CreateProduct::class)
-            ->fillForm($data + [
-                'videos' => [
-                    ['filename_description' => 'frente', 'path' => [$video()]],
-                    ['filename_description' => 'frente-ecommerce-16x9', 'path' => [$video()]],
-                ],
-            ])
-            ->call('create')
-            ->assertHasFormErrors(['videos.0.filename_description']);
-
-        $this->assertDatabaseCount('product_videos', 0);
-        $this->assertSame([], Storage::disk('public')->allFiles('products'));
-    }
-
-    public function test_filament_uploads_and_replaces_video_at_same_path(): void
+    public function test_filament_uploads_and_replaces_mp4_videos(): void
     {
         $product = Product::factory()->create(['name' => 'Producto']);
-        $inputPath = tempnam(sys_get_temp_dir(), 'video-form-');
-        $this->assertNotFalse($inputPath);
+        $directory = "products/{$product->image_directory}";
 
-        try {
-            (new Process([
-                'ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=red:s=64x64:r=1:d=1',
-                '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-f', 'mp4', '-y', $inputPath,
-            ]))->mustRun();
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->fillForm([
+                'videos' => [
+                    ['filename_description' => 'frente', 'path' => [UploadedFile::fake()->createWithContent('video.mp4', 'uno')]],
+                    ['filename_description' => 'dorso', 'path' => [UploadedFile::fake()->createWithContent('second.mp4', 'dos')]],
+                ],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
 
-            Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
-                ->fillForm([
-                    'images' => [
-                        ['filename_description' => 'foto', 'path' => [UploadedFile::fake()->image('photo.jpg')]],
-                    ],
-                    'videos' => [
-                        ['filename_description' => 'frente', 'path' => [UploadedFile::fake()->createWithContent('video.mp4', file_get_contents($inputPath))]],
-                        ['filename_description' => 'dorso', 'path' => [UploadedFile::fake()->createWithContent('second.mp4', file_get_contents($inputPath))]],
-                    ],
-                ])
-                ->call('save')
-                ->assertHasNoFormErrors();
+        $this->assertSame(
+            ["{$directory}/producto-frente.mp4", "{$directory}/producto-dorso.mp4"],
+            $product->videos()->pluck('path')->all(),
+        );
+        $this->assertEqualsCanonicalizing(
+            ["{$directory}/producto-frente.mp4", "{$directory}/producto-dorso.mp4"],
+            Storage::disk('public')->allFiles($directory),
+        );
+        $this->assertSame('uno', Storage::disk('public')->get("{$directory}/producto-frente.mp4"));
 
-            $video = $product->videos()->firstOrFail();
-            $this->assertSame(
-                ["products/{$product->image_directory}/producto-frente.mp4", "products/{$product->image_directory}/producto-dorso.mp4"],
-                $product->videos()->pluck('path')->all(),
-            );
-            $path = "products/{$product->image_directory}/producto-frente.mp4";
-            $this->assertSame($path, $video->path);
-            $this->assertSame('frente', $video->filename_description);
-            $imagePath = "products/{$product->image_directory}/producto-foto.webp";
-            $this->assertSame($imagePath, $product->images()->firstOrFail()->path);
-            Storage::disk('public')->assertExists($imagePath);
-            foreach (ProductVideo::filePaths($path) as $filePath) {
-                Storage::disk('public')->assertExists($filePath);
-            }
+        $video = $product->videos()->firstOrFail();
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->set("data.videos.record-{$video->id}.path", [UploadedFile::fake()->createWithContent('video.mp4', 'nuevo')])
+            ->call('save')
+            ->assertHasNoFormErrors();
 
-            Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
-                ->set("data.videos.record-{$video->id}.path", [UploadedFile::fake()->createWithContent('video.mp4', file_get_contents($inputPath))])
-                ->call('save')
-                ->assertHasNoFormErrors();
-            $this->assertSame($path, $video->fresh()->path);
-            foreach (ProductVideo::filePaths($path) as $filePath) {
-                Storage::disk('public')->assertExists($filePath);
-            }
-        } finally {
-            if (is_file($inputPath)) {
-                unlink($inputPath);
-            }
-        }
+        $this->assertSame("{$directory}/producto-frente.mp4", $video->fresh()->path);
+        $this->assertSame('nuevo', Storage::disk('public')->get("{$directory}/producto-frente.mp4"));
+        $this->assertCount(2, Storage::disk('public')->allFiles($directory));
     }
 
     public function test_changes_and_reordering_do_not_rename_videos(): void
@@ -244,18 +190,19 @@ class ProductVideosTest extends TestCase
         Storage::disk('public')->assertExists($path);
     }
 
-    public function test_video_conflicts_with_existing_image_thumbnail_and_other_video_variants(): void
+    public function test_video_conflicts_with_existing_files_and_other_videos(): void
     {
         $product = Product::factory()->create(['name' => 'Producto']);
         $directory = 'products/'.$product->image_directory;
-        $imagePath = "{$directory}/producto-frente-thumbnail.webp";
-        $product->images()->create(['path' => $imagePath, 'position' => 1, 'filename_description' => 'frente-thumbnail']);
         $storage = app(ProductVideoStorage::class);
-        $this->assertTrue($storage->hasConflict('public', "{$directory}/producto-frente.mp4"));
 
         $videoPath = "{$directory}/producto-otro.mp4";
         $product->videos()->create(['path' => $videoPath, 'position' => 1, 'filename_description' => 'otro']);
-        $this->assertTrue($storage->hasConflict('public', "{$directory}/producto-otro-ecommerce-16x9.mp4"));
+        $this->assertTrue($storage->hasConflict('public', $videoPath));
         $this->assertFalse($storage->hasConflict('public', $videoPath, $videoPath));
+
+        $imagePath = "{$directory}/producto-foto.webp";
+        $product->images()->create(['path' => $imagePath, 'position' => 1, 'filename_description' => 'foto']);
+        $this->assertTrue($storage->hasConflict('public', $imagePath));
     }
 }

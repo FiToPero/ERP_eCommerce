@@ -130,34 +130,23 @@ El panel permite cargar hasta diez videos por producto, ordenarlos y editar su
 título y descripción. La descripción para el nombre del archivo es obligatoria
 y distinta entre los videos del producto, con la misma normalización que las
 imágenes. Editarla o reordenar no renombra archivos ya guardados. Acepta MP4,
-MOV, WebM, MKV y AVI de hasta 100 MiB. Los archivos convertidos se guardan junto
-con las imágenes en `products/{nombre-producto}-{ulid}/`, usando el prefijo
-`{nombre-producto}-{descripcion}`:
-
-- `{prefijo}.mp4`: H.264 con CRF 0 a la resolución original (ajustada cuando sea
-  necesario a dimensiones pares). La conversión de color y audio puede perder
-  información, por lo que no es una copia idéntica al archivo cargado.
-- `{prefijo}-ecommerce-16x9.mp4`: 1920 × 1080 para la ficha del producto.
-- `{prefijo}-vertical-9x16.mp4`: 1080 × 1920 para formatos verticales.
-- `{prefijo}-square-1x1.mp4`: 1080 × 1080 para formatos cuadrados.
-- `{prefijo}-thumbnail.webp`: portada generada a partir del primer fotograma.
+MOV, WebM, MKV y AVI de hasta 100 MiB. Cada video se guarda como un único MP4
+junto con las imágenes en `products/{nombre-producto}-{ulid}/`, con el nombre
+`{nombre-producto}-{descripcion}.mp4`. Un MP4 se guarda sin tocarlo; los demás
+formatos se convierten una sola vez a H.264/AAC con FFmpeg. No se generan
+variantes ni portada.
 
 Los nombres no incluyen la posición. Se permite reemplazar el mismo video;
 una colisión con otra imagen, video o archivo se informa sin sobrescribirlo.
 
-Las tres variantes recortan el centro para llenar el formato y pueden ampliar
-videos de menor resolución. Los MP4 usan audio AAC si el archivo lo contiene.
-La conversión es sincrónica y puede tardar varios minutos; el tiempo total de
-las conversiones en una solicitud está limitado a 25 minutos. Requiere espacio
-temporal para el archivo cargado y todas las
-versiones, además de FFmpeg con los codificadores `libx264` y `libwebp`.
 Reconstruye y despliega la imagen PHP como se indica arriba, y actualiza la
 configuración de nginx en ambos entornos. Ajusta también los límites y tiempos
 de cualquier proxy adicional. No se debe cambiar la imagen de un servidor en
 uso sin coordinar su despliegue.
 
-La API devuelve los videos ordenados con las URLs de las cinco versiones;
-`video_link` sigue disponible como URL horizontal del primer video. Las bajas
+La API devuelve los videos ordenados con su `url`; `video_link` sigue disponible
+como la URL del primer video. Los videos guardados antes de este cambio pueden
+conservar archivos de variantes antiguas, que no se eliminan automáticamente. Las bajas
 lógicas conservan los archivos y las definitivas los eliminan tras confirmar la
 transacción, igual que con las imágenes. Las operaciones SQL directas y las
 cargas abandonadas pueden dejar archivos huérfanos. El disco compartido con las
