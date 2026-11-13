@@ -71,19 +71,6 @@ class ProductInfolist
                     ->dateTime()
                     ->placeholder('-'),
 
-                ImageEntry::make('image_link')
-                    ->label('Imagen principal')
-                    ->getStateUsing(fn (Product $record): ?string => $record->image_link)
-                    ->imageHeight(220)
-                    ->square()
-                    ->columnSpanFull(),
-
-                ImageEntry::make('additional_image_links')
-                    ->label('Imágenes adicionales')
-                    ->getStateUsing(fn (Product $record): array => $record->additional_image_links)
-                    ->imageHeight(120)
-                    ->columnSpanFull(),
-
                 RepeatableEntry::make('images')
                     ->label('Datos de las imágenes')
                     ->getStateUsing(fn (Product $record) => $record->images)

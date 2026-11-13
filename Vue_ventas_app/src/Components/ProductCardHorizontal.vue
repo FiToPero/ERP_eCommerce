@@ -1,5 +1,5 @@
 <script setup>
-import { ref, useId, defineProps } from 'vue';
+import { ref, useId, defineProps, defineEmits } from 'vue';
 
 const props = defineProps({
   product: {
@@ -12,6 +12,7 @@ const min = ref(1);
 const max = ref(10);
 const inputId = useId();
 const count = ref(1);
+const emit = defineEmits(['select']);
 
 function clamp(value, lower, upper) {
   return Math.min(Math.max(value, lower), upper);
@@ -38,14 +39,15 @@ function handleOnChange(event) {
 
 <template>
   <article
-    class="group relative z-0 flex min-w-80 max-w-160 gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/30 dark:hover:shadow-black/50"
+    @click="emit('select', product)"
+    class="group relative z-0 flex cursor-pointer min-w-80 max-w-160 gap-4 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/30 dark:hover:shadow-black/50"
   >
     <div class="relative w-25 overflow-hidden rounded-xl bg-neutral-100 dark:bg-gray-900 sm:w-44">
       <a href="#" class="block">
         <img
-          v-if="product.image_link"
+          v-if="product.images?.[0]?.url"
           class="h-auto w-full rounded-xl border border-neutral-200 object-cover transition-transform duration-300 group-hover:scale-[1.08] dark:border-gray-700"
-          :src="product.image_link"
+          :src="product.images?.[0]?.url"
           :alt="product.images?.[0]?.alt_text || product.name"
           width="176"
           height="176"

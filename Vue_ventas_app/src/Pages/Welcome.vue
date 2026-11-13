@@ -9,6 +9,7 @@ import { defaultApiOrigin } from '@/config/runtimeUrls';
 // Esta constante usa el origen de la API por dominio y evita caer al puerto 8090 antiguo.
 const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin;
 const products = ref([]);
+const selectedProduct = ref(null);
 
 onMounted(async () => {
     const response = await fetch(`${API_URL}/products/index`);
@@ -30,8 +31,13 @@ onMounted(async () => {
                 v-for="product in products"
                 :key="product.id"
                 :product="product"
+                @select="selectedProduct = $event"
             />
         </div>
     </section>
-    <!-- <ProductCardDetails /> -->
+    <ProductCardDetails
+        v-if="selectedProduct"
+        :product="selectedProduct"
+        @close="selectedProduct = null"
+    />
 </template>

@@ -9,6 +9,8 @@ use RuntimeException;
 
 class ProductImage extends Model
 {
+    protected $appends = ['url'];
+
     protected $fillable = ['path', 'position', 'filename_description', 'alt_text', 'title', 'description'];
 
     protected static function booted(): void

@@ -41,10 +41,11 @@ class ProductImagesTest extends TestCase
         $response = $this->getJson('/api/products/index')->assertOk();
         $products = collect($response->json())->keyBy('id');
 
-        $this->assertSame(Storage::disk('public')->url('products/first.jpg'), $products[$product->id]['image_link']);
-        $this->assertSame([Storage::disk('public')->url('products/second.jpg')], $products[$product->id]['additional_image_links']);
-        $this->assertNull($products[$empty->id]['image_link']);
-        $this->assertSame([], $products[$empty->id]['additional_image_links']);
+        $this->assertSame(
+            [Storage::disk('public')->url('products/first.jpg'), Storage::disk('public')->url('products/second.jpg')],
+            collect($products[$product->id]['images'])->pluck('url')->all(),
+        );
+        $this->assertSame([], $products[$empty->id]['images']);
     }
 
     public function test_replacing_and_removing_images_cleans_files_after_commit(): void

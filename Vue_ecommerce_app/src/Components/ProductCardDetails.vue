@@ -14,14 +14,18 @@ const min = ref(1);
 const max = ref(999);
 const count = ref(1);
 const rating = 3;
-const galleryImages = computed(() =>
-  [props.product.image_link, ...(props.product.additional_image_links ?? [])]
-    .filter(Boolean)
-    .map((src, index) => ({
-      src,
-      alt: props.product.images?.[index]?.alt_text || props.product.name,
-    })),
-);
+const galleryImages = computed(() => [
+  ...(props.product.images ?? []).map((image) => ({
+    type: 'image',
+    src: image.url,
+    alt: image.alt_text || props.product.name,
+  })),
+  ...(props.product.videos ?? []).map((video) => ({
+    type: 'video',
+    src: video.url,
+    alt: video.filename_description || props.product.name,
+  })),
+]);
 const selectedImage = ref(galleryImages.value[0]);
 watch(galleryImages, (images) => {
   selectedImage.value = images[0];
@@ -58,7 +62,6 @@ function handleOnChange(event) {
     <div
       class="group relative z-0 max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-4xl bg-white p-6 shadow-2xl ring-1 ring-black/5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-2 hover:scale-[1.01] hover:shadow-[0_30px_80px_rgba(15,23,42,0.28)] dark:bg-gray-800 dark:ring-white/5 dark:shadow-black/40 dark:hover:shadow-black/60 sm:p-8"
     >
-      <div class="text-white">   {{ product }} </div>
       <div
         class="mb-4 inline-flex items-center justify-center rounded-full bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white"
       >
@@ -109,26 +112,50 @@ function handleOnChange(event) {
       </div>
       <div class="mb-6">
         <div class="mx-auto overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-100 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+          <video
+            v-if="selectedImage?.type === 'video'"
+            :key="selectedImage.src"
+            :src="selectedImage.src"
+            :aria-label="selectedImage.alt"
+            controls
+            playsinline
+            preload="metadata"
+            class="h-72 w-full bg-black object-contain sm:h-96"
+          />
           <img
-            v-if="selectedImage"
+            v-else-if="selectedImage"
             :src="selectedImage.src"
             :alt="selectedImage.alt"
             class="h-72 w-full object-cover transition-transform duration-300 hover:scale-[1.02] sm:h-96"
           />
-          <div v-else class="flex h-72 items-center justify-center text-neutral-500 sm:h-96">Sin imagen</div>
+          <div v-else class="flex h-72 items-center justify-center text-neutral-500 sm:h-96">Sin contenido</div>
         </div>
         <div class="mt-4 flex flex-wrap justify-center gap-3">
           <button
             v-for="image in galleryImages"
             :key="image.src"
             type="button"
-            class="overflow-hidden rounded-2xl border-2 transition-all duration-200"
+            :aria-label="image.alt"
+            class="relative overflow-hidden rounded-2xl border-2 transition-all duration-200"
             :class="image.src === selectedImage?.src
               ? 'border-neutral-900 shadow-lg dark:border-gray-100'
               : 'border-transparent opacity-80 hover:border-neutral-300 hover:opacity-100 dark:hover:border-gray-600'"
             @click="selectedImage = image"
           >
+            <template v-if="image.type === 'video'">
+              <video
+                :src="image.src"
+                preload="metadata"
+                muted
+                class="pointer-events-none h-16 w-16 bg-black object-cover sm:h-20 sm:w-20"
+              />
+              <span
+                class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 text-lg text-white"
+                aria-hidden="true"
+              >▶</span>
+            </template>
             <img
+              v-else
               :src="image.src"
               :alt="image.alt"
               class="h-16 w-16 object-cover sm:h-20 sm:w-20"

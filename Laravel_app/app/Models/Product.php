@@ -42,8 +42,6 @@ class Product extends Model
         'meta_requirements'  => 'array',
     ];
 
-    protected $appends = ['image_link', 'additional_image_links', 'video_link'];
-
     protected static function booted(): void
     {
         static::creating(function (Product $product): void {
@@ -82,21 +80,6 @@ class Product extends Model
     public function videos(): HasMany
     {
         return $this->hasMany(ProductVideo::class)->orderBy('position')->orderBy('id');
-    }
-
-    public function getVideoLinkAttribute(): ?string
-    {
-        return $this->videos->first()?->url;
-    }
-
-    public function getImageLinkAttribute(): ?string
-    {
-        return $this->images->first()?->url;
-    }
-
-    public function getAdditionalImageLinksAttribute(): array
-    {
-        return $this->images->skip(1)->map(fn (ProductImage $image): string => $image->url)->values()->all();
     }
 
     /**

@@ -107,8 +107,7 @@ Las migraciones actuales crean el esquema de la galería desde cero. No conviert
 ni importan las URLs antiguas; recrear una base existente elimina sus datos.
 
 `product_images` guarda las rutas relativas y el orden: la primera imagen es la
-principal. La API sigue entregando `image_link` y `additional_image_links` como
-URLs calculadas para los clientes existentes. El formulario reordena las filas
+principal. La API entrega cada imagen en `images` con su `url` calculada; la primera es la principal. El formulario reordena las filas
 secuencialmente; la base de datos usa el identificador como desempate si otro
 proceso inserta posiciones iguales. La eliminación lógica conserva los archivos;
 la eliminación definitiva de productos o categorías y los cambios de imágenes
@@ -144,8 +143,7 @@ configuración de nginx en ambos entornos. Ajusta también los límites y tiempo
 de cualquier proxy adicional. No se debe cambiar la imagen de un servidor en
 uso sin coordinar su despliegue.
 
-La API devuelve los videos ordenados con su `url`; `video_link` sigue disponible
-como la URL del primer video. Los videos guardados antes de este cambio pueden
+La API devuelve los videos ordenados con su `url`. Los videos guardados antes de este cambio pueden
 conservar archivos de variantes antiguas, que no se eliminan automáticamente. Las bajas
 lógicas conservan los archivos y las definitivas los eliminan tras confirmar la
 transacción, igual que con las imágenes. Las operaciones SQL directas y las

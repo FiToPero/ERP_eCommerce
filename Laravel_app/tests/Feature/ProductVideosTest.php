@@ -48,7 +48,7 @@ class ProductVideosTest extends TestCase
         $video = $product->videos()->create(['path' => $path, 'position' => 1, 'filename_description' => 'Vista general']);
         $this->assertSame(Storage::disk('public')->url($path), $video->url);
         $products = collect($this->getJson('/api/products/index')->assertOk()->json())->keyBy('id');
-        $this->assertSame($video->url, $products[$product->id]['video_link']);
+        $this->assertSame($video->url, $products[$product->id]['videos'][0]['url']);
 
         $video->delete();
         Storage::disk('public')->assertMissing($path);

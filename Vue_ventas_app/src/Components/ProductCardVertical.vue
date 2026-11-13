@@ -17,8 +17,8 @@ const props = defineProps({
     <div class="relative bg-neutral-100 dark:bg-gray-900">
       <a href="#" class="block">
         <img
-          v-if="product.image_link"
-          :src="product.image_link"
+          v-if="product.images?.[0]?.url"
+          :src="product.images?.[0]?.url"
           :alt="product.images?.[0]?.alt_text || product.name"
           class="block aspect-square h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.09]"
           width="300"

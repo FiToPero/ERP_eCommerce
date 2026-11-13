@@ -69,9 +69,9 @@ class ProductsTable
                         'used'        => 'danger',
                         default       => 'gray',
                     }),
-                ImageColumn::make('image_link')
+                ImageColumn::make('imagen')
                     ->label('Imagen')
-                    ->getStateUsing(fn (Product $record): ?string => $record->image_link)
+                    ->getStateUsing(fn (Product $record): ?string => $record->images->first()?->url)
                     ->square(),
 
                 IconColumn::make('identifier_exists')
