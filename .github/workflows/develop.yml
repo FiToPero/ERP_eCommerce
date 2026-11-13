@@ -119,7 +119,7 @@ jobs:
             docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
             
             # Run migrations
-            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate:refresh --seed --force
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate:fresh --seed --force
                
             # Clear caches
             docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan config:cache

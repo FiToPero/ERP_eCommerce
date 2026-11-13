@@ -103,7 +103,11 @@ class ProductSeeder extends Seeder
 
     private function downloadExampleImage(Product $product, string $disk, int $position): string
     {
-        $response = Http::timeout(30)->retry(2, 500)->get('https://picsum.photos/800/800')->throw();
+        $response = Http::timeout(30)->retry(2, 500)->get('https://picsum.dev/800/800')->throw();
+
+        // curl -L --max-time 15 "https://picsum.dev/800/600" -o imagen.jpg
+
+
         $body = $response->body();
         if (strlen($body) > 5 * 1024 * 1024) {
             throw new RuntimeException("La imagen de ejemplo de {$product->sku} supera los 5 MiB.");
