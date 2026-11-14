@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class Product extends Model
 {
@@ -61,6 +63,31 @@ class Product extends Model
             }
             foreach ($product->getRelation('videosToDelete') as $video) {
                 ProductVideo::deleteFilesAfterCommit($video->path, $product);
+            }
+
+            self::deleteMediaDirectoryAfterCommit($product->image_directory, $product);
+        });
+    }
+
+    public static function deleteMediaDirectoryAfterCommit(string $imageDirectory, Model $model): void
+    {
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-hjkmnp-tv-z]{26}$/', $imageDirectory)) {
+            throw new RuntimeException('El directorio de imágenes del producto no es válido.');
+        }
+
+        $directory = 'products/'.$imageDirectory;
+        $disk = ProductImage::disk();
+
+        $model->getConnection()->afterCommit(function () use ($directory, $disk): void {
+            if (
+                ProductImage::query()->where('path', 'like', $directory.'/%')->exists()
+                || ProductVideo::query()->where('path', 'like', $directory.'/%')->exists()
+            ) {
+                return;
+            }
+
+            if (! Storage::disk($disk)->deleteDirectory($directory)) {
+                throw new RuntimeException("No se pudo eliminar el directorio del producto: {$directory}");
             }
         });
     }

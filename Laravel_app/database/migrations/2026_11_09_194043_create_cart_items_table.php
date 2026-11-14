@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cart_id')->constrained('carts')->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained('products')->restrictOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 14, 2);
             $table->decimal('discount', 14, 2)->default(0);
