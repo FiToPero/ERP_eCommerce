@@ -3,12 +3,11 @@ import { onBeforeUnmount, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ButtonColor from '../Components/ButtonColor.vue'
 import CardMobile from '../Components/CardMobile.vue'
-import { defaultApiOrigin } from '@/config/runtimeUrls'
 
 const route = useRoute()
 const router = useRouter()
 
-const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
+const API_URL = import.meta.env.VITE_API_URL
 const email = route.query.email ?? ''
 
 const processing = ref(false)

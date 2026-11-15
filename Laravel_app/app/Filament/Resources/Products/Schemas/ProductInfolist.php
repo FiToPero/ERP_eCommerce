@@ -7,6 +7,7 @@ use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -104,10 +105,10 @@ class ProductInfolist
                         TextEntry::make('description')
                             ->label('Descripción del video')
                             ->placeholder('-'),
-                        TextEntry::make('url')
+                        ViewEntry::make('url')
                             ->label('Video')
-                            ->url(fn (?string $state) => $state)
-                            ->openUrlInNewTab(),
+                            ->view('filament.infolists.components.product-video')
+                            ->columnSpanFull(),
                     ])
                     ->columnSpanFull(),
 

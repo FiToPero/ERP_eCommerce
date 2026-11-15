@@ -6,8 +6,7 @@ import ButtonColor from '../Components/ButtonColor.vue'
 import Checkbox from '../Components/Checkbox.vue'
 import CardMobile from '../Components/CardMobile.vue'
 import { useAuthStore } from '../Stores/useAuthStore'
-// Este import usa una URL base compartida para que el login no dependa de `localhost:8090`.
-import { defaultApiOrigin } from '@/config/runtimeUrls'
+
 // Mensage de Verificación
 import { useRoute } from 'vue-router'
 const route = useRoute()
@@ -27,8 +26,7 @@ const forgotProcessing = ref(false)
 const forgotMessage = ref('')
 const forgotError = ref('')
 
-// Esta constante resuelve el backend del admin por dominio cuando no se inyectó `VITE_API_URL`.
-const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
+const API_URL = import.meta.env.VITE_API_URL
 
 const sendResetLink = async () => {
     forgotMessage.value = ''

@@ -1,280 +1,3 @@
-<!-- eslint-disable vuejs-accessibility/no-static-element-interactions -->
-<template>
-  <div class="w-full h-full">
-    <header class="relative">
-      <div
-        class="flex h-full w-full flex-wrap items-center justify-between border-0 border-green-800 bg-green-700 px-4 py-2 text-white md:z-10 md:h-20 md:flex-nowrap md:px-10 md:py-5 dark:bg-green-900"
-      >
-        <div class="flex items-center shrink-0">
-          <button
-            aria-label="Close menu"
-            type="button"
-            class="mr-5 inline-flex items-center justify-center rounded-full bg-transparent p-2 text-white transition-colors hover:bg-green-800 active:bg-green-900 dark:hover:bg-green-800 md:hidden"
-            @click="openMenu([])"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 18a1 1 0 1 1 0-2h16a1 1 0 1 1 0 2zm0-5a1 1 0 1 1 0-2h16a1 1 0 1 1 0 2zM3 7a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1" />
-            </svg>
-          </button>
-          <a
-            href="#"
-            aria-label="SF Homepage"
-            class="flex shrink-0 items-center mr-auto text-white focus-visible:outline focus-visible:outline-offset focus-visible:rounded-xs"
-          >
-            <picture>
-              <source srcset="https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/alokai-logo-white.svg" media="(min-width: 1024px)" />
-              <img
-                src="https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/alokai-sign-white.svg"
-                alt="Sf Logo"
-                class="h-8 w-8 lg:h-7 lg:w-42"
-              />
-            </picture>
-          </a>
-        </div>
-        <form role="search" class="hidden md:flex flex-[100%] ml-10" @submit.prevent="search">
-          <label
-            class="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 pr-0 text-neutral-500 ring-1 ring-inset ring-neutral-300 hover:ring-green-700 focus-within:outline focus-within:outline-offset focus-within:ring-2 focus-within:ring-green-700 focus-within:caret-green-700 active:ring-2 active:ring-green-700 active:caret-green-700 dark:bg-green-700 dark:text-neutral-300 dark:ring-green-600 dark:hover:ring-green-500 dark:focus-within:ring-green-500 dark:focus-within:caret-green-400"
-          >
-            <input
-              v-model="inputValue"
-              type="search"
-              placeholder="Search"
-              class="min-w-20 w-full appearance-none bg-transparent text-base text-neutral-900 outline-hidden placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:bg-transparent read-only:bg-transparent [&::-webkit-search-cancel-button]:appearance-none dark:text-white dark:placeholder:text-neutral-400"
-            />
-            <span class="flex items-center">
-              <button
-                aria-label="search"
-                type="submit"
-                class="inline-flex items-center justify-center rounded-full rounded-l-none p-2 text-green-700 transition-colors hover:bg-transparent hover:text-green-800 active:bg-transparent active:text-green-900 dark:text-green-300 dark:hover:text-green-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m18.9 20.3-5.6-5.6q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.887T3 9.5t1.888-4.613Q6.775 3 9.5 3t4.613 1.887T16 9.5a6.1 6.1 0 0 1-1.3 3.8l5.625 5.625a.92.92 0 0 1 .275.675q0 .4-.3.7a.95.95 0 0 1-.7.275.95.95 0 0 1-.7-.275M9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5t-1.312-3.188Q11.375 5 9.5 5T6.312 6.312 5 9.5t1.312 3.188Q7.625 14 9.5 14" />
-                </svg>
-              </button>
-            </span>
-          </label>
-        </form>
-        <nav class="flex flex-nowrap justify-end items-center md:ml-10 gap-x-1">
-          <!-- Recorre actionItems y crea un boton por cada accion disponible en la barra. -->
-          <button
-            v-for="actionItem in actionItems"
-            :key="actionItem.ariaLabel"
-            :aria-label="actionItem.ariaLabel"
-            type="button"
-            class="relative inline-flex items-center justify-center gap-2 rounded-md bg-transparent p-2 text-white transition-colors hover:bg-green-800 hover:text-white active:bg-green-900 active:text-white dark:hover:bg-green-700"
-            @click="actionItem.onClick()"
-          >
-            <svg
-              v-if="actionItem.icon"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 fill-current"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                :d="actionItem.icon.path"
-                :fill-rule="actionItem.icon.fillRule"
-                :clip-rule="actionItem.icon.clipRule"
-              />
-            </svg>
-            <!-- Solo algunos roles muestran texto junto al icono: autenticacion y tema. -->
-            <p v-if="actionItem.role === 'auth' || actionItem.role === 'auth-text' || actionItem.role === 'theme'" class="hidden lg:inline-flex whitespace-nowrap mr-2">
-              {{ actionItem.label }}
-            </p>
-            <span
-              v-if="actionItem.badge"
-              class="absolute -right-1 top-0 inline-flex min-w-5 items-center justify-center rounded-full border border-green-700 bg-white px-1.5 text-xs font-semibold leading-5 text-neutral-900 dark:border-green-900 dark:bg-green-200"
-            >
-              <!-- Si el item trae badge, muestra el contador formateado en la esquina del boton. -->
-              {{ formatBadge(actionItem.badge.content, actionItem.badge.max) }}
-            </span>
-          </button>
-        </nav>
-        <form role="search" class="flex md:hidden flex-[100%] my-2" @submit.prevent="search">
-          <label
-            class="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 pr-0 text-neutral-500 ring-1 ring-inset ring-neutral-300 hover:ring-green-700 focus-within:outline focus-within:outline-offset focus-within:ring-2 focus-within:ring-green-700 focus-within:caret-green-700 active:ring-2 active:ring-green-700 active:caret-green-700 dark:bg-green-700 dark:text-neutral-300 dark:ring-green-600 dark:hover:ring-green-500 dark:focus-within:ring-green-500 dark:focus-within:caret-green-400"
-          >
-            <input
-              v-model="inputValue"
-              type="search"
-              placeholder="Search"
-              class="min-w-20 w-full appearance-none bg-transparent text-base text-neutral-900 outline-hidden placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:bg-transparent read-only:bg-transparent [&::-webkit-search-cancel-button]:appearance-none dark:text-white dark:placeholder:text-neutral-400"
-            />
-            <span class="flex items-center">
-              <button
-                aria-label="search"
-                type="submit"
-                class="inline-flex items-center justify-center rounded-full rounded-l-none p-2 text-green-700 transition-colors hover:bg-transparent hover:text-green-800 active:bg-transparent active:text-green-900 dark:text-green-300 dark:hover:text-green-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m18.9 20.3-5.6-5.6q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.887T3 9.5t1.888-4.613Q6.775 3 9.5 3t4.613 1.887T16 9.5a6.1 6.1 0 0 1-1.3 3.8l5.625 5.625a.92.92 0 0 1 .275.675q0 .4-.3.7a.95.95 0 0 1-.7.275.95.95 0 0 1-.7-.275M9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5t-1.312-3.188Q11.375 5 9.5 5T6.312 6.312 5 9.5t1.312 3.188Q7.625 14 9.5 14" />
-                </svg>
-              </button>
-            </span>
-          </label>
-        </form>
-      </div>
-      <!-- Desktop dropdown -->
-      <nav>
-        <ul
-          class="hidden border-b border-b-neutral-200 bg-white px-6 py-2 dark:border-b-green-700 dark:bg-green-950 md:flex"
-          @blur="handleDesktopBlur"
-        >
-          <li v-for="(menuNode, index) in content.children" :key="menuNode.key">
-            <button
-              :ref="(element) => setTriggerRef(element, index)"
-              type="button"
-              class="group mr-2 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200 hover:text-neutral-700 active:bg-neutral-300 active:text-neutral-900 dark:text-neutral-100 dark:hover:bg-green-800 dark:hover:text-white dark:active:bg-green-700"
-              @mouseenter="openMenu([menuNode.key])"
-              @click="openMenu([menuNode.key])"
-            >
-              <span>{{ menuNode.value.label }}</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 rotate-90 fill-current text-neutral-500 group-hover:text-neutral-700 group-active:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M9.003 17a1 1 0 0 1 0-1.41l3.876-3.885-3.876-3.884a.998.998 0 0 1 1.411-1.41l4.588 4.588a1 1 0 0 1 0 1.414l-4.588 4.588A.997.997 0 0 1 9.003 17" />
-              </svg>
-            </button>
-
-            <div
-              v-if="isOpen && activeNode.length === 1 && activeNode[0] === menuNode.key"
-              :key="activeMenu.key"
-              ref="megaMenuRef"
-              class="absolute left-0 right-0 top-full z-30 hidden grid-cols-4 gap-x-6 bg-white p-6 shadow-lg outline-hidden dark:bg-green-950 dark:shadow-black/40 md:grid"
-              tabindex="0"
-              @mouseleave="close()"
-              @keydown.esc="focusTrigger(index)"
-            >
-              <template v-for="node in activeMenu.children" :key="node.key">
-                <template v-if="node.isLeaf">
-                  <a
-                    :href="node.value.link"
-                    class="mb-2 inline-flex w-fit rounded-md px-4 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-green-800 dark:hover:text-white"
-                  >
-                    {{ node.value.label }}
-                  </a>
-                  <div class="col-start-2 col-end-5" />
-                </template>
-                <div v-else>
-                  <p
-                    class="whitespace-nowrap border-b border-b-neutral-200 px-4 py-1.5 text-base font-medium text-neutral-900 dark:border-b-green-700 dark:text-white"
-                  >
-                    {{ node.value.label }}
-                  </p>
-                  <ul class="mt-2">
-                    <li v-for="child in node.children" :key="child.key">
-                      <a
-                        :href="child.value.link"
-                        class="flex w-auto items-center justify-between gap-3 rounded-md px-4 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-green-800 dark:hover:text-white"
-                      >
-                        <span>{{ child.value.label }}</span>
-                        <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
-                          {{ child.value.counter }}
-                        </span>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </template>
-              <div
-                class="flex grow flex-col items-center justify-center overflow-hidden rounded-md bg-neutral-100 dark:bg-green-800"
-              >
-                <img :src="bannerNode.value.banner" :alt="bannerNode.value.bannerTitle" class="object-contain" />
-                <p class="mb-4 mt-4 px-4 text-center text-base font-medium text-neutral-900 dark:text-white">
-                  {{ bannerNode.value.bannerTitle }}
-                </p>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </nav>
-
-      <!-- Mobile drawer -->
-      <div v-if="isOpen" class="fixed inset-0 z-30 bg-neutral-500/50 md:hidden" @click="close()" />
-      <aside
-        v-if="isOpen"
-        ref="drawerRef"
-        class="fixed inset-y-0 left-0 z-40 w-[calc(100%-50px)] max-w-94 overflow-y-auto bg-white shadow-xl dark:bg-green-950 md:hidden"
-      >
-        <nav>
-          <div class="flex items-center justify-between border-b border-b-neutral-200 p-4 dark:border-b-green-700">
-            <p class="text-base font-medium text-neutral-900 dark:text-white">Browse products</p>
-            <button
-              type="button"
-              aria-label="Close menu"
-              class="ml-2 inline-flex items-center justify-center rounded-full p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-green-800 dark:hover:text-white"
-              @click="close()"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m12 13.4-4.9 4.9q-.275.275-.7.275t-.7-.275a.96.96 0 0 1-.287-.7q0-.425.287-.7l4.9-4.9-4.9-4.9a.96.96 0 0 1-.287-.7q0-.425.287-.7t.7-.275q.425 0 .7.275l4.9 4.9 4.9-4.9q.275-.275.7-.275t.7.275.275.7q0 .425-.275.7l-4.9 4.9 4.9 4.9q.275.275.275.7t-.275.7-.7.275q-.425 0-.7-.275z" />
-              </svg>
-            </button>
-            </div>
-          <ul class="mb-6 mt-2">
-            <li v-if="activeMenu.key !== 'root'">
-              <button
-                type="button"
-                class="flex w-full items-center border-b border-b-neutral-200 px-4 py-4 text-left dark:border-b-green-700"
-                @click="goBack()"
-              >
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M14.997 17a.997.997 0 0 1-.707-.293l-4.587-4.588a1 1 0 0 1 0-1.414l4.588-4.588a.999.999 0 1 1 1.413 1.411l-3.877 3.884 3.877 3.885A.999.999 0 0 1 14.997 17" />
-                  </svg>
-                  <p class="ml-5 font-medium text-neutral-900 dark:text-white">{{ activeMenu.value.label }}</p>
-                </div>
-              </button>
-            </li>
-            <template v-for="node in activeMenu.children" :key="node.value.label">
-              <li v-if="node.isLeaf">
-                <a
-                  :href="node.value.link"
-                  class="flex items-center justify-between px-4 py-4 text-neutral-900 first-of-type:mt-2 dark:text-white"
-                  @click="close()"
-                >
-                  <div class="flex items-center">
-                    <p class="text-left">{{ node.value.label }}</p>
-                    <span class="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
-                      {{ node.value.counter }}
-                    </span>
-                  </div>
-                </a>
-              </li>
-              <li v-else>
-                <button type="button" class="flex w-full items-center justify-between px-4 py-4 text-left" @click="goNext(node.key)">
-                  <div class="flex items-center">
-                    <p class="text-left text-neutral-900 dark:text-white">{{ node.value.label }}</p>
-                    <span class="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
-                      {{ node.value.counter }}
-                    </span>
-                  </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M9.003 17a1 1 0 0 1 0-1.41l3.876-3.885-3.876-3.884a.998.998 0 0 1 1.411-1.41l4.588 4.588a1 1 0 0 1 0 1.414l-4.588 4.588A.997.997 0 0 1 9.003 17" />
-                  </svg>
-                </button>
-              </li>
-            </template>
-          </ul>
-          <div
-            v-if="bannerNode.value.banner"
-            class="flex grow items-center overflow-hidden bg-neutral-100 dark:bg-green-800"
-          >
-            <img
-              :src="bannerNode.value.banner"
-              :alt="bannerNode.value.bannerTitle"
-              class="object-contain w-[50%] basis-6/12"
-            />
-            <p class="basis-6/12 p-6 text-base font-medium text-neutral-900 dark:text-white">{{ bannerNode.value.bannerTitle }}</p>
-          </div>
-        </nav>
-      </aside>
-    </header>
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -301,11 +24,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
 
-// Este import centraliza los fallbacks de dominios para que la SPA no dependa otra vez de puertos explícitos.
-import { defaultApiOrigin } from '@/config/runtimeUrls'
-
-// Esta constante usa primero el valor configurado en Vite y, si no existe, cae al dominio del admin correcto.
-const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin;
+const API_URL = import.meta.env.VITE_API_URL;
 
 const activeMenu = computed(() => findNode(activeNode.value, content));
 const bannerNode = computed(() => findNode(activeNode.value.slice(0, 1), content));
@@ -786,4 +505,281 @@ const content = {
   ],
 };
 </script>
+<template>
+  <div class="w-full h-full">
+    <header class="relative">
+      <div
+        class="flex h-full w-full flex-wrap items-center justify-between border-0 border-green-800 bg-green-700 px-4 py-2 text-white md:z-10 md:h-20 md:flex-nowrap md:px-10 md:py-5 dark:bg-green-900"
+      >
+        <div class="flex items-center shrink-0">
+          <button
+            aria-label="Close menu"
+            type="button"
+            class="mr-5 inline-flex items-center justify-center rounded-full bg-transparent p-2 text-white transition-colors hover:bg-green-800 active:bg-green-900 dark:hover:bg-green-800 md:hidden"
+            @click="openMenu([])"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 18a1 1 0 1 1 0-2h16a1 1 0 1 1 0 2zm0-5a1 1 0 1 1 0-2h16a1 1 0 1 1 0 2zM3 7a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1" />
+            </svg>
+          </button>
+          <a
+            href="#"
+            aria-label="SF Homepage"
+            class="flex shrink-0 items-center mr-auto text-white focus-visible:outline focus-visible:outline-offset focus-visible:rounded-xs"
+          >
+            <picture>
+              <source srcset="https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/alokai-logo-white.svg" media="(min-width: 1024px)" />
+              <img
+                src="https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/alokai-sign-white.svg"
+                alt="Sf Logo"
+                class="h-8 w-8 lg:h-7 lg:w-42"
+              />
+            </picture>
+          </a>
+        </div>
+        <form role="search" class="hidden md:flex flex-[100%] ml-10" @submit.prevent="search">
+          <label
+            class="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 pr-0 text-neutral-500 ring-1 ring-inset ring-neutral-300 hover:ring-green-700 focus-within:outline focus-within:outline-offset focus-within:ring-2 focus-within:ring-green-700 focus-within:caret-green-700 active:ring-2 active:ring-green-700 active:caret-green-700 dark:bg-green-700 dark:text-neutral-300 dark:ring-green-600 dark:hover:ring-green-500 dark:focus-within:ring-green-500 dark:focus-within:caret-green-400"
+          >
+            <input
+              v-model="inputValue"
+              type="search"
+              placeholder="Search"
+              class="min-w-20 w-full appearance-none bg-transparent text-base text-neutral-900 outline-hidden placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:bg-transparent read-only:bg-transparent [&::-webkit-search-cancel-button]:appearance-none dark:text-white dark:placeholder:text-neutral-400"
+            />
+            <span class="flex items-center">
+              <button
+                aria-label="search"
+                type="submit"
+                class="inline-flex items-center justify-center rounded-full rounded-l-none p-2 text-green-700 transition-colors hover:bg-transparent hover:text-green-800 active:bg-transparent active:text-green-900 dark:text-green-300 dark:hover:text-green-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m18.9 20.3-5.6-5.6q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.887T3 9.5t1.888-4.613Q6.775 3 9.5 3t4.613 1.887T16 9.5a6.1 6.1 0 0 1-1.3 3.8l5.625 5.625a.92.92 0 0 1 .275.675q0 .4-.3.7a.95.95 0 0 1-.7.275.95.95 0 0 1-.7-.275M9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5t-1.312-3.188Q11.375 5 9.5 5T6.312 6.312 5 9.5t1.312 3.188Q7.625 14 9.5 14" />
+                </svg>
+              </button>
+            </span>
+          </label>
+        </form>
+        <nav class="flex flex-nowrap justify-end items-center md:ml-10 gap-x-1">
+          <!-- Recorre actionItems y crea un boton por cada accion disponible en la barra. -->
+          <button
+            v-for="actionItem in actionItems"
+            :key="actionItem.ariaLabel"
+            :aria-label="actionItem.ariaLabel"
+            type="button"
+            class="relative inline-flex items-center justify-center gap-2 rounded-md bg-transparent p-2 text-white transition-colors hover:bg-green-800 hover:text-white active:bg-green-900 active:text-white dark:hover:bg-green-700"
+            @click="actionItem.onClick()"
+          >
+            <svg
+              v-if="actionItem.icon"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 fill-current"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                :d="actionItem.icon.path"
+                :fill-rule="actionItem.icon.fillRule"
+                :clip-rule="actionItem.icon.clipRule"
+              />
+            </svg>
+            <!-- Solo algunos roles muestran texto junto al icono: autenticacion y tema. -->
+            <p v-if="actionItem.role === 'auth' || actionItem.role === 'auth-text' || actionItem.role === 'theme'" class="hidden lg:inline-flex whitespace-nowrap mr-2">
+              {{ actionItem.label }}
+            </p>
+            <span
+              v-if="actionItem.badge"
+              class="absolute -right-1 top-0 inline-flex min-w-5 items-center justify-center rounded-full border border-green-700 bg-white px-1.5 text-xs font-semibold leading-5 text-neutral-900 dark:border-green-900 dark:bg-green-200"
+            >
+              <!-- Si el item trae badge, muestra el contador formateado en la esquina del boton. -->
+              {{ formatBadge(actionItem.badge.content, actionItem.badge.max) }}
+            </span>
+          </button>
+        </nav>
+        <form role="search" class="flex md:hidden flex-[100%] my-2" @submit.prevent="search">
+          <label
+            class="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 pr-0 text-neutral-500 ring-1 ring-inset ring-neutral-300 hover:ring-green-700 focus-within:outline focus-within:outline-offset focus-within:ring-2 focus-within:ring-green-700 focus-within:caret-green-700 active:ring-2 active:ring-green-700 active:caret-green-700 dark:bg-green-700 dark:text-neutral-300 dark:ring-green-600 dark:hover:ring-green-500 dark:focus-within:ring-green-500 dark:focus-within:caret-green-400"
+          >
+            <input
+              v-model="inputValue"
+              type="search"
+              placeholder="Search"
+              class="min-w-20 w-full appearance-none bg-transparent text-base text-neutral-900 outline-hidden placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:bg-transparent read-only:bg-transparent [&::-webkit-search-cancel-button]:appearance-none dark:text-white dark:placeholder:text-neutral-400"
+            />
+            <span class="flex items-center">
+              <button
+                aria-label="search"
+                type="submit"
+                class="inline-flex items-center justify-center rounded-full rounded-l-none p-2 text-green-700 transition-colors hover:bg-transparent hover:text-green-800 active:bg-transparent active:text-green-900 dark:text-green-300 dark:hover:text-green-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m18.9 20.3-5.6-5.6q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.887T3 9.5t1.888-4.613Q6.775 3 9.5 3t4.613 1.887T16 9.5a6.1 6.1 0 0 1-1.3 3.8l5.625 5.625a.92.92 0 0 1 .275.675q0 .4-.3.7a.95.95 0 0 1-.7.275.95.95 0 0 1-.7-.275M9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5t-1.312-3.188Q11.375 5 9.5 5T6.312 6.312 5 9.5t1.312 3.188Q7.625 14 9.5 14" />
+                </svg>
+              </button>
+            </span>
+          </label>
+        </form>
+      </div>
+      <!-- Desktop dropdown -->
+      <nav>
+        <ul
+          class="hidden border-b border-b-neutral-200 bg-white px-6 py-2 dark:border-b-green-700 dark:bg-green-950 md:flex"
+          @blur="handleDesktopBlur"
+        >
+          <li v-for="(menuNode, index) in content.children" :key="menuNode.key">
+            <button
+              :ref="(element) => setTriggerRef(element, index)"
+              type="button"
+              class="group mr-2 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200 hover:text-neutral-700 active:bg-neutral-300 active:text-neutral-900 dark:text-neutral-100 dark:hover:bg-green-800 dark:hover:text-white dark:active:bg-green-700"
+              @mouseenter="openMenu([menuNode.key])"
+              @click="openMenu([menuNode.key])"
+            >
+              <span>{{ menuNode.value.label }}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 rotate-90 fill-current text-neutral-500 group-hover:text-neutral-700 group-active:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M9.003 17a1 1 0 0 1 0-1.41l3.876-3.885-3.876-3.884a.998.998 0 0 1 1.411-1.41l4.588 4.588a1 1 0 0 1 0 1.414l-4.588 4.588A.997.997 0 0 1 9.003 17" />
+              </svg>
+            </button>
+
+            <div
+              v-if="isOpen && activeNode.length === 1 && activeNode[0] === menuNode.key"
+              :key="activeMenu.key"
+              ref="megaMenuRef"
+              class="absolute left-0 right-0 top-full z-30 hidden grid-cols-4 gap-x-6 bg-white p-6 shadow-lg outline-hidden dark:bg-green-950 dark:shadow-black/40 md:grid"
+              tabindex="0"
+              @mouseleave="close()"
+              @keydown.esc="focusTrigger(index)"
+            >
+              <template v-for="node in activeMenu.children" :key="node.key">
+                <template v-if="node.isLeaf">
+                  <a
+                    :href="node.value.link"
+                    class="mb-2 inline-flex w-fit rounded-md px-4 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-green-800 dark:hover:text-white"
+                  >
+                    {{ node.value.label }}
+                  </a>
+                  <div class="col-start-2 col-end-5" />
+                </template>
+                <div v-else>
+                  <p
+                    class="whitespace-nowrap border-b border-b-neutral-200 px-4 py-1.5 text-base font-medium text-neutral-900 dark:border-b-green-700 dark:text-white"
+                  >
+                    {{ node.value.label }}
+                  </p>
+                  <ul class="mt-2">
+                    <li v-for="child in node.children" :key="child.key">
+                      <a
+                        :href="child.value.link"
+                        class="flex w-auto items-center justify-between gap-3 rounded-md px-4 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-green-800 dark:hover:text-white"
+                      >
+                        <span>{{ child.value.label }}</span>
+                        <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
+                          {{ child.value.counter }}
+                        </span>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <div
+                class="flex grow flex-col items-center justify-center overflow-hidden rounded-md bg-neutral-100 dark:bg-green-800"
+              >
+                <img :src="bannerNode.value.banner" :alt="bannerNode.value.bannerTitle" class="object-contain" />
+                <p class="mb-4 mt-4 px-4 text-center text-base font-medium text-neutral-900 dark:text-white">
+                  {{ bannerNode.value.bannerTitle }}
+                </p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Mobile drawer -->
+      <div v-if="isOpen" class="fixed inset-0 z-30 bg-neutral-500/50 md:hidden" @click="close()" />
+      <aside
+        v-if="isOpen"
+        ref="drawerRef"
+        class="fixed inset-y-0 left-0 z-40 w-[calc(100%-50px)] max-w-94 overflow-y-auto bg-white shadow-xl dark:bg-green-950 md:hidden"
+      >
+        <nav>
+          <div class="flex items-center justify-between border-b border-b-neutral-200 p-4 dark:border-b-green-700">
+            <p class="text-base font-medium text-neutral-900 dark:text-white">Browse products</p>
+            <button
+              type="button"
+              aria-label="Close menu"
+              class="ml-2 inline-flex items-center justify-center rounded-full p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-green-800 dark:hover:text-white"
+              @click="close()"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m12 13.4-4.9 4.9q-.275.275-.7.275t-.7-.275a.96.96 0 0 1-.287-.7q0-.425.287-.7l4.9-4.9-4.9-4.9a.96.96 0 0 1-.287-.7q0-.425.287-.7t.7-.275q.425 0 .7.275l4.9 4.9 4.9-4.9q.275-.275.7-.275t.7.275.275.7q0 .425-.275.7l-4.9 4.9 4.9 4.9q.275.275.275.7t-.275.7-.7.275q-.425 0-.7-.275z" />
+              </svg>
+            </button>
+            </div>
+          <ul class="mb-6 mt-2">
+            <li v-if="activeMenu.key !== 'root'">
+              <button
+                type="button"
+                class="flex w-full items-center border-b border-b-neutral-200 px-4 py-4 text-left dark:border-b-green-700"
+                @click="goBack()"
+              >
+                <div class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14.997 17a.997.997 0 0 1-.707-.293l-4.587-4.588a1 1 0 0 1 0-1.414l4.588-4.588a.999.999 0 1 1 1.413 1.411l-3.877 3.884 3.877 3.885A.999.999 0 0 1 14.997 17" />
+                  </svg>
+                  <p class="ml-5 font-medium text-neutral-900 dark:text-white">{{ activeMenu.value.label }}</p>
+                </div>
+              </button>
+            </li>
+            <template v-for="node in activeMenu.children" :key="node.value.label">
+              <li v-if="node.isLeaf">
+                <a
+                  :href="node.value.link"
+                  class="flex items-center justify-between px-4 py-4 text-neutral-900 first-of-type:mt-2 dark:text-white"
+                  @click="close()"
+                >
+                  <div class="flex items-center">
+                    <p class="text-left">{{ node.value.label }}</p>
+                    <span class="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
+                      {{ node.value.counter }}
+                    </span>
+                  </div>
+                </a>
+              </li>
+              <li v-else>
+                <button type="button" class="flex w-full items-center justify-between px-4 py-4 text-left" @click="goNext(node.key)">
+                  <div class="flex items-center">
+                    <p class="text-left text-neutral-900 dark:text-white">{{ node.value.label }}</p>
+                    <span class="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
+                      {{ node.value.counter }}
+                    </span>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9.003 17a1 1 0 0 1 0-1.41l3.876-3.885-3.876-3.884a.998.998 0 0 1 1.411-1.41l4.588 4.588a1 1 0 0 1 0 1.414l-4.588 4.588A.997.997 0 0 1 9.003 17" />
+                  </svg>
+                </button>
+              </li>
+            </template>
+          </ul>
+          <div
+            v-if="bannerNode.value.banner"
+            class="flex grow items-center overflow-hidden bg-neutral-100 dark:bg-green-800"
+          >
+            <img
+              :src="bannerNode.value.banner"
+              :alt="bannerNode.value.bannerTitle"
+              class="object-contain w-[50%] basis-6/12"
+            />
+            <p class="basis-6/12 p-6 text-base font-medium text-neutral-900 dark:text-white">{{ bannerNode.value.bannerTitle }}</p>
+          </div>
+        </nav>
+      </aside>
+    </header>
+  </div>
+</template>
+
+
 

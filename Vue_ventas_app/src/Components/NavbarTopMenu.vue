@@ -1,4 +1,510 @@
-<!-- eslint-disable vuejs-accessibility/no-static-element-interactions -->
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '../Stores/useAuthStore';
+
+const findNode = (keys, node) => {
+  if (keys.length > 1) {
+    const [currentKey, ...restKeys] = keys;
+    return findNode(restKeys, node.children?.find((child) => child.key === currentKey) || node);
+  } else {
+    return node.children?.find((child) => child.key === keys[0]) || node;
+  }
+};
+
+const isOpen = ref(false);
+const isDarkMode = ref(false);
+const drawerRef = ref(null);
+const megaMenuRef = ref(null);
+const triggerRefs = ref([]);
+const activeNode = ref([]);
+const router = useRouter();
+/// pinia store for authentication
+const authStore = useAuthStore();
+const { isLoggedIn } = storeToRefs(authStore);
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+const activeMenu = computed(() => findNode(activeNode.value, content));
+const bannerNode = computed(() => findNode(activeNode.value.slice(0, 1), content));
+
+const setTriggerRef = (element, index) => {
+  const resolvedElement = element && '$el' in element ? element.$el : element;
+  triggerRefs.value[index] = resolvedElement ?? null;
+};
+
+const handleDesktopBlur = (event) => {
+  const currentTarget = event.currentTarget;
+
+  if (currentTarget instanceof Element && !currentTarget.contains(event.relatedTarget)) {
+    close();
+  }
+};
+
+const close = () => {
+  isOpen.value = false;
+  activeNode.value = [];
+};
+
+const openMenu = (menuType) => {
+  activeNode.value = menuType;
+  isOpen.value = true;
+};
+
+const applyTheme = (nextIsDark) => {
+  isDarkMode.value = nextIsDark;
+  document.documentElement.classList.toggle('dark', nextIsDark);
+  localStorage.setItem('theme', nextIsDark ? 'dark' : 'light');
+};
+
+const toggleDarkMode = () => {
+  applyTheme(!isDarkMode.value);
+};
+
+const goBack = () => {
+  activeNode.value = activeNode.value.slice(0, activeNode.value.length - 1);
+};
+
+const goNext = (key) => {
+  activeNode.value = [...activeNode.value, key];
+};
+
+const focusTrigger = (index) => {
+  close();
+  triggerRefs.value[index]?.focus();
+};
+
+const inputValue = ref('');
+
+const search = () => {
+  alert(`Successfully found 10 results for ${inputValue.value}`);
+};
+
+const logout = async () => {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      headers: {'Authorization': `Bearer ${authStore.token}`, 'Accept': 'application/json'},
+    });
+  } finally {
+    authStore.clearToken();
+    router.push('/login');
+  }
+};
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
+});
+
+const formatBadge = (content, max) => {
+  return content > max ? `${max}+` : `${content}`;
+};
+
+const getActionIcon = (iconName) => {
+  if (iconName === 'theme' && isDarkMode.value) {
+    return {
+      path: 'M12 17.5q-2.3 0-3.9-1.6Q6.5 14.3 6.5 12t1.6-3.9Q9.7 6.5 12 6.5t3.9 1.6q1.6 1.6 1.6 3.9t-1.6 3.9q-1.6 1.6-3.9 1.6M12 22q-.425 0-.712-.288A.97.97 0 0 1 11 21v-1.025q0-.425.288-.712A.97.97 0 0 1 12 18.975q.424 0 .712.288.288.287.288.712V21q0 .425-.288.712A.97.97 0 0 1 12 22m0-16.975q-.425 0-.712-.288A.97.97 0 0 1 11 4.025V3q0-.425.288-.712A.97.97 0 0 1 12 2q.424 0 .712.288Q13 2.575 13 3v1.025q0 .424-.288.712a.97.97 0 0 1-.712.288M4.925 6.35l-.725-.7q-.3-.3-.3-.713 0-.411.3-.712.275-.3.7-.3.425 0 .725.3l.7.725q.3.3.287.7-.012.4-.287.675-.275.3-.687.313-.413.012-.713-.288m13.7 13.725-.725-.725q-.3-.3-.3-.712 0-.413.3-.688.275-.3.688-.312.412-.013.712.287l.725.7q.3.3.3.725t-.3.7q-.3.3-.712.3-.413 0-.688-.275M19.975 13q-.425 0-.712-.288a.97.97 0 0 1-.288-.712q0-.425.288-.712a.97.97 0 0 1 .712-.288H21q.425 0 .712.288.288.287.288.712 0 .424-.288.712A.97.97 0 0 1 21 13zm-16.975 0q-.425 0-.712-.288A.97.97 0 0 1 2 12q0-.425.288-.712A.97.97 0 0 1 3 11h1.025q.424 0 .712.288Q5.025 11.575 5.025 12q0 .424-.288.712a.97.97 0 0 1-.712.288zm2.625 7.075q-.3.275-.712.275-.413 0-.713-.3-.3-.275-.3-.688 0-.412.3-.712l.725-.725q.3-.3.712-.288.413.013.688.313.275.275.288.688.012.412-.288.712zm13.7-13.7q-.3.3-.7.288-.4-.013-.675-.313-.3-.275-.312-.687-.013-.413.287-.713l.7-.725q.3-.3.725-.3t.7.3q.3.3.313.712.012.413-.288.713z',
+    };
+  }
+
+  if (iconName === 'theme') {
+    return {
+      path: 'M12.05 21q-3.775 0-6.413-2.625Q3 15.75 3 12.025q0-3.05 1.8-5.537 1.8-2.488 4.675-3.338.35-.1.638.013.287.112.437.387t.138.587a.94.94 0 0 1-.263.588q-.725.85-1.075 1.85t-.35 2.05q0 2.075 1.463 3.538Q11.925 13.625 14 13.625q1.05 0 2.05-.35t1.85-1.075q.25-.225.575-.25.325-.025.6.125t.4.425q.15.25.05.625-.85 2.875-3.325 4.675Q15.725 21 12.675 21z',
+    };
+  }
+
+  if (iconName === 'cart') {
+    return {
+      path: 'M7 22q-.824 0-1.412-.587A1.93 1.93 0 0 1 5 20q0-.824.588-1.413A1.93 1.93 0 0 1 7 18q.824 0 1.412.587Q9 19.176 9 20t-.588 1.413A1.93 1.93 0 0 1 7 22m10 0q-.825 0-1.412-.587A1.93 1.93 0 0 1 15 20q0-.824.588-1.413A1.93 1.93 0 0 1 17 18q.824 0 1.413.587Q19 19.176 19 20t-.587 1.413A1.93 1.93 0 0 1 17 22M6.15 6l2.4 5h7l2.75-5zM7 17q-1.125 0-1.7-.988-.575-.987-.05-1.962L6.6 11.6 3 4H1.975a.93.93 0 0 1-.7-.288A1 1 0 0 1 1 3q0-.424.288-.712A.97.97 0 0 1 2 2h1.625q.274 0 .525.15.25.15.375.425L5.2 4h14.75q.675 0 .925.5t-.025 1.05l-3.55 6.4a2.03 2.03 0 0 1-.725.775q-.45.275-1.025.275H8.1L7 15h11.025q.425 0 .7.287.275.288.275.713 0 .424-.288.712A.97.97 0 0 1 18 17z',
+    };
+  }
+
+  if (iconName === 'wishlist') {
+    return {
+      path: 'M19.664 4.99c-2.64-1.8-5.9-.96-7.66 1.1-1.76-2.06-5.02-2.91-7.66-1.1-1.4.96-2.28 2.58-2.34 4.29-.14 3.88 3.3 6.99 8.55 11.76l.1.09c.76.69 1.93.69 2.69-.01l.11-.1c5.25-4.76 8.68-7.87 8.55-11.75-.06-1.7-.94-3.32-2.34-4.28m-7.56 14.56-.1.1-.1-.1c-4.76-4.31-7.9-7.16-7.9-10.05 0-2 1.5-3.5 3.5-3.5 1.54 0 3.04.99 3.57 2.36h1.87c.52-1.37 2.02-2.36 3.56-2.36 2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05',
+      fillRule: 'evenodd',
+      clipRule: 'evenodd',
+    };
+  }
+
+  return {
+    path: 'M12 12q-1.65 0-2.825-1.175T8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12m6 8H6q-.824 0-1.412-.587A1.93 1.93 0 0 1 4 18v-.8q0-.85.438-1.563A2.9 2.9 0 0 1 5.6 14.55a15 15 0 0 1 3.15-1.163A13.8 13.8 0 0 1 12 13q1.65 0 3.25.387 1.6.388 3.15 1.163.724.375 1.162 1.087T20 17.2v.8q0 .825-.587 1.413A1.93 1.93 0 0 1 18 20M6 18h12v-.8a.94.94 0 0 0-.137-.5 1 1 0 0 0-.363-.35q-1.35-.675-2.725-1.013a11.6 11.6 0 0 0-5.55 0Q7.85 15.675 6.5 16.35a.97.97 0 0 0-.5.85zm6-8q.825 0 1.413-.588Q14 8.825 14 8q0-.824-.587-1.412A1.93 1.93 0 0 0 12 6q-.825 0-1.412.588A1.92 1.92 0 0 0 10 8q0 .825.588 1.412Q11.175 10 12 10',
+  };
+};
+
+const actionItems = computed(() => {
+  const commonItems = [
+    {
+      icon: getActionIcon('theme'),
+      label: isDarkMode.value ? 'Light mode' : 'Dark mode',
+      ariaLabel: isDarkMode.value ? 'Activate light mode' : 'Activate dark mode',
+      role: 'theme',
+      badge: undefined,
+      onClick: toggleDarkMode,
+    },
+    {
+      icon: getActionIcon('cart'),
+      label: '',
+      ariaLabel: 'Cart',
+      role: 'button',
+      badge: {
+        content: 2,
+        max: 99,
+      },
+      onClick: () => {},
+    },
+
+  ];
+
+  if (isLoggedIn.value) {
+    return [
+      ...commonItems,
+      {
+        icon: getActionIcon('login'),
+        label: 'Logout',
+        ariaLabel: 'Logout',
+        role: 'auth',
+        badge: undefined,
+        onClick: logout,
+      },
+    ];
+  }
+
+  return [
+    ...commonItems,
+    {
+      icon: getActionIcon('login'),
+      label: 'Login',
+      ariaLabel: 'Login',
+      role: 'auth',
+      badge: undefined,
+      onClick: () => router.push('/login'),
+    },
+    {
+      label: 'Register',
+      ariaLabel: 'Register',
+      role: 'auth-text',
+      badge: undefined,
+      onClick: () => router.push('/register'),
+    },
+  ];
+});
+
+const content = {
+  key: 'root',
+  value: { label: '', counter: 0 },
+  isLeaf: false,
+  children: [
+    {
+      key: 'WOMEN',
+      value: {
+        label: 'Women',
+        counter: 515,
+        banner: 'https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/glasses.png',
+        bannerTitle: 'The world in a new light',
+      },
+      isLeaf: false,
+      children: [
+        {
+          key: 'ALL_WOMEN',
+          value: { label: "All Women's", counter: 515, link: '#' },
+          isLeaf: true,
+        },
+        {
+          key: 'CATEGORIES',
+          value: { label: 'Categories', counter: 178 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_CATEGORIES',
+              value: { label: 'All Categories', counter: 178, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'CLOTHING',
+              value: { label: 'Clothing', counter: 30, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'SHOES',
+              value: { label: 'Shoes', counter: 28, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'ACCESSORIES',
+              value: { label: 'Accessories', counter: 56, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'WEARABLES',
+              value: { label: 'Wearables', counter: 12, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FOOD_DRINKS',
+              value: { label: 'Food & Drinks', counter: 52, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+        {
+          key: 'ACTIVITIES',
+          value: { label: 'Activities', counter: 239 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_ACTIVITIES',
+              value: { label: 'All Activities', counter: 239, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FITNESS',
+              value: { label: 'Fitness', counter: 83, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'PILATES',
+              value: { label: 'Pilates', counter: 65, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'TRAINING',
+              value: { label: 'Training', counter: 21, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'CARDIO_WORKOUT',
+              value: { label: 'Cardio Workout', counter: 50, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'YOGA',
+              value: { label: 'Yoga', counter: 20, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+        {
+          key: 'DEALS',
+          value: { label: 'Deals', counter: 98 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_DEALS',
+              value: { label: 'All Deals', counter: 98, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'OUTLET',
+              value: { label: 'Outlet', counter: 98, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'MEN',
+      value: {
+        label: 'Men',
+        counter: 364,
+        banner: 'https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/watch.png',
+        bannerTitle: 'New in designer watches',
+      },
+      isLeaf: false,
+      children: [
+        {
+          key: 'ALL_MEN',
+          value: { label: "All Men's", counter: 364, link: '#' },
+          isLeaf: true,
+        },
+        {
+          key: 'CATEGORIES',
+          value: { label: 'Categories', counter: 164 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_CATEGORIES',
+              value: { label: 'All Categories', counter: 164, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'CLOTHING',
+              value: { label: 'Clothing', counter: 41, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'SHOES',
+              value: { label: 'Shoes', counter: 20, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'ACCESSORIES',
+              value: { label: 'Accessories', counter: 56, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'WEARABLES',
+              value: { label: 'Wearables', counter: 32, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FOOD_DRINKS',
+              value: { label: 'Food & Drinks', counter: 15, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+        {
+          key: 'ACTIVITIES',
+          value: { label: 'Activities', counter: 132 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_ACTIVITIES',
+              value: { label: 'All Activities', counter: 132, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'TRAINING',
+              value: { label: 'Training', counter: 21, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'WORKOUT',
+              value: { label: 'Workout', counter: 43, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FOOTBALL',
+              value: { label: 'Football', counter: 30, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FITNESS',
+              value: { label: 'Fitness', counter: 38, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+        {
+          key: 'DEALS',
+          value: { label: 'Deals', counter: 68 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_DEALS',
+              value: { label: 'All Deals', counter: 68, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'OUTLET',
+              value: { label: 'Outlet', counter: 68, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'KIDS',
+      value: {
+        label: 'Kids',
+        counter: 263,
+        banner: 'https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/toy.png',
+        bannerTitle: 'Unleash your imagination',
+      },
+      isLeaf: false,
+      children: [
+        {
+          key: 'ALL_KIDS',
+          value: { label: 'All Kids', counter: 263, link: '#' },
+          isLeaf: true,
+        },
+        {
+          key: 'CATEGORIES',
+          value: { label: 'Categories', counter: 192 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_CATEGORIES',
+              value: { label: 'All Categories', counter: 192, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'CLOTHING',
+              value: { label: 'Clothing', counter: 29, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'SHOES',
+              value: { label: 'Shoes', counter: 60, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'ACCESSORIES',
+              value: { label: 'Accessories', counter: 48, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'WEARABLES',
+              value: { label: 'Wearables', counter: 22, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FOOD_DRINKS',
+              value: { label: 'Food & Drinks', counter: 33, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+        {
+          key: 'ACTIVITIES',
+          value: { label: 'Activities', counter: 40 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_ACTIVITIES',
+              value: { label: 'All Activities', counter: 40, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'FOOTBALL',
+              value: { label: 'Football', counter: 21, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'BASKETBALL',
+              value: { label: 'Basketball', counter: 19, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+        {
+          key: 'DEALS',
+          value: { label: 'Deals', counter: 31 },
+          isLeaf: false,
+          children: [
+            {
+              key: 'ALL_DEALS',
+              value: { label: 'All Deals', counter: 31, link: '#' },
+              isLeaf: true,
+            },
+            {
+              key: 'OUTLET',
+              value: { label: 'Outlet', counter: 31, link: '#' },
+              isLeaf: true,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+</script>
 <template>
   <div class="w-full h-full">
     <header class="relative">
@@ -301,11 +807,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
 
-// Este import centraliza los fallbacks de dominios para que la SPA no dependa otra vez de puertos explícitos.
-import { defaultApiOrigin } from '@/config/runtimeUrls'
-
-// Esta constante usa primero el valor configurado en Vite y, si no existe, cae al dominio del admin correcto.
-const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin;
+const API_URL = import.meta.env.VITE_API_URL;
 
 const activeMenu = computed(() => findNode(activeNode.value, content));
 const bannerNode = computed(() => findNode(activeNode.value.slice(0, 1), content));

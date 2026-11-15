@@ -5,8 +5,6 @@ import InputFull from '../Components/InputFull.vue'
 import ButtonColor from '../Components/ButtonColor.vue'
 import CardMobile from '../Components/CardMobile.vue'
 import { useAuthStore } from '../Stores/useAuthStore'
-// Este import evita que el registro siga asumiendo el puerto 8090 del esquema anterior.
-import { defaultApiOrigin } from '@/config/runtimeUrls'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -26,8 +24,7 @@ const errors = reactive({
     general: '',
 })
 
-// Esta constante reusa el origen de la API del admin sin necesidad de fijar puertos en el navegador.
-const API_URL = import.meta.env.VITE_API_URL ?? defaultApiOrigin
+const API_URL = import.meta.env.VITE_API_URL
 
 const submit = async () => {
     errors.customer_name = ''
