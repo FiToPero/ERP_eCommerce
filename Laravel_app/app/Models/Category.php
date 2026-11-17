@@ -80,14 +80,6 @@ class Category extends Model
     }
 
     /**
-     * Get all descendants recursively.
-     */
-    public function descendants()
-    {
-        return $this->children()->with('descendants');
-    }
-
-    /**
      * Get the products for this category.
      */
     public function products()

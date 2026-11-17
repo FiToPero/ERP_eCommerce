@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -31,5 +32,8 @@ Route::middleware('auth:api')->group(function () {
 // Public routes that do not require authentication
 Route::group(['prefix' => 'products', 'middleware' => 'throttle:api'], function () {
     Route::get('/index', [ProductController::class, 'index']);
-    //Route::get('/show/{id}', [ProductController::class, 'show']);
+});
+
+Route::group(['prefix' => 'categories', 'middleware' => 'throttle:api'], function () {
+    Route::get('/index', [CategoryController::class, 'index']);
 });

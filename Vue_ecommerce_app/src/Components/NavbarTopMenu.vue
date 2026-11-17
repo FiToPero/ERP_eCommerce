@@ -1,8 +1,17 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, defineProps } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../Stores/useAuthStore';
+import CategoryMenuItem from './CategoryMenuItem.vue';
+import CategoryMenuItemMobile from './CategoryMenuItemMobile.vue';
+
+const props = defineProps({
+  categories: {
+    type: Array,
+    required: true
+  }
+});
 
 const findNode = (keys, node) => {
   if (keys.length > 1) {
@@ -25,14 +34,6 @@ const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-const activeMenu = computed(() => findNode(activeNode.value, content));
-const bannerNode = computed(() => findNode(activeNode.value.slice(0, 1), content));
-
-const setTriggerRef = (element, index) => {
-  const resolvedElement = element && '$el' in element ? element.$el : element;
-  triggerRefs.value[index] = resolvedElement ?? null;
-};
 
 const handleDesktopBlur = (event) => {
   const currentTarget = event.currentTarget;
@@ -62,19 +63,6 @@ const toggleDarkMode = () => {
   applyTheme(!isDarkMode.value);
 };
 
-const goBack = () => {
-  activeNode.value = activeNode.value.slice(0, activeNode.value.length - 1);
-};
-
-const goNext = (key) => {
-  activeNode.value = [...activeNode.value, key];
-};
-
-const focusTrigger = (index) => {
-  close();
-  triggerRefs.value[index]?.focus();
-};
-
 const inputValue = ref('');
 
 const search = () => {
@@ -89,7 +77,7 @@ const logout = async () => {
     });
   } finally {
     authStore.clearToken();
-    router.push('/login');
+    router.push('/');
   }
 };
 
@@ -193,317 +181,6 @@ const actionItems = computed(() => {
   ];
 });
 
-const content = {
-  key: 'root',
-  value: { label: '', counter: 0 },
-  isLeaf: false,
-  children: [
-    {
-      key: 'WOMEN',
-      value: {
-        label: 'Women',
-        counter: 515,
-        banner: 'https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/glasses.png',
-        bannerTitle: 'The world in a new light',
-      },
-      isLeaf: false,
-      children: [
-        {
-          key: 'ALL_WOMEN',
-          value: { label: "All Women's", counter: 515, link: '#' },
-          isLeaf: true,
-        },
-        {
-          key: 'CATEGORIES',
-          value: { label: 'Categories', counter: 178 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_CATEGORIES',
-              value: { label: 'All Categories', counter: 178, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'CLOTHING',
-              value: { label: 'Clothing', counter: 30, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'SHOES',
-              value: { label: 'Shoes', counter: 28, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'ACCESSORIES',
-              value: { label: 'Accessories', counter: 56, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'WEARABLES',
-              value: { label: 'Wearables', counter: 12, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FOOD_DRINKS',
-              value: { label: 'Food & Drinks', counter: 52, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-        {
-          key: 'ACTIVITIES',
-          value: { label: 'Activities', counter: 239 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_ACTIVITIES',
-              value: { label: 'All Activities', counter: 239, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FITNESS',
-              value: { label: 'Fitness', counter: 83, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'PILATES',
-              value: { label: 'Pilates', counter: 65, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'TRAINING',
-              value: { label: 'Training', counter: 21, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'CARDIO_WORKOUT',
-              value: { label: 'Cardio Workout', counter: 50, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'YOGA',
-              value: { label: 'Yoga', counter: 20, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-        {
-          key: 'DEALS',
-          value: { label: 'Deals', counter: 98 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_DEALS',
-              value: { label: 'All Deals', counter: 98, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'OUTLET',
-              value: { label: 'Outlet', counter: 98, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      key: 'MEN',
-      value: {
-        label: 'Men',
-        counter: 364,
-        banner: 'https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/watch.png',
-        bannerTitle: 'New in designer watches',
-      },
-      isLeaf: false,
-      children: [
-        {
-          key: 'ALL_MEN',
-          value: { label: "All Men's", counter: 364, link: '#' },
-          isLeaf: true,
-        },
-        {
-          key: 'CATEGORIES',
-          value: { label: 'Categories', counter: 164 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_CATEGORIES',
-              value: { label: 'All Categories', counter: 164, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'CLOTHING',
-              value: { label: 'Clothing', counter: 41, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'SHOES',
-              value: { label: 'Shoes', counter: 20, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'ACCESSORIES',
-              value: { label: 'Accessories', counter: 56, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'WEARABLES',
-              value: { label: 'Wearables', counter: 32, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FOOD_DRINKS',
-              value: { label: 'Food & Drinks', counter: 15, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-        {
-          key: 'ACTIVITIES',
-          value: { label: 'Activities', counter: 132 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_ACTIVITIES',
-              value: { label: 'All Activities', counter: 132, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'TRAINING',
-              value: { label: 'Training', counter: 21, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'WORKOUT',
-              value: { label: 'Workout', counter: 43, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FOOTBALL',
-              value: { label: 'Football', counter: 30, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FITNESS',
-              value: { label: 'Fitness', counter: 38, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-        {
-          key: 'DEALS',
-          value: { label: 'Deals', counter: 68 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_DEALS',
-              value: { label: 'All Deals', counter: 68, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'OUTLET',
-              value: { label: 'Outlet', counter: 68, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      key: 'KIDS',
-      value: {
-        label: 'Kids',
-        counter: 263,
-        banner: 'https://storage.googleapis.com/sfui_docs_artifacts_bucket_public/production/toy.png',
-        bannerTitle: 'Unleash your imagination',
-      },
-      isLeaf: false,
-      children: [
-        {
-          key: 'ALL_KIDS',
-          value: { label: 'All Kids', counter: 263, link: '#' },
-          isLeaf: true,
-        },
-        {
-          key: 'CATEGORIES',
-          value: { label: 'Categories', counter: 192 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_CATEGORIES',
-              value: { label: 'All Categories', counter: 192, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'CLOTHING',
-              value: { label: 'Clothing', counter: 29, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'SHOES',
-              value: { label: 'Shoes', counter: 60, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'ACCESSORIES',
-              value: { label: 'Accessories', counter: 48, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'WEARABLES',
-              value: { label: 'Wearables', counter: 22, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FOOD_DRINKS',
-              value: { label: 'Food & Drinks', counter: 33, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-        {
-          key: 'ACTIVITIES',
-          value: { label: 'Activities', counter: 40 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_ACTIVITIES',
-              value: { label: 'All Activities', counter: 40, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'FOOTBALL',
-              value: { label: 'Football', counter: 21, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'BASKETBALL',
-              value: { label: 'Basketball', counter: 19, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-        {
-          key: 'DEALS',
-          value: { label: 'Deals', counter: 31 },
-          isLeaf: false,
-          children: [
-            {
-              key: 'ALL_DEALS',
-              value: { label: 'All Deals', counter: 31, link: '#' },
-              isLeaf: true,
-            },
-            {
-              key: 'OUTLET',
-              value: { label: 'Outlet', counter: 31, link: '#' },
-              isLeaf: true,
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
 </script>
 <template>
   <div class="w-full h-full">
@@ -511,6 +188,7 @@ const content = {
       <div
         class="flex h-full w-full flex-wrap items-center justify-between border-0 border-green-800 bg-green-700 px-4 py-2 text-white md:z-10 md:h-20 md:flex-nowrap md:px-10 md:py-5 dark:bg-green-900"
       >
+        <!-- Menu button (hamburger, small screens) and logo -->
         <div class="flex items-center shrink-0">
           <button
             aria-label="Close menu"
@@ -537,6 +215,7 @@ const content = {
             </picture>
           </a>
         </div>
+        <!-- Search form -->
         <form role="search" class="hidden md:flex flex-[100%] ml-10" @submit.prevent="search">
           <label
             class="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 pr-0 text-neutral-500 ring-1 ring-inset ring-neutral-300 hover:ring-green-700 focus-within:outline focus-within:outline-offset focus-within:ring-2 focus-within:ring-green-700 focus-within:caret-green-700 active:ring-2 active:ring-green-700 active:caret-green-700 dark:bg-green-700 dark:text-neutral-300 dark:ring-green-600 dark:hover:ring-green-500 dark:focus-within:ring-green-500 dark:focus-within:caret-green-400"
@@ -596,6 +275,7 @@ const content = {
             </span>
           </button>
         </nav>
+        <!-- Search form (small screens) -->
         <form role="search" class="flex md:hidden flex-[100%] my-2" @submit.prevent="search">
           <label
             class="flex h-10 flex-1 items-center gap-2 rounded-full bg-white px-4 pr-0 text-neutral-500 ring-1 ring-inset ring-neutral-300 hover:ring-green-700 focus-within:outline focus-within:outline-offset focus-within:ring-2 focus-within:ring-green-700 focus-within:caret-green-700 active:ring-2 active:ring-green-700 active:caret-green-700 dark:bg-green-700 dark:text-neutral-300 dark:ring-green-600 dark:hover:ring-green-500 dark:focus-within:ring-green-500 dark:focus-within:caret-green-400"
@@ -626,75 +306,11 @@ const content = {
           class="hidden border-b border-b-neutral-200 bg-white px-6 py-2 dark:border-b-green-700 dark:bg-green-950 md:flex"
           @blur="handleDesktopBlur"
         >
-          <li v-for="(menuNode, index) in content.children" :key="menuNode.key">
-            <button
-              :ref="(element) => setTriggerRef(element, index)"
-              type="button"
-              class="group mr-2 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200 hover:text-neutral-700 active:bg-neutral-300 active:text-neutral-900 dark:text-neutral-100 dark:hover:bg-green-800 dark:hover:text-white dark:active:bg-green-700"
-              @mouseenter="openMenu([menuNode.key])"
-              @click="openMenu([menuNode.key])"
-            >
-              <span>{{ menuNode.value.label }}</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 rotate-90 fill-current text-neutral-500 group-hover:text-neutral-700 group-active:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-neutral-200"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M9.003 17a1 1 0 0 1 0-1.41l3.876-3.885-3.876-3.884a.998.998 0 0 1 1.411-1.41l4.588 4.588a1 1 0 0 1 0 1.414l-4.588 4.588A.997.997 0 0 1 9.003 17" />
-              </svg>
-            </button>
-
-            <div
-              v-if="isOpen && activeNode.length === 1 && activeNode[0] === menuNode.key"
-              :key="activeMenu.key"
-              ref="megaMenuRef"
-              class="absolute left-0 right-0 top-full z-30 hidden grid-cols-4 gap-x-6 bg-white p-6 shadow-lg outline-hidden dark:bg-green-950 dark:shadow-black/40 md:grid"
-              tabindex="0"
-              @mouseleave="close()"
-              @keydown.esc="focusTrigger(index)"
-            >
-              <template v-for="node in activeMenu.children" :key="node.key">
-                <template v-if="node.isLeaf">
-                  <a
-                    :href="node.value.link"
-                    class="mb-2 inline-flex w-fit rounded-md px-4 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-green-800 dark:hover:text-white"
-                  >
-                    {{ node.value.label }}
-                  </a>
-                  <div class="col-start-2 col-end-5" />
-                </template>
-                <div v-else>
-                  <p
-                    class="whitespace-nowrap border-b border-b-neutral-200 px-4 py-1.5 text-base font-medium text-neutral-900 dark:border-b-green-700 dark:text-white"
-                  >
-                    {{ node.value.label }}
-                  </p>
-                  <ul class="mt-2">
-                    <li v-for="child in node.children" :key="child.key">
-                      <a
-                        :href="child.value.link"
-                        class="flex w-auto items-center justify-between gap-3 rounded-md px-4 py-1.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-200 dark:hover:bg-green-800 dark:hover:text-white"
-                      >
-                        <span>{{ child.value.label }}</span>
-                        <span class="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
-                          {{ child.value.counter }}
-                        </span>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </template>
-              <div
-                class="flex grow flex-col items-center justify-center overflow-hidden rounded-md bg-neutral-100 dark:bg-green-800"
-              >
-                <img :src="bannerNode.value.banner" :alt="bannerNode.value.bannerTitle" class="object-contain" />
-                <p class="mb-4 mt-4 px-4 text-center text-base font-medium text-neutral-900 dark:text-white">
-                  {{ bannerNode.value.bannerTitle }}
-                </p>
-              </div>
-            </div>
-          </li>
+          <CategoryMenuItem
+            v-for="category in categories"
+            :key="category.id"
+            :category="category"
+          />
         </ul>
       </nav>
 
@@ -720,61 +336,13 @@ const content = {
             </button>
             </div>
           <ul class="mb-6 mt-2">
-            <li v-if="activeMenu.key !== 'root'">
-              <button
-                type="button"
-                class="flex w-full items-center border-b border-b-neutral-200 px-4 py-4 text-left dark:border-b-green-700"
-                @click="goBack()"
-              >
-                <div class="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M14.997 17a.997.997 0 0 1-.707-.293l-4.587-4.588a1 1 0 0 1 0-1.414l4.588-4.588a.999.999 0 1 1 1.413 1.411l-3.877 3.884 3.877 3.885A.999.999 0 0 1 14.997 17" />
-                  </svg>
-                  <p class="ml-5 font-medium text-neutral-900 dark:text-white">{{ activeMenu.value.label }}</p>
-                </div>
-              </button>
-            </li>
-            <template v-for="node in activeMenu.children" :key="node.value.label">
-              <li v-if="node.isLeaf">
-                <a
-                  :href="node.value.link"
-                  class="flex items-center justify-between px-4 py-4 text-neutral-900 first-of-type:mt-2 dark:text-white"
-                  @click="close()"
-                >
-                  <div class="flex items-center">
-                    <p class="text-left">{{ node.value.label }}</p>
-                    <span class="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
-                      {{ node.value.counter }}
-                    </span>
-                  </div>
-                </a>
-              </li>
-              <li v-else>
-                <button type="button" class="flex w-full items-center justify-between px-4 py-4 text-left" @click="goNext(node.key)">
-                  <div class="flex items-center">
-                    <p class="text-left text-neutral-900 dark:text-white">{{ node.value.label }}</p>
-                    <span class="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 dark:bg-green-800 dark:text-neutral-300">
-                      {{ node.value.counter }}
-                    </span>
-                  </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M9.003 17a1 1 0 0 1 0-1.41l3.876-3.885-3.876-3.884a.998.998 0 0 1 1.411-1.41l4.588 4.588a1 1 0 0 1 0 1.414l-4.588 4.588A.997.997 0 0 1 9.003 17" />
-                  </svg>
-                </button>
-              </li>
-            </template>
-          </ul>
-          <div
-            v-if="bannerNode.value.banner"
-            class="flex grow items-center overflow-hidden bg-neutral-100 dark:bg-green-800"
-          >
-            <img
-              :src="bannerNode.value.banner"
-              :alt="bannerNode.value.bannerTitle"
-              class="object-contain w-[50%] basis-6/12"
+            <CategoryMenuItemMobile
+              v-for="category in categories"
+              :key="category.id"
+              :category="category"
+              @close="close()"
             />
-            <p class="basis-6/12 p-6 text-base font-medium text-neutral-900 dark:text-white">{{ bannerNode.value.bannerTitle }}</p>
-          </div>
+          </ul>
         </nav>
       </aside>
     </header>

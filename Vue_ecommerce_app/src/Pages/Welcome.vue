@@ -5,34 +5,36 @@ import ProductCardDetails from '../Components/ProductCardDetails.vue';
 import Banner from '../Components/Banner.vue';
 import NavbarTopMenu from '../Components/NavbarTopMenu.vue';
 
-// Esta constante usa el origen de la API por dominio
 const API_URL = import.meta.env.VITE_API_URL
 const products = ref([]);
 const selectedProduct = ref(null);
+const categories = ref([]);
 
 onMounted(async () => {
     const response = await fetch(`${API_URL}/products/index`);
     products.value = await response.json();
+
+    const categoryResponse = await fetch(`${API_URL}/categories/index`);
+    categories.value = await categoryResponse.json();
 });
 
 </script>
 
 <template>
-    <NavbarTopMenu />
+    <NavbarTopMenu :categories="categories" />
 
     <section class="min-h-screen bg-gray-100 dark:bg-gray-900 p-5">
 
         <!-- <Banner /> -->
 
-        <!-- <div class="my-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"> -->
         <div class="my-5 flex flex-wrap items-start justify-center gap-6">
             <ProductCardVertical
                 v-for="product in products"
                 :key="product.id"
                 :product="product"
                 @select="selectedProduct = $event"
-            />
-                            <!--
+            /> 
+                <!--
                     @select="selectedProduct = $event"
                     @ es una abreviación de v-on.
                     Se utiliza para escuchar eventos.
@@ -64,7 +66,7 @@ onMounted(async () => {
         :product="selectedProduct"
         @close="selectedProduct = null"
     />
-          <!--
+        <!--
             @close="selectedProduct = null"
             Escuchamos un evento llamado close.
             Este evento debe ser emitido por ProductCardDetails.
@@ -81,6 +83,8 @@ onMounted(async () => {
             Por lo tanto, Vue elimina ProductCardDetails del DOM.
             Esto permite cerrar la ventana de detalles del producto.
         -->
+
+   
 </template>
 
 
