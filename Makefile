@@ -1,7 +1,7 @@
 # Makefile
 # Comandos útiles para desarrollo y producción
 # ssh -p5064 fito@66.87.43.244  #############
-.PHONY: help dev prod start stop restart logs build clean test migrate seed fresh deploy health
+.PHONY: help dev prod start stop restart logs build clean test migrate seed fresh deploy health telescope-clear
 
 # Variables
 COMPOSE_DEV = docker compose -f docker-compose.dev.yml
@@ -83,6 +83,9 @@ delete-images: ## Eliminar imágenes de ejemplo
 
 test: ## Ejecutar tests
 	$(PHP_EXEC) php artisan test
+
+telescope-clear: ## Eliminar todos los registros y etiquetas monitoreadas de Telescope
+	$(PHP_EXEC) php artisan telescope:clear
 
 cache-clear: ## Limpiar todos los caches
 	$(PHP_EXEC) php artisan cache:clear

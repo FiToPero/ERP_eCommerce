@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\CustomerPasswordBroker;
 use App\Support\RequestWeb;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -30,7 +30,7 @@ class PasswordResetController extends Controller
             return response()->json(['message' => __(Password::INVALID_USER)], 422);
         }
 
-        $status = Password::broker('customers')->sendResetLink([
+        $status = app(CustomerPasswordBroker::class)->sendResetLink([
             'email' => $request->input('email'),
             'web'   => $web,
         ]);
@@ -59,7 +59,7 @@ class PasswordResetController extends Controller
             return response()->json(['message' => __(Password::INVALID_USER)], 422);
         }
 
-        $status = Password::broker('customers')->reset(
+        $status = app(CustomerPasswordBroker::class)->reset(
             [
                 ...$request->only('email', 'password', 'password_confirmation', 'token'),
                 'web' => $web,

@@ -16,7 +16,6 @@ Route::prefix('auth')->group(function () {
         ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::post('email/resend', [AuthController::class, 'resendVerification'])
         ->middleware('throttle:6,1');
-
     // Password recovery
     Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink']);
     Route::post('reset-password',  [PasswordResetController::class, 'reset']);

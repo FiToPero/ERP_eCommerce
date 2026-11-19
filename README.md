@@ -163,14 +163,47 @@ los migra. El proveedor debe permitir la visibilidad pública usada en las carga
 ## Verificación del correo de usuarios
 
 Al crear un usuario se envía un enlace de verificación. Si se cambia su correo
-en edición, se elimina la fecha de verificación y se envía un enlace nuevo a la
-dirección guardada; los enlaces de la dirección anterior dejan de funcionar.
+en edición, el panel pide confirmación al guardar, elimina la fecha de
+verificación y envía un enlace nuevo a la dirección guardada; los enlaces de
+la dirección anterior dejan de funcionar.
 Los enlaces caducan después de 60 minutos.
 
 En la edición de un usuario sin verificar, el botón **Reenviar correo de
 verificación** envía el enlace al correo guardado. Guarda primero los cambios
 del formulario. Si el envío falla, el usuario sigue sin verificar y el panel
 avisa para que se pueda volver a enviar.
+
+## Verificación del correo de clientes
+
+Al crear un cliente desde el panel, indica en **web** el origen de la tienda,
+por ejemplo `https://tienda.example`, sin rutas ni parámetros. El cliente se
+crea sin verificar y recibe un enlace válido durante 60 minutos, que lo
+redirige al login de esa tienda. El perfil es opcional; si se agrega, requiere
+CUIT y teléfono.
+
+Si falla el envío, el cliente queda creado y el panel muestra un aviso. Tras
+revisar la configuración de correo y `APP_URL`, se puede solicitar un nuevo
+enlace desde la pantalla de verificación de la tienda con el correo del cliente.
+
+Al cambiar el correo desde la edición del cliente, el panel pide confirmación,
+elimina su fecha de verificación y envía un enlace a la nueva dirección. Para
+un cliente sin verificar, el botón **Reenviar correo de verificación** utiliza
+el correo guardado; guarda primero cualquier cambio. Si falla el envío, el
+cliente permanece sin verificar y el panel informa del error.
+
+## Restablecimiento de contraseña de clientes
+
+En la edición de un cliente, **Enviar enlace para restablecer contraseña**
+envía el enlace al correo guardado y abre la pantalla de la tienda indicada en
+su web guardada. Si se modificaron estos datos, hay que guardarlos antes de
+enviar. El mismo flujo está disponible desde el inicio de sesión de cada tienda.
+
+Los tokens de clientes siguen en `password_reset_tokens`, identificados por
+cliente, correo y web para no mezclarlos con otras cuentas. Su duración y límite
+de reenvío se configuran en `auth.passwords.customers`. Los enlaces de clientes
+generados con el mecanismo anterior dejan de ser válidos; solicita uno nuevo.
+Si el envío falla, comprueba la configuración de correo y espera el plazo de
+reenvío antes de volver a intentarlo.
 
 AO28
 ---

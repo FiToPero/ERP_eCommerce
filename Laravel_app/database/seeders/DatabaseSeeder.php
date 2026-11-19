@@ -16,13 +16,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-
-         // Crear roles y permisos primero
+        // Crear roles y permisos primero
         $this->command->call('shield:generate', ['--all' => true, '--panel' => 'admin']);
 
-        // Asegurar que el rol guest existe
+        // Asegurar que el roles necesarios existen
         Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
@@ -30,19 +27,60 @@ class DatabaseSeeder extends Seeder
         Role::firstOrCreate(['name' => 'sales', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'warehouse', 'guard_name' => 'web']);
 
+        // Crear relaciones entre roles y permisos
         $this->call(FactoriesSeeders\RolePermissionSeeder::class);
 
-        // Crear usuario admin
+        // Crear usuarios
+        $super_admin = User::firstOrCreate([
+            'user_name' => 'super_admin',
+            'type' => 'business',
+            'email' => 'super_admin@example.com',
+            'password' => bcrypt('admin1234'),
+            'email_verified_at' => now(), 
+        ]);
         $admin = User::firstOrCreate([
             'user_name' => 'admin',
             'type' => 'business',
             'email' => 'admin@example.com',
-            'password' => bcrypt('admin1234'),
+            'password' => bcrypt('12345678'),
+            'email_verified_at' => now(), 
+        ]);
+        $manager = User::firstOrCreate([
+            'user_name' => 'manager',
+            'type' => 'business',
+            'email' => 'manager@example.com',
+            'password' => bcrypt('12345678'),
+            'email_verified_at' => now(), 
+        ]);
+        $sales = User::firstOrCreate([
+            'user_name' => 'sales',
+            'type' => 'business',
+            'email' => 'sales@example.com',
+            'password' => bcrypt('12345678'),
+            'email_verified_at' => now(), 
+        ]);
+        $warehouse = User::firstOrCreate([
+            'user_name' => 'warehouse',
+            'type' => 'business',
+            'email' => 'warehouse@example.com',
+            'password' => bcrypt('12345678'),
+            'email_verified_at' => now(), 
+        ]);
+        $customer = User::firstOrCreate([
+            'user_name' => 'customer',
+            'type' => 'business',
+            'email' => 'customer@example.com',
+            'password' => bcrypt('12345678'),
             'email_verified_at' => now(), 
         ]);
 
-        // Asignar rol super_admin
-        $admin->syncRoles('super_admin');
+        // Asignar roles
+        $super_admin->syncRoles('super_admin');
+        $admin->syncRoles('admin');
+        $manager->syncRoles('manager');
+        $sales->syncRoles('sales');
+        $warehouse->syncRoles('warehouse');
+        $customer->syncRoles('customer');
 
         // Seedear categorías y productos
         $this->call([

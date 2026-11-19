@@ -16,12 +16,68 @@ use Filament\Auth\Notifications\ResetPassword;
 use App\Models\User;
 use App\Support\UserEmailVerification;
 use App\Support\UserRoleAssignments;
+use Filament\Support\Components\Attributes\Exposed;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
+
+    #[Exposed]
+    public function save(bool $shouldRedirect = true, bool $shouldSendSavedNotification = true): void
+    {
+        $email = $this->data['email'] ?? null;
+
+        if ($email !== $this->getRecord()->email) {
+            $this->mountAction('confirmEmailChange', [
+                'email' => $email,
+                'originalEmail' => $this->getRecord()->email,
+                'shouldRedirect' => $shouldRedirect,
+                'shouldSendSavedNotification' => $shouldSendSavedNotification,
+            ]);
+
+            return;
+        }
+
+        parent::save($shouldRedirect, $shouldSendSavedNotification);
+    }
+
+    public function confirmEmailChangeAction(): Action
+    {
+        return Action::make('confirmEmailChange')
+            ->requiresConfirmation()
+            ->modalHeading('Confirmar cambio de correo')
+            ->modalDescription('El nuevo correo quedará sin verificar y se enviará un enlace de verificación.')
+            ->modalSubmitActionLabel('Confirmar y guardar')
+            ->action(function (array $arguments): void {
+                $user = $this->getRecord()->fresh();
+                abort_unless($user && UserResource::canEdit($user), 403);
+                abort_unless(app(UserRoleAssignments::class)->canManageUser(Filament::auth()->user(), $user), 403);
+
+                if ($user->trashed() || $user->email !== ($arguments['originalEmail'] ?? null)
+                    || ($this->data['email'] ?? null) !== ($arguments['email'] ?? null)) {
+                    Notification::make()
+                        ->title('No se pudo confirmar el cambio de correo')
+                        ->body('Los datos cambiaron. Recarga la página y vuelve a intentarlo.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                parent::save(
+                    $arguments['shouldRedirect'] ?? true,
+                    $arguments['shouldSendSavedNotification'] ?? true,
+                );
+
+                if ($this->getRecord()->wasChanged('email')) {
+                    $this->getRecord()->refresh();
+                    $this->fillForm();
+                    $this->rememberData();
+                }
+            });
+    }
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
