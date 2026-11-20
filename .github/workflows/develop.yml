@@ -119,7 +119,12 @@ jobs:
             docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php composer install --no-interaction --prefer-dist --optimize-autoloader
             
             # Run migrations
-            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+            # docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate --force
+
+            # Clear product images
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html php bash rm -rf ERP_storage/public/products/*
+            docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan migrate:fresh --force
+
                
             # Clear caches
             docker compose -f ${{ env.COMPOSE_FILE }} exec -T -w /var/www/html/Laravel_app php php artisan config:cache

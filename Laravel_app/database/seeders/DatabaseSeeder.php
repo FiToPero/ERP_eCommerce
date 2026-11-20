@@ -31,56 +31,8 @@ class DatabaseSeeder extends Seeder
         $this->call(FactoriesSeeders\RolePermissionSeeder::class);
 
         // Crear usuarios
-        $super_admin = User::firstOrCreate([
-            'user_name' => 'super_admin',
-            'type' => 'business',
-            'email' => 'super_admin@example.com',
-            'password' => bcrypt('admin1234'),
-            'email_verified_at' => now(), 
-        ]);
-        $admin = User::firstOrCreate([
-            'user_name' => 'admin',
-            'type' => 'business',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(), 
-        ]);
-        $manager = User::firstOrCreate([
-            'user_name' => 'manager',
-            'type' => 'business',
-            'email' => 'manager@example.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(), 
-        ]);
-        $sales = User::firstOrCreate([
-            'user_name' => 'sales',
-            'type' => 'business',
-            'email' => 'sales@example.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(), 
-        ]);
-        $warehouse = User::firstOrCreate([
-            'user_name' => 'warehouse',
-            'type' => 'business',
-            'email' => 'warehouse@example.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(), 
-        ]);
-        $customer = User::firstOrCreate([
-            'user_name' => 'customer',
-            'type' => 'business',
-            'email' => 'customer@example.com',
-            'password' => bcrypt('12345678'),
-            'email_verified_at' => now(), 
-        ]);
-
-        // Asignar roles
-        $super_admin->syncRoles('super_admin');
-        $admin->syncRoles('admin');
-        $manager->syncRoles('manager');
-        $sales->syncRoles('sales');
-        $warehouse->syncRoles('warehouse');
-        $customer->syncRoles('customer');
+        $this->call(FactoriesSeeders\UserSeeder::class);
+        $this->call(FactoriesSeeders\CustomerSeeder::class);
 
         // Seedear categorías y productos
         $this->call([

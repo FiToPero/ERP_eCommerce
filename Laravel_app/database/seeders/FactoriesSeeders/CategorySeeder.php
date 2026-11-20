@@ -13,824 +13,611 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         // Categorías principales (root)
-        $electronics = Category::factory()->create([
+        $electronics = $this->findOrCreateCategory('electronica', [
             'name' => 'Electrónica',
-            'slug' => 'electronica',
             'description' => 'Productos electrónicos',
         ]);
 
-        $clothing = Category::factory()->create([
+        $clothing = $this->findOrCreateCategory('ropa', [
             'name' => 'Ropa',
-            'slug' => 'ropa',
             'description' => 'Ropa y accesorios',
         ]);
 
-        $home = Category::factory()->create([
+        $home = $this->findOrCreateCategory('hogar', [
             'name' => 'Hogar',
-            'slug' => 'hogar',
             'description' => 'Productos para el hogar',
         ]);
 
-        $beauty = Category::factory()->create([
+        $beauty = $this->findOrCreateCategory('belleza', [
             'name' => 'Belleza',
-            'slug' => 'belleza',
             'description' => 'Belleza, cosmética y cuidado personal',
         ]);
 
-        $sports = Category::factory()->create([
+        $sports = $this->findOrCreateCategory('deportes', [
             'name' => 'Deportes',
-            'slug' => 'deportes',
             'description' => 'Artículos deportivos y fitness',
         ]);
 
-        $babies = Category::factory()->create([
+        $babies = $this->findOrCreateCategory('bebes', [
             'name' => 'Bebés',
-            'slug' => 'bebes',
             'description' => 'Productos para bebés y primera infancia',
         ]);
 
-        $supermarket = Category::factory()->create([
+        $supermarket = $this->findOrCreateCategory('supermercado', [
             'name' => 'Supermercado',
-            'slug' => 'supermercado',
             'description' => 'Alimentos, bebidas y limpieza',
         ]);
 
         // Subcategorías de Electrónica
-        $smartphones = Category::factory()->create([
-            'parent_id' => $electronics->id,
+        $smartphones = $this->childCategory($electronics, 'smartphones', [
             'name' => 'Smartphones',
-            'slug' => 'smartphones',
             'description' => 'Teléfonos inteligentes',
         ]);
 
-        $laptops = Category::factory()->create([
-            'parent_id' => $electronics->id,
+        $laptops = $this->childCategory($electronics, 'laptops', [
             'name' => 'Laptops',
-            'slug' => 'laptops',
             'description' => 'Computadoras portátiles',
         ]);
 
-        $tablets = Category::factory()->create([
-            'parent_id' => $electronics->id,
+        $tablets = $this->childCategory($electronics, 'tablets', [
             'name' => 'Tablets',
-            'slug' => 'tablets',
             'description' => 'Tabletas',
         ]);
 
-        $audio = Category::factory()->create([
-            'parent_id' => $electronics->id,
+        $audio = $this->childCategory($electronics, 'audio', [
             'name' => 'Audio',
-            'slug' => 'audio',
             'description' => 'Auriculares, parlantes y equipos de sonido',
         ]);
 
-        $tvVideo = Category::factory()->create([
-            'parent_id' => $electronics->id,
+        $tvVideo = $this->childCategory($electronics, 'tv-y-video', [
             'name' => 'TV y Video',
-            'slug' => 'tv-y-video',
             'description' => 'Televisores, proyectores y streaming',
         ]);
 
-        $gaming = Category::factory()->create([
-            'parent_id' => $electronics->id,
+        $gaming = $this->childCategory($electronics, 'gaming', [
             'name' => 'Gaming',
-            'slug' => 'gaming',
             'description' => 'Consolas, accesorios y componentes gamer',
         ]);
 
         // Sub-subcategorías de Smartphones (3er nivel)
-        Category::factory()->create([
-            'parent_id' => $smartphones->id,
+        $this->childCategory($smartphones, 'iphone', [
             'name' => 'iPhone',
-            'slug' => 'iphone',
             'description' => 'Smartphones Apple iPhone',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $smartphones->id,
+        $this->childCategory($smartphones, 'samsung-galaxy', [
             'name' => 'Samsung Galaxy',
-            'slug' => 'samsung-galaxy',
             'description' => 'Smartphones Samsung Galaxy',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $smartphones->id,
+        $this->childCategory($smartphones, 'motorola', [
             'name' => 'Motorola',
-            'slug' => 'motorola',
             'description' => 'Smartphones Motorola',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $smartphones->id,
+        $this->childCategory($smartphones, 'xiaomi', [
             'name' => 'Xiaomi',
-            'slug' => 'xiaomi',
             'description' => 'Smartphones Xiaomi y Redmi',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $smartphones->id,
+        $this->childCategory($smartphones, 'accesorios-para-celulares', [
             'name' => 'Accesorios para Celulares',
-            'slug' => 'accesorios-para-celulares',
             'description' => 'Fundas, cables, cargadores y soportes',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $laptops->id,
+        $this->childCategory($laptops, 'ultrabooks', [
             'name' => 'Ultrabooks',
-            'slug' => 'ultrabooks',
             'description' => 'Laptops livianas y portátiles de alto rendimiento',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $laptops->id,
+        $this->childCategory($laptops, 'laptops-gamer', [
             'name' => 'Laptops Gamer',
-            'slug' => 'laptops-gamer',
             'description' => 'Portátiles para gaming y alto desempeño gráfico',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $laptops->id,
+        $this->childCategory($laptops, 'accesorios-para-laptops', [
             'name' => 'Accesorios para Laptops',
-            'slug' => 'accesorios-para-laptops',
             'description' => 'Bases, cargadores, mochilas y hubs',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $tablets->id,
+        $this->childCategory($tablets, 'ipad', [
             'name' => 'iPad',
-            'slug' => 'ipad',
             'description' => 'Tablets Apple iPad',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $tablets->id,
+        $this->childCategory($tablets, 'tablets-android', [
             'name' => 'Tablets Android',
-            'slug' => 'tablets-android',
             'description' => 'Tablets Samsung, Lenovo, Xiaomi y otras',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $tablets->id,
+        $this->childCategory($tablets, 'accesorios-para-tablets', [
             'name' => 'Accesorios para Tablets',
-            'slug' => 'accesorios-para-tablets',
             'description' => 'Fundas con teclado, stylus y protectores',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $audio->id,
+        $this->childCategory($audio, 'auriculares', [
             'name' => 'Auriculares',
-            'slug' => 'auriculares',
             'description' => 'Auriculares inalámbricos, gamers e in-ear',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $audio->id,
+        $this->childCategory($audio, 'parlantes', [
             'name' => 'Parlantes',
-            'slug' => 'parlantes',
             'description' => 'Parlantes Bluetooth, portátiles y smart speakers',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $audio->id,
+        $this->childCategory($audio, 'microfonos', [
             'name' => 'Micrófonos',
-            'slug' => 'microfonos',
             'description' => 'Micrófonos para streaming, estudio y podcast',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $tvVideo->id,
+        $this->childCategory($tvVideo, 'smart-tv', [
             'name' => 'Smart TV',
-            'slug' => 'smart-tv',
             'description' => 'Televisores con conectividad y apps integradas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $tvVideo->id,
+        $this->childCategory($tvVideo, 'proyectores', [
             'name' => 'Proyectores',
-            'slug' => 'proyectores',
             'description' => 'Proyectores portátiles, hogareños y profesionales',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $tvVideo->id,
+        $this->childCategory($tvVideo, 'streaming-media-players', [
             'name' => 'Streaming Media Players',
-            'slug' => 'streaming-media-players',
             'description' => 'Chromecast, Roku, Fire TV y dispositivos similares',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $gaming->id,
+        $this->childCategory($gaming, 'consolas', [
             'name' => 'Consolas',
-            'slug' => 'consolas',
             'description' => 'PlayStation, Xbox, Nintendo y consolas retro',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $gaming->id,
+        $this->childCategory($gaming, 'accesorios-gamer', [
             'name' => 'Accesorios Gamer',
-            'slug' => 'accesorios-gamer',
             'description' => 'Joysticks, teclados, mouse y sillas gamer',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $gaming->id,
+        $this->childCategory($gaming, 'componentes-de-pc', [
             'name' => 'Componentes de PC',
-            'slug' => 'componentes-de-pc',
             'description' => 'Placas de video, memorias, motherboards y fuentes',
         ]);
 
         // Subcategorías de Ropa
-        $men = Category::factory()->create([
-            'parent_id' => $clothing->id,
+        $men = $this->childCategory($clothing, 'ropa-hombre', [
             'name' => 'Hombre',
-            'slug' => 'ropa-hombre',
             'description' => 'Ropa para hombre',
         ]);
 
-        $women = Category::factory()->create([
-            'parent_id' => $clothing->id,
+        $women = $this->childCategory($clothing, 'ropa-mujer', [
             'name' => 'Mujer',
-            'slug' => 'ropa-mujer',
             'description' => 'Ropa para mujer',
         ]);
 
-        $kids = Category::factory()->create([
-            'parent_id' => $clothing->id,
+        $kids = $this->childCategory($clothing, 'ropa-ninos', [
             'name' => 'Niños',
-            'slug' => 'ropa-ninos',
             'description' => 'Ropa para niños',
         ]);
 
-        $footwear = Category::factory()->create([
-            'parent_id' => $clothing->id,
+        $footwear = $this->childCategory($clothing, 'calzado', [
             'name' => 'Calzado',
-            'slug' => 'calzado',
             'description' => 'Zapatillas, botas, zapatos y sandalias',
         ]);
 
-        $accessories = Category::factory()->create([
-            'parent_id' => $clothing->id,
+        $accessories = $this->childCategory($clothing, 'accesorios-de-moda', [
             'name' => 'Accesorios de Moda',
-            'slug' => 'accesorios-de-moda',
             'description' => 'Carteras, relojes, lentes y cinturones',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $men->id,
+        $this->childCategory($men, 'remeras-hombre', [
             'name' => 'Remeras',
-            'slug' => 'remeras-hombre',
             'description' => 'Remeras básicas, estampadas y deportivas para hombre',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $men->id,
+        $this->childCategory($men, 'jeans-hombre', [
             'name' => 'Jeans',
-            'slug' => 'jeans-hombre',
             'description' => 'Pantalones jeans para hombre',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $men->id,
+        $this->childCategory($men, 'camisas-hombre', [
             'name' => 'Camisas',
-            'slug' => 'camisas-hombre',
             'description' => 'Camisas casuales y formales para hombre',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $women->id,
+        $this->childCategory($women, 'vestidos-mujer', [
             'name' => 'Vestidos',
-            'slug' => 'vestidos-mujer',
             'description' => 'Vestidos casuales, de fiesta y urbanos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $women->id,
+        $this->childCategory($women, 'blusas-mujer', [
             'name' => 'Blusas',
-            'slug' => 'blusas-mujer',
             'description' => 'Blusas y camisas femeninas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $women->id,
+        $this->childCategory($women, 'jeans-mujer', [
             'name' => 'Jeans',
-            'slug' => 'jeans-mujer',
             'description' => 'Pantalones jeans para mujer',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $kids->id,
+        $this->childCategory($kids, 'ropa-bebes', [
             'name' => 'Bebés',
-            'slug' => 'ropa-bebes',
             'description' => 'Indumentaria para bebés',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $kids->id,
+        $this->childCategory($kids, 'ropa-ninas', [
             'name' => 'Niñas',
-            'slug' => 'ropa-ninas',
             'description' => 'Indumentaria para niñas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $kids->id,
+        $this->childCategory($kids, 'ropa-ninos-varones', [
             'name' => 'Niños Varones',
-            'slug' => 'ropa-ninos-varones',
             'description' => 'Indumentaria para niños',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $footwear->id,
+        $this->childCategory($footwear, 'zapatillas', [
             'name' => 'Zapatillas',
-            'slug' => 'zapatillas',
             'description' => 'Zapatillas urbanas y deportivas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $footwear->id,
+        $this->childCategory($footwear, 'botas', [
             'name' => 'Botas',
-            'slug' => 'botas',
             'description' => 'Botas y botinetas para todas las temporadas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $footwear->id,
+        $this->childCategory($footwear, 'sandalias', [
             'name' => 'Sandalias',
-            'slug' => 'sandalias',
             'description' => 'Sandalias, ojotas y calzado fresco',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $accessories->id,
+        $this->childCategory($accessories, 'mochilas', [
             'name' => 'Mochilas',
-            'slug' => 'mochilas',
             'description' => 'Mochilas urbanas, escolares y de viaje',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $accessories->id,
+        $this->childCategory($accessories, 'relojes', [
             'name' => 'Relojes',
-            'slug' => 'relojes',
             'description' => 'Relojes analógicos, digitales y smartwatches',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $accessories->id,
+        $this->childCategory($accessories, 'lentes-de-sol', [
             'name' => 'Lentes de Sol',
-            'slug' => 'lentes-de-sol',
             'description' => 'Anteojos de sol y accesorios ópticos',
         ]);
 
         // Subcategorías de Hogar
-        $furniture = Category::factory()->create([
-            'parent_id' => $home->id,
+        $furniture = $this->childCategory($home, 'muebles', [
             'name' => 'Muebles',
-            'slug' => 'muebles',
             'description' => 'Muebles para el hogar',
         ]);
 
-        $decoration = Category::factory()->create([
-            'parent_id' => $home->id,
+        $decoration = $this->childCategory($home, 'decoracion', [
             'name' => 'Decoración',
-            'slug' => 'decoracion',
             'description' => 'Artículos de decoración',
         ]);
 
-        $appliances = Category::factory()->create([
-            'parent_id' => $home->id,
+        $appliances = $this->childCategory($home, 'electrodomesticos', [
             'name' => 'Electrodomésticos',
-            'slug' => 'electrodomesticos',
             'description' => 'Electrodomésticos de cocina, limpieza y confort',
         ]);
 
-        $garden = Category::factory()->create([
-            'parent_id' => $home->id,
+        $garden = $this->childCategory($home, 'jardin-y-exterior', [
             'name' => 'Jardín y Exterior',
-            'slug' => 'jardin-y-exterior',
             'description' => 'Muebles, herramientas y decoración exterior',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $furniture->id,
+        $this->childCategory($furniture, 'sofas-y-sillones', [
             'name' => 'Sofás y Sillones',
-            'slug' => 'sofas-y-sillones',
             'description' => 'Sofás, sillones reclinables y futones',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $furniture->id,
+        $this->childCategory($furniture, 'mesas', [
             'name' => 'Mesas',
-            'slug' => 'mesas',
             'description' => 'Mesas ratonas, de comedor y auxiliares',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $furniture->id,
+        $this->childCategory($furniture, 'placares-y-roperos', [
             'name' => 'Placares y Roperos',
-            'slug' => 'placares-y-roperos',
             'description' => 'Guardado y organización para dormitorios',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $decoration->id,
+        $this->childCategory($decoration, 'cuadros', [
             'name' => 'Cuadros',
-            'slug' => 'cuadros',
             'description' => 'Cuadros decorativos, láminas y posters',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $decoration->id,
+        $this->childCategory($decoration, 'espejos', [
             'name' => 'Espejos',
-            'slug' => 'espejos',
             'description' => 'Espejos decorativos y funcionales',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $decoration->id,
+        $this->childCategory($decoration, 'alfombras', [
             'name' => 'Alfombras',
-            'slug' => 'alfombras',
             'description' => 'Alfombras para living, dormitorio y pasillos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $appliances->id,
+        $this->childCategory($appliances, 'heladeras', [
             'name' => 'Heladeras',
-            'slug' => 'heladeras',
             'description' => 'Heladeras con freezer, no frost e inverter',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $appliances->id,
+        $this->childCategory($appliances, 'lavarropas', [
             'name' => 'Lavarropas',
-            'slug' => 'lavarropas',
             'description' => 'Lavarropas automáticos y semiautomáticos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $appliances->id,
+        $this->childCategory($appliances, 'pequenos-electrodomesticos', [
             'name' => 'Pequeños Electrodomésticos',
-            'slug' => 'pequenos-electrodomesticos',
             'description' => 'Cafeteras, licuadoras, freidoras y pavas eléctricas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $garden->id,
+        $this->childCategory($garden, 'muebles-de-jardin', [
             'name' => 'Muebles de Jardín',
-            'slug' => 'muebles-de-jardin',
             'description' => 'Sillas, mesas y juegos para exterior',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $garden->id,
+        $this->childCategory($garden, 'parrillas', [
             'name' => 'Parrillas',
-            'slug' => 'parrillas',
             'description' => 'Parrillas, accesorios y utensilios para asado',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $garden->id,
+        $this->childCategory($garden, 'herramientas-de-jardin', [
             'name' => 'Herramientas de Jardín',
-            'slug' => 'herramientas-de-jardin',
             'description' => 'Mangueras, podadoras y herramientas manuales',
         ]);
 
         // Subcategorías de Belleza
-        $hairCare = Category::factory()->create([
-            'parent_id' => $beauty->id,
+        $hairCare = $this->childCategory($beauty, 'cuidado-del-cabello', [
             'name' => 'Cuidado del Cabello',
-            'slug' => 'cuidado-del-cabello',
             'description' => 'Productos para limpieza, peinado y tratamiento capilar',
         ]);
 
-        $skinCare = Category::factory()->create([
-            'parent_id' => $beauty->id,
+        $skinCare = $this->childCategory($beauty, 'cuidado-de-la-piel', [
             'name' => 'Cuidado de la Piel',
-            'slug' => 'cuidado-de-la-piel',
             'description' => 'Rutinas faciales y corporales',
         ]);
 
-        $makeup = Category::factory()->create([
-            'parent_id' => $beauty->id,
+        $makeup = $this->childCategory($beauty, 'maquillaje', [
             'name' => 'Maquillaje',
-            'slug' => 'maquillaje',
             'description' => 'Cosméticos para rostro, ojos y labios',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $hairCare->id,
+        $this->childCategory($hairCare, 'shampoo', [
             'name' => 'Shampoo',
-            'slug' => 'shampoo',
             'description' => 'Shampoos para distintos tipos de cabello',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $hairCare->id,
+        $this->childCategory($hairCare, 'acondicionadores', [
             'name' => 'Acondicionadores',
-            'slug' => 'acondicionadores',
             'description' => 'Acondicionadores y tratamientos nutritivos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $hairCare->id,
+        $this->childCategory($hairCare, 'planchitas-y-secadores', [
             'name' => 'Planchitas y Secadores',
-            'slug' => 'planchitas-y-secadores',
             'description' => 'Herramientas eléctricas para peinado',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $skinCare->id,
+        $this->childCategory($skinCare, 'limpieza-facial', [
             'name' => 'Limpieza Facial',
-            'slug' => 'limpieza-facial',
             'description' => 'Espumas, geles y aguas micelares',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $skinCare->id,
+        $this->childCategory($skinCare, 'hidratantes', [
             'name' => 'Hidratantes',
-            'slug' => 'hidratantes',
             'description' => 'Cremas, sérums y lociones hidratantes',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $skinCare->id,
+        $this->childCategory($skinCare, 'proteccion-solar', [
             'name' => 'Protección Solar',
-            'slug' => 'proteccion-solar',
             'description' => 'Protectores solares faciales y corporales',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $makeup->id,
+        $this->childCategory($makeup, 'bases-y-correctores', [
             'name' => 'Bases y Correctores',
-            'slug' => 'bases-y-correctores',
             'description' => 'Maquillaje para rostro y cobertura',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $makeup->id,
+        $this->childCategory($makeup, 'labiales', [
             'name' => 'Labiales',
-            'slug' => 'labiales',
             'description' => 'Labiales líquidos, mate y gloss',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $makeup->id,
+        $this->childCategory($makeup, 'mascaras-de-pestanas', [
             'name' => 'Máscaras de Pestañas',
-            'slug' => 'mascaras-de-pestanas',
             'description' => 'Máscaras para volumen y definición',
         ]);
 
         // Subcategorías de Deportes
-        $fitness = Category::factory()->create([
-            'parent_id' => $sports->id,
+        $fitness = $this->childCategory($sports, 'fitness', [
             'name' => 'Fitness',
-            'slug' => 'fitness',
             'description' => 'Equipamiento para entrenamiento y musculación',
         ]);
 
-        $running = Category::factory()->create([
-            'parent_id' => $sports->id,
+        $running = $this->childCategory($sports, 'running', [
             'name' => 'Running',
-            'slug' => 'running',
             'description' => 'Accesorios e indumentaria para correr',
         ]);
 
-        $cycling = Category::factory()->create([
-            'parent_id' => $sports->id,
+        $cycling = $this->childCategory($sports, 'ciclismo', [
             'name' => 'Ciclismo',
-            'slug' => 'ciclismo',
             'description' => 'Bicicletas, cascos y accesorios',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $fitness->id,
+        $this->childCategory($fitness, 'mancuernas', [
             'name' => 'Mancuernas',
-            'slug' => 'mancuernas',
             'description' => 'Mancuernas, pesas rusas y kits de entrenamiento',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $fitness->id,
+        $this->childCategory($fitness, 'bancos-de-musculacion', [
             'name' => 'Bancos de Musculación',
-            'slug' => 'bancos-de-musculacion',
             'description' => 'Bancos y soportes para entrenamiento de fuerza',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $fitness->id,
+        $this->childCategory($fitness, 'bandas-elasticas', [
             'name' => 'Bandas Elásticas',
-            'slug' => 'bandas-elasticas',
             'description' => 'Bandas de resistencia y accesorios funcionales',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $running->id,
+        $this->childCategory($running, 'zapatillas-de-running', [
             'name' => 'Zapatillas de Running',
-            'slug' => 'zapatillas-de-running',
             'description' => 'Calzado técnico para running',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $running->id,
+        $this->childCategory($running, 'relojes-deportivos', [
             'name' => 'Relojes Deportivos',
-            'slug' => 'relojes-deportivos',
             'description' => 'Relojes GPS y smartwatches deportivos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $running->id,
+        $this->childCategory($running, 'hidratacion-deportiva', [
             'name' => 'Hidratación Deportiva',
-            'slug' => 'hidratacion-deportiva',
             'description' => 'Botellas, mochilas y cinturones de hidratación',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $cycling->id,
+        $this->childCategory($cycling, 'bicicletas', [
             'name' => 'Bicicletas',
-            'slug' => 'bicicletas',
             'description' => 'Bicicletas urbanas, mountain bike y ruta',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $cycling->id,
+        $this->childCategory($cycling, 'cascos-ciclismo', [
             'name' => 'Cascos',
-            'slug' => 'cascos-ciclismo',
             'description' => 'Cascos de protección para ciclismo',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $cycling->id,
+        $this->childCategory($cycling, 'accesorios-para-bicicleta', [
             'name' => 'Accesorios para Bicicleta',
-            'slug' => 'accesorios-para-bicicleta',
             'description' => 'Luces, infladores, caramañolas y herramientas',
         ]);
 
         // Subcategorías de Bebés
-        $walk = Category::factory()->create([
-            'parent_id' => $babies->id,
+        $walk = $this->childCategory($babies, 'paseo-bebes', [
             'name' => 'Paseo',
-            'slug' => 'paseo-bebes',
             'description' => 'Cochecitos, sillas para auto y portabebés',
         ]);
 
-        $feeding = Category::factory()->create([
-            'parent_id' => $babies->id,
+        $feeding = $this->childCategory($babies, 'alimentacion-bebes', [
             'name' => 'Alimentación',
-            'slug' => 'alimentacion-bebes',
             'description' => 'Mamaderas, extractores y sillas de comer',
         ]);
 
-        $sleep = Category::factory()->create([
-            'parent_id' => $babies->id,
+        $sleep = $this->childCategory($babies, 'descanso-bebes', [
             'name' => 'Descanso',
-            'slug' => 'descanso-bebes',
             'description' => 'Cunas, colchones y monitores para bebé',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $walk->id,
+        $this->childCategory($walk, 'cochecitos', [
             'name' => 'Cochecitos',
-            'slug' => 'cochecitos',
             'description' => 'Cochecitos travel system, jogging y paragüitas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $walk->id,
+        $this->childCategory($walk, 'sillas-para-auto', [
             'name' => 'Sillas para Auto',
-            'slug' => 'sillas-para-auto',
             'description' => 'Butacas y boosters para auto',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $walk->id,
+        $this->childCategory($walk, 'mochilas-portabebes', [
             'name' => 'Mochilas Portabebés',
-            'slug' => 'mochilas-portabebes',
             'description' => 'Portabebés ergonómicos y fulares',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $feeding->id,
+        $this->childCategory($feeding, 'mamaderas', [
             'name' => 'Mamaderas',
-            'slug' => 'mamaderas',
             'description' => 'Mamaderas anticólicos y accesorios',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $feeding->id,
+        $this->childCategory($feeding, 'sillas-de-comer', [
             'name' => 'Sillas de Comer',
-            'slug' => 'sillas-de-comer',
             'description' => 'Sillas altas y boosters para bebés',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $feeding->id,
+        $this->childCategory($feeding, 'extractores-de-leche', [
             'name' => 'Extractores de Leche',
-            'slug' => 'extractores-de-leche',
             'description' => 'Extractores manuales y eléctricos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $sleep->id,
+        $this->childCategory($sleep, 'cunas', [
             'name' => 'Cunas',
-            'slug' => 'cunas',
             'description' => 'Cunas funcionales, colecho y practicunas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $sleep->id,
+        $this->childCategory($sleep, 'colchones-para-bebe', [
             'name' => 'Colchones para Bebé',
-            'slug' => 'colchones-para-bebe',
             'description' => 'Colchones y accesorios para descanso infantil',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $sleep->id,
+        $this->childCategory($sleep, 'monitores-para-bebe', [
             'name' => 'Monitores para Bebé',
-            'slug' => 'monitores-para-bebe',
             'description' => 'Baby call con audio, video y WiFi',
         ]);
 
         // Subcategorías de Supermercado
-        $grocery = Category::factory()->create([
-            'parent_id' => $supermarket->id,
+        $grocery = $this->childCategory($supermarket, 'almacen', [
             'name' => 'Almacén',
-            'slug' => 'almacen',
             'description' => 'Productos secos y básicos de despensa',
         ]);
 
-        $drinks = Category::factory()->create([
-            'parent_id' => $supermarket->id,
+        $drinks = $this->childCategory($supermarket, 'bebidas', [
             'name' => 'Bebidas',
-            'slug' => 'bebidas',
             'description' => 'Aguas, gaseosas, jugos y bebidas alcohólicas',
         ]);
 
-        $cleaning = Category::factory()->create([
-            'parent_id' => $supermarket->id,
+        $cleaning = $this->childCategory($supermarket, 'limpieza', [
             'name' => 'Limpieza',
-            'slug' => 'limpieza',
             'description' => 'Productos de limpieza para hogar y ropa',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $grocery->id,
+        $this->childCategory($grocery, 'arroz-y-legumbres', [
             'name' => 'Arroz y Legumbres',
-            'slug' => 'arroz-y-legumbres',
             'description' => 'Arroces, lentejas, garbanzos y porotos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $grocery->id,
+        $this->childCategory($grocery, 'pastas', [
             'name' => 'Pastas',
-            'slug' => 'pastas',
             'description' => 'Fideos, spaghetti y variedades secas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $grocery->id,
+        $this->childCategory($grocery, 'aceites-y-vinagres', [
             'name' => 'Aceites y Vinagres',
-            'slug' => 'aceites-y-vinagres',
             'description' => 'Aceites de cocina, oliva y vinagres',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $drinks->id,
+        $this->childCategory($drinks, 'gaseosas', [
             'name' => 'Gaseosas',
-            'slug' => 'gaseosas',
             'description' => 'Bebidas carbonatadas y saborizadas',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $drinks->id,
+        $this->childCategory($drinks, 'aguas', [
             'name' => 'Aguas',
-            'slug' => 'aguas',
             'description' => 'Aguas minerales, saborizadas y soda',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $drinks->id,
+        $this->childCategory($drinks, 'cervezas-y-vinos', [
             'name' => 'Cervezas y Vinos',
-            'slug' => 'cervezas-y-vinos',
             'description' => 'Bebidas alcohólicas para consumo y eventos',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $cleaning->id,
+        $this->childCategory($cleaning, 'detergentes', [
             'name' => 'Detergentes',
-            'slug' => 'detergentes',
             'description' => 'Detergentes para vajilla y cocina',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $cleaning->id,
+        $this->childCategory($cleaning, 'desinfectantes', [
             'name' => 'Desinfectantes',
-            'slug' => 'desinfectantes',
             'description' => 'Lavandina, desinfectantes y sanitizantes',
         ]);
 
-        Category::factory()->create([
-            'parent_id' => $cleaning->id,
+        $this->childCategory($cleaning, 'lavado-de-ropa', [
             'name' => 'Lavado de Ropa',
-            'slug' => 'lavado-de-ropa',
             'description' => 'Jabones líquidos, suavizantes y quitamanchas',
         ]);
+    }
+
+    private function findOrCreateCategory(string $slug, array $attributes): Category
+    {
+        return Category::withTrashed()->firstOrCreate(['slug' => $slug], $attributes);
+    }
+
+    private function childCategory(?Category $parent, string $slug, array $attributes): ?Category
+    {
+        if ($parent === null || $parent->trashed()) {
+            return null;
+        }
+
+        return $this->findOrCreateCategory($slug, ['parent_id' => $parent->id, ...$attributes]);
     }
 }

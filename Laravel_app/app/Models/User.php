@@ -75,4 +75,9 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         ]);
     }
 
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
+
 }

@@ -93,6 +93,14 @@ versionada. Las migraciones de creación se actualizaron para el esquema actual:
 en una base ya migrada los cambios no aparecen automáticamente. Si se usa
 `migrate:fresh`, se perderán todas las tablas y datos; respalda antes de hacerlo.
 
+El seeder de clientes crea 20 clientes de ejemplo con un perfil cada uno en cada
+ejecución. Requiere `FRONTEND_URL_WEB_01` y genera contraseñas aleatorias; no son
+cuentas destinadas al inicio de sesión. Ejecuta las migraciones pendientes antes
+de usarlo.
+
+El seeder de usuarios crea un empleado de ejemplo para cada uno de sus seis
+usuarios, incluido `customer`, y conserva los empleados existentes al repetirse.
+
 El seeder de productos descarga fotografías aleatorias de ejemplo desde
 `picsum.photos` para cada producto sin imágenes, las convierte a WebP y las guarda
 en el disco de imágenes configurado. Uno de cada cuatro productos recibe tres

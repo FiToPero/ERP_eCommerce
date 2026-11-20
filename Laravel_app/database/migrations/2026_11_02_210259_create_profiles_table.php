@@ -16,8 +16,10 @@ return new class extends Migration
             $table->foreignId('customer_id')->unique()->constrained('customers')->cascadeOnDelete();
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
+            $table->enum('type_identity', ['DNI', 'Passport', 'Other'])->default('DNI');
+            $table->string('identity_number')->unique();
             $table->string('company_name')->nullable();
-            $table->string('cuit')->unique();
+            $table->string('CUIT')->unique()->nullable();
             $table->string('phone');
             $table->date('birthdate')->nullable();
             $table->string('bio')->nullable();
@@ -28,7 +30,6 @@ return new class extends Migration
             $table->string('github')->nullable();
             $table->string('facebook')->nullable();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

@@ -20,8 +20,10 @@ class ProfileFactory extends Factory
             'customer_id' => \App\Models\Customer::factory(),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
+            'type_identity' => $this->faker->randomElement(['DNI', 'Passport', 'Other']),
+            'identity_number' => $this->faker->unique()->numerify('##########'),
             'company_name' => $this->faker->company(),
-            'cuit' => $this->faker->unique()->numerify('##-########-#'),
+            'CUIT' => $this->faker->unique()->numerify('##-########-#'),
             'phone' => $this->faker->phoneNumber(),
             'birthdate' => $this->faker->date(),
             'bio' => $this->faker->text(),
@@ -33,7 +35,6 @@ class ProfileFactory extends Factory
             'facebook' => $this->faker->userName(),
             'created_at' => now(),
             'updated_at' => now(),
-            'deleted_at' => null,
         ];
     }
 }

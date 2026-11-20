@@ -4,13 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Customer;
 
 class Profile extends Model
 {
     /** @use HasFactory<\Database\Factories\ProfileFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -21,8 +20,10 @@ class Profile extends Model
         'customer_id',
         'first_name',
         'last_name',
+        'type_identity',
+        'identity_number',
         'company_name',
-        'cuit',
+        'CUIT',
         'phone',
         'address',
         'city',
