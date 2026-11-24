@@ -127,6 +127,23 @@ class CustomerAuthenticationTest extends TestCase
             ->assertOk()->assertJsonStructure(['token', 'token_type', 'customer']);
     }
 
+    public function test_inactive_customer_cannot_log_in_until_reactivated(): void
+    {
+        $customer = $this->customer(['is_active' => false]);
+        $customer->markEmailAsVerified();
+        $this->assertFalse($customer->fresh()->is_active);
+        $credentials = ['email' => $customer->email, 'password' => 'password123'];
+
+        $this->withHeader('Origin', self::WEB)->postJson('/api/auth/login', $credentials)
+            ->assertUnauthorized()->assertExactJson(['message' => 'Invalid credentials.']);
+        $this->assertDatabaseMissing('customer_sessions', ['customer_id' => $customer->id]);
+        $this->assertSame(0, $customer->tokens()->count());
+
+        $customer->update(['is_active' => true]);
+        $this->postJson('/api/auth/login', $credentials)->assertOk()->assertJsonStructure(['token']);
+        $this->assertDatabaseHas('customer_sessions', ['customer_id' => $customer->id, 'is_active' => true]);
+    }
+
     /** El segundo inicio invalida el primer token y el logout invalida el actual. */
     public function test_login_replaces_previous_session_and_logout_revokes_token(): void
     {

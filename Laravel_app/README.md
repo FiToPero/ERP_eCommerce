@@ -15,6 +15,8 @@ Antes de ejecutarlo, verifica que los IDs 1 a 6 de roles y 1 a 69 de permisos co
 
 ## Pruebas de autenticación y usuarios
 
+El inicio de sesión del panel y de la API requiere que `is_active` sea verdadero para el usuario o cliente. Desactivar una cuenta no cierra por sí solo sus sesiones o tokens existentes. Las bases de datos donde ya se ejecutaron las migraciones de creación necesitan incorporar la columna mediante una migración adicional.
+
 Las pruebas usan PHPUnit, Livewire y Filament instalados por Composer. `phpunit.xml` configura SQLite en memoria con claves foráneas, correo y caché en memoria, cola síncrona y sesiones en memoria. `tests/TestCase.php` comprueba esta configuración antes de ejecutar migraciones y aborta si no está aislada. No uses una base de desarrollo o producción para pruebas.
 
 Desde la raíz del repositorio, con el servicio PHP de desarrollo ejecutándose:

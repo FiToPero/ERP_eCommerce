@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->string('first_name');
             $table->string('last_name');
             $table->enum('type_identity', ['DNI', 'Passport', 'Other'])->default('DNI');
@@ -29,6 +28,7 @@ return new class extends Migration
             $table->date('birthdate')->nullable();
             $table->enum('marital_status', ['Single', 'Married', 'Divorced', 'Widowed'])->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

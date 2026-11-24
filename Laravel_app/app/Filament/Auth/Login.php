@@ -9,6 +9,11 @@ use Filament\Facades\Filament;
 
 class Login extends BaseLogin
 {
+    protected function getCredentialsFromFormData(#[\SensitiveParameter] array $data): array
+    {
+        return [...parent::getCredentialsFromFormData($data), 'is_active' => true];
+    }
+
     public function authenticate(): ?LoginResponse
     {
         $response = parent::authenticate();

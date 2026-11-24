@@ -25,6 +25,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'web',
         'email',
         'password',
+        'is_active',
     ];
 
     /**
@@ -45,6 +46,7 @@ class Customer extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean',
     ];
 
     /**

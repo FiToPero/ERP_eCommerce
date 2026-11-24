@@ -100,6 +100,23 @@ class PanelAuthenticationTest extends TestCase
         $this->assertDatabaseMissing('user_sessions', ['user_id' => $user->id]);
     }
 
+    public function test_inactive_user_cannot_log_in_until_reactivated(): void
+    {
+        $user = $this->panelUser();
+        $user->update(['is_active' => false]);
+        $this->assertFalse($user->fresh()->is_active);
+
+        Livewire::test(Login::class)->set('data.email', $user->email)
+            ->set('data.password', 'password123')->call('authenticate')->assertHasErrors();
+        $this->assertGuest();
+        $this->assertDatabaseMissing('user_sessions', ['user_id' => $user->id]);
+
+        $user->update(['is_active' => true]);
+        $this->submitLogin($user->email, 'password123');
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('user_sessions', ['user_id' => $user->id, 'is_active' => true]);
+    }
+
     /** Limita intentos de login y no autentica mientras el límite está activo. */
     public function test_panel_login_rate_limit_blocks_further_attempts(): void
     {

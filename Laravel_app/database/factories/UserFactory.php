@@ -24,6 +24,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'employee_id' => \App\Models\Employee::factory(),
             'user_name' => fake()->name(),
             'type' => fake()->randomElement(['personal', 'business', 'employee']),
             'email' => fake()->unique()->safeEmail(),

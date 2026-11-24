@@ -18,7 +18,6 @@ class EmployeeFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'type_identity' => $this->faker->randomElement(['DNI', 'Passport', 'Other']),

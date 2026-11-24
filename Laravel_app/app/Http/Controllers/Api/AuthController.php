@@ -53,7 +53,7 @@ class AuthController extends Controller
         $web = $this->originWeb($request);
         $provider = Auth::createUserProvider(config('auth.guards.api.provider'));
         $customer = $web
-            ? $provider->retrieveByCredentials(['email' => $credentials['email'], 'web' => $web])
+            ? $provider->retrieveByCredentials(['email' => $credentials['email'], 'web' => $web, 'is_active' => true])
             : null;
 
         if (! $customer || ! $provider->validateCredentials($customer, $credentials)) {

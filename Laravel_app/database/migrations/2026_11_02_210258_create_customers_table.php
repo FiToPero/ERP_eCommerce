@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->string('customer_name');
+            $table->boolean('is_active')->default(true);
             $table->enum('type', ['personal', 'business'])->default('personal');
             $table->string('web');
             $table->string('email');

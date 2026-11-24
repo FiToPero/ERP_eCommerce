@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         'type',
         'email',
         'password',
+        'is_active',
     ];
 
     /**
@@ -48,6 +49,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
     
@@ -77,7 +79,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
     public function employee()
     {
-        return $this->hasOne(Employee::class);
+        return $this->belongsTo(Employee::class);
     }
 
 }
