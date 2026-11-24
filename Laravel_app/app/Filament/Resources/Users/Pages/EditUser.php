@@ -1,29 +1,34 @@
 <?php
 
+// Edita usuarios y perfiles de forma atómica y administra sus enlaces de acceso.
+
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
+use App\Support\UserEmailVerification;
+use App\Support\UserRoleAssignments;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
-use Filament\Resources\Pages\EditRecord;
-use Filament\Actions\Action;
-use Illuminate\Support\Facades\Password;
-use Filament\Notifications\Notification;
-use Filament\Facades\Filament;
 use Filament\Auth\Notifications\ResetPassword;
-use App\Models\User;
-use App\Support\UserEmailVerification;
-use App\Support\UserRoleAssignments;
+use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Components\Attributes\Exposed;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 
 class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
 
+    protected ?bool $hasDatabaseTransactions = true;
+
+    /** Solicita confirmación antes de guardar un cambio de correo. */
     #[Exposed]
     public function save(bool $shouldRedirect = true, bool $shouldSendSavedNotification = true): void
     {
@@ -43,6 +48,7 @@ class EditUser extends EditRecord
         parent::save($shouldRedirect, $shouldSendSavedNotification);
     }
 
+    /** Confirma el cambio si el usuario y los datos siguen siendo válidos. */
     public function confirmEmailChangeAction(): Action
     {
         return Action::make('confirmEmailChange')
@@ -79,6 +85,7 @@ class EditUser extends EditRecord
             });
     }
 
+    /** Carga el rol actual en el formulario. */
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['role_id'] = $this->getRecord()->roles()->value('roles.id');
@@ -86,6 +93,7 @@ class EditUser extends EditRecord
         return $data;
     }
 
+    /** Actualiza usuario y rol, y programa la verificación si cambia el correo. */
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
         return DB::transaction(function () use ($record, $data): Model {
@@ -117,6 +125,7 @@ class EditUser extends EditRecord
         });
     }
 
+    /** Envía la verificación e informa explícitamente si falla. */
     private function sendVerificationEmail(User $user): void
     {
         try {
@@ -134,11 +143,12 @@ class EditUser extends EditRecord
         }
 
         Notification::make()
-            ->title('Correo de verificación enviado a ' . $user->email)
+            ->title('Correo de verificación enviado a '.$user->email)
             ->success()
             ->send();
     }
 
+    /** Define las acciones de eliminación, restauración y envío de enlaces. */
     protected function getHeaderActions(): array
     {
         return [

@@ -13,6 +13,22 @@
 
 Antes de ejecutarlo, verifica que los IDs 1 a 6 de roles y 1 a 69 de permisos correspondan a los mismos roles y permisos de la base de datos de referencia. Los IDs pueden cambiar entre bases de datos; la existencia de un ID no garantiza que represente el mismo rol o permiso. Si falta alguno, el seeder falla sin guardar asignaciones parciales.
 
+## Pruebas de autenticación y usuarios
+
+Las pruebas usan PHPUnit, Livewire y Filament instalados por Composer. `phpunit.xml` configura SQLite en memoria con claves foráneas, correo y caché en memoria, cola síncrona y sesiones en memoria. `tests/TestCase.php` comprueba esta configuración antes de ejecutar migraciones y aborta si no está aislada. No uses una base de desarrollo o producción para pruebas.
+
+Desde la raíz del repositorio, con el servicio PHP de desarrollo ejecutándose:
+
+```bash
+docker compose -f docker-compose.dev.yml exec -w /var/www/html/Laravel_app php php artisan test
+```
+
+Para un archivo específico, añade su ruta al comando, por ejemplo `tests/Feature/UserManagementTest.php`. El entorno `testing` se establece también en `$_SERVER`, aunque el contenedor herede `APP_ENV=local`. En un entorno compartido evita el script de Composer que ejecuta `config:clear`. Si existe configuración cacheada o variables de entorno incompatibles, corrige el entorno de pruebas de forma segura: la comprobación de aislamiento impedirá ejecutarlas. El contenedor debe tener `pdo_sqlite`.
+
+Las pruebas cubren el panel de usuarios y la API de clientes, no la interfaz Vue. Los correos se simulan; las pruebas de transacciones se ejecutan en procesos separados para verificar commits y rollbacks reales. SQLite no sustituye una futura suite aislada con el motor de producción; el guard actual limita explícitamente estas pruebas a SQLite en memoria.
+
+En la configuración actual, Filament limita el login a cinco intentos y la solicitud y el restablecimiento de contraseña a dos intentos mediante Livewire. Las rutas de verificación y reenvío de la API y la ruta de verificación del panel usan `throttle:6,1`. Las rutas de login y recuperación de la API no declaran un límite propio; cualquier protección adicional de infraestructura debe verificarse por separado.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

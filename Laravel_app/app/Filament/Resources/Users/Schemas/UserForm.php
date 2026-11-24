@@ -4,14 +4,14 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use App\Models\User;
 use App\Support\UserRoleAssignments;
-use Filament\Schemas\Components\Section;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Facades\Filament;
 
 class UserForm
 {
@@ -24,6 +24,7 @@ class UserForm
                 TextInput::make('email')
                     ->label('Email address')
                     ->email()
+                    ->unique(ignoreRecord: true)
                     ->required(),
                 Select::make('role_id')
                     ->label('Rol')
@@ -81,10 +82,12 @@ class UserForm
                         TextInput::make('identity_number')
                             ->label('Identity Number')
                             ->required()
+                            ->unique(ignoreRecord: true)
                             ->maxLength(255),
                         TextInput::make('CUIL')
                             ->label('CUIL')
                             ->required()
+                            ->unique(ignoreRecord: true)
                             ->maxLength(255),
                         TextInput::make('phone')
                             ->label('Phone')

@@ -15,6 +15,9 @@ class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
 
+    protected ?bool $hasDatabaseTransactions = true;
+
+    /** Crea el usuario y asigna un rol permitido al actor. */
     protected function handleRecordCreation(array $data): Model
     {
         return DB::transaction(function () use ($data): Model {
@@ -28,6 +31,7 @@ class CreateUser extends CreateRecord
         });
     }
 
+    /** Programa la verificación solo cuando la creación se confirma. */
     protected function afterCreate(): void
     {
         $user = $this->record;
@@ -36,11 +40,25 @@ class CreateUser extends CreateRecord
             return;
         }
 
-        app(UserEmailVerification::class)->send($user);
+        DB::afterCommit(function () use ($user): void {
+            try {
+                app(UserEmailVerification::class)->send($user);
+            } catch (\Throwable $exception) {
+                report($exception);
 
-        Notification::make()
-            ->title('Email de verificación enviado a ' . $user->email)
-            ->success()
-            ->send();
+                Notification::make()
+                    ->title('No se pudo enviar el correo de verificación')
+                    ->body('El correo no está verificado. Comprueba la configuración de correo y vuelve a enviarlo.')
+                    ->danger()
+                    ->send();
+
+                return;
+            }
+
+            Notification::make()
+                ->title('Email de verificación enviado a '.$user->email)
+                ->success()
+                ->send();
+        });
     }
 }
