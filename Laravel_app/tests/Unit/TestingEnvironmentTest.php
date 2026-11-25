@@ -16,7 +16,7 @@ class TestingEnvironmentTest extends TestCase
         $process = new Process([
             PHP_BINARY,
             $root.'/vendor/bin/phpunit',
-            '--configuration',1
+            '--configuration',
             $root.'/phpunit.xml',
             '--do-not-cache-result',
             $root.'/tests/Feature/ExampleTest.php',
