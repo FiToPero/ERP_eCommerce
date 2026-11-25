@@ -36,3 +36,5 @@ Route::group(['prefix' => 'products', 'middleware' => 'throttle:api'], function 
 Route::group(['prefix' => 'categories', 'middleware' => 'throttle:api'], function () {
     Route::get('/index', [CategoryController::class, 'index']);
 });
+
+/// solo comentario //
