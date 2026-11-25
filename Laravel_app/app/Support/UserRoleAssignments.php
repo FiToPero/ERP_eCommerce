@@ -53,7 +53,7 @@ class UserRoleAssignments
             ->all();
     }
 
-    public function resolve(User $actor, mixed $roleId, ?User $target = null): Role
+    public function resolve(User $actor, mixed $roleId, ?User $target = null, string $field = 'data.role_id'): Role
     {
         if ($target && ! $this->canManageUser($actor, $target)) {
             abort(403);
@@ -63,7 +63,7 @@ class UserRoleAssignments
             (! is_string($roleId) && ! is_int($roleId))
             || filter_var($roleId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false
         ) {
-            throw ValidationException::withMessages(['data.role_id' => 'Selecciona un rol permitido.']);
+            throw ValidationException::withMessages([$field => 'Selecciona un rol permitido.']);
         }
 
         $role = Role::query()->whereKey($roleId)->where('guard_name', 'web')->first();
@@ -73,7 +73,7 @@ class UserRoleAssignments
             && $target->roles()->whereKey($role->getKey())->exists();
 
         if (! $role || (! in_array($role->name, $this->allowedRoles($actor), true) && ! $isUnchangedOwnRole)) {
-            throw ValidationException::withMessages(['data.role_id' => 'No tienes permiso para asignar este rol.']);
+            throw ValidationException::withMessages([$field => 'No tienes permiso para asignar este rol.']);
         }
 
         return $role;
